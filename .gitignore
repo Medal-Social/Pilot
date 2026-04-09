@@ -6,5 +6,7 @@ dist/
 .env.*
 .pilot/
 .superpowers/
+.claude/skills
+.agents/
 coverage/
 *.log

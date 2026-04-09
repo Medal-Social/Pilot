@@ -53,6 +53,12 @@ Phase 15: Sessions + Distribution (persistence, print mode, context management, 
                                           |
                                           v
                               08-sessions-distribution
+                                          |
+                                          v
+                              09-skill-security
+                                          |
+                                          v
+                              10-skill-runtime
 ```
 
 ## Phase Summary
@@ -67,5 +73,7 @@ Phase 15: Sessions + Distribution (persistence, print mode, context management, 
 | 06 | Production Hardening | 8-12: Toolchain, Logging, AI Robustness, Config, Binary, E2E, ErrorBoundary | 29-37 | Not started | [06-production-hardening.md](06-production-hardening.md) |
 | 07 | Platform + Distribution | 13-14: XDG, NO_COLOR, Completions, tsup, Changesets, CI | 38-43 | Not started | [07-platform-distribution.md](07-platform-distribution.md) |
 | 08 | Sessions + Distribution | 15: Sessions, Print Mode, Context Management, Homebrew | 44-47 | Not started | [08-sessions-distribution.md](08-sessions-distribution.md) |
+| 09 | Skill Security | Validation, Signing, Script Safety, Sync, Versioning | 48-52 | Not started | [09-skill-security.md](09-skill-security.md) |
+| 10 | Skill Runtime | Preamble, Learnings, Context Recovery, Self-Update, Multi-Host, Docs | 53-58 | Not started | [10-skill-runtime.md](10-skill-runtime.md) |
 
-**Total scope: 47 tasks across 15 phases.**
+**Total scope: 58 tasks across 10 subplans.**
