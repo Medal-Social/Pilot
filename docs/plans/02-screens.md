@@ -976,7 +976,11 @@ export async function runUpdate() {
 Run: `pnpm test packages/cli/src/screens/Update.test.tsx`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Update README.md Feature Tracker**
+
+Update the Feature Tracker in README.md — change status from "Planned" to "Done" for features completed in this subplan.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add packages/cli/src/screens/Update.tsx packages/cli/src/screens/Update.test.tsx packages/cli/src/commands/update.ts

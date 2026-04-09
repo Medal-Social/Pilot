@@ -441,7 +441,11 @@ cat ~/.claude/CLAUDE.md | grep "Pilot routing"
 
 Expected: Skills directory created, symlink exists, routing rules in CLAUDE.md.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 4: Update README.md Feature Tracker**
+
+Update the Feature Tracker in README.md — change status from "Planned" to "Done" for features completed in this subplan.
+
+- [ ] **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/commands/repl.ts packages/cli/src/screens/Update.tsx

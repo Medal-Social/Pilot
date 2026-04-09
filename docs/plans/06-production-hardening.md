@@ -194,3 +194,5 @@ Every command entry point wraps its screen in ErrorBoundary. Crashes log to ~/.p
 | Runtime secret/PII redaction before display | Task 59 |
 | Quiet audit trail with auto-rotation | Task 61 |
 | Egress allowlist validation (manifest review, no runtime enforcement) | Task 34 |
+
+After completing this subplan, update README.md Feature Tracker status from Planned to Done for all features delivered.
