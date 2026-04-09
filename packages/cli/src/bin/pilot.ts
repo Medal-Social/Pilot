@@ -1,0 +1,74 @@
+#!/usr/bin/env node
+import { program } from 'commander';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const pkg = require('../../package.json');
+
+program
+  .name('pilot')
+  .description('Your AI crew, ready to fly.')
+  .version(pkg.version, '-v, --version');
+
+program
+  .command('up [template]')
+  .description('One-click setup — install templates, skills, crew bindings')
+  .action(async (template?: string) => {
+    const { runUp } = await import('../commands/up.js');
+    await runUp(template);
+  });
+
+program
+  .command('crew')
+  .description('Manage your AI crew')
+  .action(async () => {
+    const { runCrew } = await import('../commands/crew.js');
+    await runCrew();
+  });
+
+program
+  .command('training')
+  .description('Knowledge base — teach your crew about your brand')
+  .action(async () => {
+    const { runTraining } = await import('../commands/training.js');
+    await runTraining();
+  });
+
+program
+  .command('plugins')
+  .description('Browse and manage plugins')
+  .action(async () => {
+    const { runPlugins } = await import('../commands/plugins.js');
+    await runPlugins();
+  });
+
+program
+  .command('update')
+  .description('Check for and apply updates')
+  .action(async () => {
+    const { runUpdate } = await import('../commands/update.js');
+    await runUpdate();
+  });
+
+program
+  .command('status')
+  .description('Machine and system health')
+  .action(async () => {
+    const { runStatus } = await import('../commands/status.js');
+    await runStatus();
+  });
+
+program
+  .command('help')
+  .description('Help reference')
+  .action(async () => {
+    const { runHelp } = await import('../commands/help.js');
+    await runHelp();
+  });
+
+program.action(async () => {
+  const { runRepl } = await import('../commands/repl.js');
+  await runRepl();
+});
+
+program.parse();
