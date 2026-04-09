@@ -195,7 +195,6 @@ Status: **Pre-release** · Building v1
 | Changesets versioning | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
 | GitHub Actions CI + release | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
 | E2E test suite | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Proxy support | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
 | Shell completions (bash, zsh, fish) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
 | NO_COLOR / FORCE_COLOR support | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
 | Local-only telemetry | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
