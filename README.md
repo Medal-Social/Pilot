@@ -132,10 +132,10 @@ Status: **Pre-release** · Building v1
 ### Core Platform
 | Feature | Status | Spec |
 |---------|--------|------|
-| Monorepo + toolchain (Turbo, Biome, Husky) | Planned | [Plan](docs/plans/masterplan.md) |
-| React Ink component library | Planned | [Plan](docs/plans/masterplan.md) |
-| Commander.js CLI routing | Planned | [Plan](docs/plans/masterplan.md) |
-| Design token system (from Pencil) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
+| Monorepo + toolchain (Turbo, Biome, Husky) | Done | [Plan](docs/plans/masterplan.md) |
+| React Ink component library | Done | [Plan](docs/plans/masterplan.md) |
+| Commander.js CLI routing | Done | [Plan](docs/plans/masterplan.md) |
+| Design token system (from Pencil) | Done | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Structured logging + error system | Planned | [Plan](docs/plans/masterplan.md) |
 | ErrorBoundary + crash recovery | Planned | [Plan](docs/plans/masterplan.md) |
 
@@ -144,7 +144,7 @@ Status: **Pre-release** · Building v1
 |---------|--------|------|
 | curl installer (single command) | Planned | [Plan](docs/plans/masterplan.md) |
 | Welcome screen + crew introduction | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
-| Machine detection + auto-config | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
+| Machine detection + auto-config | Done | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | XDG Base Directory compliance | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### AI & Crew
@@ -168,8 +168,8 @@ Status: **Pre-release** · Building v1
 ### Plugin System
 | Feature | Status | Spec |
 |---------|--------|------|
-| Plugin manifest (plugin.toml + Zod) | Planned | [Plan](docs/plans/masterplan.md) |
-| Plugin registry (load, enable, disable, remove) | Planned | [Plan](docs/plans/masterplan.md) |
+| Plugin manifest (plugin.toml + Zod) | Done | [Plan](docs/plans/masterplan.md) |
+| Plugin registry (load, enable, disable, remove) | Done | [Plan](docs/plans/masterplan.md) |
 | Plugin sandboxing (permission enforcement) | Planned | [Plan](docs/plans/masterplan.md) |
 | Contribution guidelines | Planned | [Plan](docs/plans/masterplan.md) |
 

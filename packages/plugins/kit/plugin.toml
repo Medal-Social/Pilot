@@ -1,0 +1,12 @@
+name = "kit"
+namespace = "medalsocial"
+description = "Machine configuration & Nix management"
+
+[provides]
+commands = ["up", "update", "status"]
+mcpServers = []
+
+[permissions]
+network = []
+
+[roleBindings]
