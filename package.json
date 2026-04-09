@@ -1,0 +1,17 @@
+{
+  "name": "pilot",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @medalsocial/pilot dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "biome check .",
+    "lint:fix": "biome check --fix ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
