@@ -39,13 +39,14 @@ cd pilot
   "private": true,
   "scripts": {
     "dev": "pnpm --filter @medalsocial/pilot dev",
-    "build": "pnpm -r build",
-    "test": "vitest",
+    "build": "turbo build",
+    "test": "turbo test",
     "lint": "biome check .",
     "lint:fix": "biome check --fix ."
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
+    "turbo": "^2.0.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }
@@ -82,7 +83,25 @@ packages:
 }
 ```
 
-- [ ] **Step 5: Create biome.json**
+- [ ] **Step 5: Create turbo.json**
+
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "lint": {}
+  }
+}
+```
+
+- [ ] **Step 6: Create biome.json**
 
 ```json
 {
@@ -94,13 +113,17 @@ packages:
   },
   "formatter": {
     "enabled": true,
-    "indentStyle": "tab",
-    "lineWidth": 100
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "quoteStyle": "single",
+    "trailingCommas": "es5",
+    "lineEnding": "lf"
   }
 }
 ```
 
-- [ ] **Step 6: Create vitest.config.ts**
+- [ ] **Step 7: Create vitest.config.ts**
 
 ```ts
 import { defineConfig } from "vitest/config";
@@ -113,7 +136,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 7: Create packages/cli/package.json**
+- [ ] **Step 8: Create packages/cli/package.json**
 
 ```json
 {
@@ -143,7 +166,7 @@ export default defineConfig({
 }
 ```
 
-- [ ] **Step 8: Create packages/cli/tsconfig.json**
+- [ ] **Step 9: Create packages/cli/tsconfig.json**
 
 ```json
 {
@@ -156,7 +179,7 @@ export default defineConfig({
 }
 ```
 
-- [ ] **Step 9: Create .gitignore**
+- [ ] **Step 10: Create .gitignore**
 
 ```
 node_modules/
@@ -168,14 +191,23 @@ dist/
 .superpowers/
 ```
 
-- [ ] **Step 10: Install dependencies and verify**
+- [ ] **Step 11: Create minimal source file**
+
+The tsconfig has `include: ["src"]` but no source files exist yet. Create a minimal entry so `tsc` has something to compile:
+
+```ts
+// packages/cli/src/index.ts
+export {};
+```
+
+- [ ] **Step 12: Install dependencies and verify**
 
 ```bash
 pnpm install
 pnpm build
 ```
 
-- [ ] **Step 11: Commit**
+- [ ] **Step 13: Commit**
 
 ```bash
 git add -A
@@ -1215,7 +1247,11 @@ export { detectMachine } from "./detect.js";
 Run: `pnpm test packages/plugins/kit/src/detect.test.ts`
 Expected: PASS
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 8: Update README.md Feature Tracker**
+
+Update the Feature Tracker in README.md — change status from "Planned" to "Done" for features completed in this subplan.
+
+- [ ] **Step 9: Commit**
 
 ```bash
 git add packages/plugins/kit/

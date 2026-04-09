@@ -408,11 +408,13 @@ git commit -m "feat(skills): add schema validation for SKILL.md frontmatter and 
 
 ---
 
-### Task 49: Skill content signing
+### Task 49: Skill content signing + launch-time integrity verification
 
 **Files:**
 - Create: `packages/cli/src/skills/signing.ts`
 - Create: `packages/cli/src/skills/signing.test.ts`
+
+**Launch-time integrity check (added):** On every `pilot` launch, silently verify all skill checksums against `~/.pilot/manifest.json`. If a skill has been tampered with (checksum mismatch), quarantine it (rename to `<name>.quarantined/`) and show a single friendly line: *"Brand Lead skill needs a refresh — run pilot update."* No Y/N prompt, no stack trace. Just inform + suggest. Tampered skills are logged to the audit trail (Task 61). This runs in <50ms — hash comparison only, no re-signing.
 
 - [ ] **Step 1: Write tests for signing and verification**
 
@@ -1783,9 +1785,33 @@ git commit -m "feat(skills): add version tracking with semver comparison and sta
 
 ---
 
+### Task 60: Context compartmentalization + safe URL validation
+
+**Files:**
+- Create: `packages/cli/src/ai/compartmentalize.ts` — stripSensitiveContext() removes secrets, internal URLs, customer data when routing between crew leads
+- Create: `packages/cli/src/ai/safe-url.ts` — validateUrl() checks URLs from tool outputs against domain allowlist, blocks data-exfiltration patterns
+- Test: `packages/cli/src/ai/compartmentalize.test.ts`
+- Test: `packages/cli/src/ai/safe-url.test.ts`
+
+**Context compartmentalization:** When crew routing passes context between leads (e.g., Brand → Marketing handoff), automatically strip sensitive fields: API keys, internal URLs, customer PII, financial data. Each crew lead only sees what it needs. The user just talks to their crew — the isolation is invisible.
+
+Runs as middleware in the crew routing pipeline. Uses the same redaction patterns from Task 30/59 plus crew-specific field filters (e.g., CS Lead strips sales pipeline data, Sales Lead strips support ticket details).
+
+**Safe URL validation:** Before the agent follows any URL from tool output, validate against a domain allowlist. Block known data-exfiltration patterns:
+- Conversation data encoded in URL query parameters
+- Base64 payloads in URL paths
+- Redirect chains through untrusted domains
+- URLs with suspiciously long query strings (>500 chars with non-standard params)
+
+Blocked URLs are logged to the audit trail (Task 61). The user sees nothing — the agent simply doesn't follow unsafe URLs. (This is a documented prompt injection attack vector per OpenAI's 2025 agent security research.)
+
+**Depends on:** Task 30 (redaction patterns), Task 61 (audit trail)
+
+---
+
 ## Summary
 
-After completing Tasks 48-52, the skill system has:
+After completing Tasks 48-52 and 60, the skill system has:
 
 | Layer | Module | Purpose |
 |-------|--------|---------|
@@ -1795,9 +1821,14 @@ After completing Tasks 48-52, the skill system has:
 | Safety | `script-safety.ts` | Dangerous pattern blocklist for skill scripts |
 | Portability | `sync.ts` | Export/import bundles for cross-device sync |
 | Versioning | `versions.ts` | Semver tracking, skip-if-current update logic |
+| Compartmentalization | `compartmentalize.ts` | Strip sensitive context on crew handoffs |
+| URL Safety | `safe-url.ts` | Block data-exfiltration via tool output URLs |
 
 **Validation runs at:** `pilot update`, `pilot training`, `pilot plugins install`
 **Signing runs at:** every skill deploy (update, import)
+**Integrity check runs at:** every `pilot` launch (silent, <50ms)
 **Safety runs at:** `pilot update`, `pilot plugins install`
+**Compartmentalization runs at:** every crew routing handoff (automatic)
+**URL validation runs at:** every tool output containing URLs (automatic)
 **Sync commands:** `pilot skills export`, `pilot skills import <path>`
 **Version display:** `pilot status`
