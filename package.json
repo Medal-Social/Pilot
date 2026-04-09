@@ -1,6 +1,7 @@
 {
   "name": "pilot",
   "private": true,
+  "packageManager": "pnpm@10.30.3",
   "scripts": {
     "dev": "pnpm --filter @medalsocial/pilot dev",
     "build": "turbo build",
