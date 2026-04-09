@@ -132,71 +132,71 @@ Status: **Pre-release** · Building v1
 ### Core Platform
 | Feature | Status | Spec |
 |---------|--------|------|
-| Monorepo + toolchain (Turbo, Biome, Husky) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| React Ink component library | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Commander.js CLI routing | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| Monorepo + toolchain (Turbo, Biome, Husky) | Planned | [Plan](docs/plans/masterplan.md) |
+| React Ink component library | Planned | [Plan](docs/plans/masterplan.md) |
+| Commander.js CLI routing | Planned | [Plan](docs/plans/masterplan.md) |
 | Design token system (from Pencil) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
-| Structured logging + error system | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| ErrorBoundary + crash recovery | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| Structured logging + error system | Planned | [Plan](docs/plans/masterplan.md) |
+| ErrorBoundary + crash recovery | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### Onboarding & Setup
 | Feature | Status | Spec |
 |---------|--------|------|
-| curl installer (single command) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| curl installer (single command) | Planned | [Plan](docs/plans/masterplan.md) |
 | Welcome screen + crew introduction | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Machine detection + auto-config | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
-| XDG Base Directory compliance | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| XDG Base Directory compliance | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### AI & Crew
 | Feature | Status | Spec |
 |---------|--------|------|
-| Vercel AI SDK integration (Claude) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| Vercel AI SDK integration (Claude) | Planned | [Plan](docs/plans/masterplan.md) |
 | 5 crew leads (Brand, Marketing, Tech, CS, Sales) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
-| Auto-routing (natural language to right crew lead) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| AI retry + timeout + offline resilience | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| AGENTS.md / CLAUDE.md generation | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| Auto-routing (natural language to right crew lead) | Planned | [Plan](docs/plans/masterplan.md) |
+| AI retry + timeout + offline resilience | Planned | [Plan](docs/plans/masterplan.md) |
+| AGENTS.md / CLAUDE.md generation | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### Skill Deployment
 | Feature | Status | Spec |
 |---------|--------|------|
 | ~/.pilot/skills/ structure | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
-| Symlink to ~/.claude/skills/pilot | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| CLAUDE.md routing injection | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Smart updates (manifest checksums) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| Symlink to ~/.claude/skills/pilot | Planned | [Plan](docs/plans/masterplan.md) |
+| CLAUDE.md routing injection | Planned | [Plan](docs/plans/masterplan.md) |
+| Smart updates (manifest checksums) | Planned | [Plan](docs/plans/masterplan.md) |
 | Tech Lead dev guide + AI best practices | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 
 ### Plugin System
 | Feature | Status | Spec |
 |---------|--------|------|
-| Plugin manifest (plugin.toml + Zod) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Plugin registry (load, enable, disable, remove) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Plugin sandboxing (permission enforcement) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Contribution guidelines | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| Plugin manifest (plugin.toml + Zod) | Planned | [Plan](docs/plans/masterplan.md) |
+| Plugin registry (load, enable, disable, remove) | Planned | [Plan](docs/plans/masterplan.md) |
+| Plugin sandboxing (permission enforcement) | Planned | [Plan](docs/plans/masterplan.md) |
+| Contribution guidelines | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### Training & Knowledge
 | Feature | Status | Spec |
 |---------|--------|------|
 | Knowledge base (sources, articles, runs) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Bi-directional source sync | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
-| Config migration system | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| Config migration system | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### pilot up (One-Click Setup)
 | Feature | Status | Spec |
 |---------|--------|------|
 | Split-panel browse UI (All/Templates/Skills/Crew) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
-| Preflight checks | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Template install progress | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| Preflight checks | Planned | [Plan](docs/plans/masterplan.md) |
+| Template install progress | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### Distribution & Quality
 | Feature | Status | Spec |
 |---------|--------|------|
-| tsup dual CJS/ESM build | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Single binary via ncc | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Changesets versioning | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| GitHub Actions CI + release | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| E2E test suite | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| Shell completions (bash, zsh, fish) | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
-| NO_COLOR / FORCE_COLOR support | Planned | [Plan](docs/specs/plans/2026-04-09-pilot-cli-v2.md) |
+| tsup dual CJS/ESM build | Planned | [Plan](docs/plans/masterplan.md) |
+| Single binary via ncc | Planned | [Plan](docs/plans/masterplan.md) |
+| Changesets versioning | Planned | [Plan](docs/plans/masterplan.md) |
+| GitHub Actions CI + release | Planned | [Plan](docs/plans/masterplan.md) |
+| E2E test suite | Planned | [Plan](docs/plans/masterplan.md) |
+| Shell completions (bash, zsh, fish) | Planned | [Plan](docs/plans/masterplan.md) |
+| NO_COLOR / FORCE_COLOR support | Planned | [Plan](docs/plans/masterplan.md) |
 | Local-only telemetry | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Themes (dark/light from design tokens) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 
