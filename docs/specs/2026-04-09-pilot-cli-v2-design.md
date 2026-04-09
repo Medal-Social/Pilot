@@ -43,6 +43,8 @@ Pilot is also an extensible platform. Plugins bridge Medal Social into Claude Co
 7. **Curated plugin ecosystem** — @medalsocial/ official plugins. Community plugins added via PR with review. Ali controls the registry.
 8. **Time-to-value < 60s** — first run to first productive interaction in under a minute.
 9. **Portable AI config** — `pilot training` generates CLAUDE.md / AGENTS.md consumed by Claude Code, Codex, Pilot REPL, any MCP-aware tool. `/pilot` as a skill in other AI tools.
+10. **Auto-detect installed agents** — skill deployment scans for installed AI agents (Claude Code, Cursor, Windsurf, Cline, Codex) and deploys to all of them automatically. No prompt asking which agents — just deploy and report what was found.
+11. **Inform, don't interrogate** — minimize Y/N prompts. Non-technical users shouldn't be gatekeepers of their own intent. Only confirm destructive actions (remove, delete). For everything else, act and show an undo path.
 
 ---
 
@@ -136,7 +138,7 @@ From zero to first productive interaction. 6 screens, 2 phases.
 ### Design Requirements
 1. Medal-branded template names only
 2. Every skill shows its crew binding
-3. Specialist prompts ask, never assume
+3. Auto-add required specialists (inform, don't ask)
 4. Progress items are benefits, not operations
 5. No version numbers, package counts, or file paths
 6. `pilot up` is for tools/templates only (agents = `pilot crew`)
@@ -167,14 +169,14 @@ Checklist with benefit labels:
 - ⠸ Preparing your creative workspace...
 - Progress bar + "Almost ready..."
 
-### Specialist Prompt Pattern
-If a template needs a crew role the user doesn't have:
+### Specialist Auto-Add
+If a template needs a crew role the user doesn't have, add it automatically and inform:
 ```
-⚠ This template works best with a Video Specialist
-Your crew doesn't have one yet. Add to your crew?
-[Y] Yes, add them    [n] Skip for now
+✓ Video Specialist added to your crew
+  This template works best with one — you're all set.
+  Manage crew anytime: pilot crew
 ```
-Never silently add crew members.
+No Y/N prompt. The user chose to install the template — the specialist is part of that choice. They can remove via `pilot crew` if they want.
 
 ### Template Success
 All checks green. "✈ Your design studio is ready for takeoff!" Summary card with what was set up + crew skills bound. "Press Enter to start working with your crew."
