@@ -1,9 +1,7 @@
 import React from 'react';
-import { render, Text } from 'ink';
-import { colors } from '../colors.js';
+import { render } from 'ink';
+import { Update } from '../screens/Update.js';
 
 export async function runUpdate() {
-  render(
-    React.createElement(Text, { color: colors.muted }, 'pilot update — coming soon')
-  );
+  render(React.createElement(Update));
 }

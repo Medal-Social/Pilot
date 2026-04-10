@@ -143,8 +143,11 @@ Status: **Pre-release** · Building v1
 | Feature | Status | Spec |
 |---------|--------|------|
 | curl installer (single command) | Planned | [Plan](docs/plans/masterplan.md) |
-| Welcome screen + crew introduction | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
+| Welcome screen + crew introduction | Done | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
+| Home screen (instruments dashboard) | Done | [Plan](docs/plans/02-screens.md) |
+| REPL routing (Welcome → Home) | Done | [Plan](docs/plans/02-screens.md) |
 | Machine detection + auto-config | Done | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
+| Update flow (check, progress, what's new) | Done | [Plan](docs/plans/02-screens.md) |
 | XDG Base Directory compliance | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### AI & Crew
@@ -170,12 +173,14 @@ Status: **Pre-release** · Building v1
 |---------|--------|------|
 | Plugin manifest (plugin.toml + Zod) | Done | [Plan](docs/plans/masterplan.md) |
 | Plugin registry (load, enable, disable, remove) | Done | [Plan](docs/plans/masterplan.md) |
+| Plugins screen (split panel browse + manage) | Done | [Plan](docs/plans/02-screens.md) |
 | Plugin sandboxing (permission enforcement) | Planned | [Plan](docs/plans/masterplan.md) |
 | Contribution guidelines | Planned | [Plan](docs/plans/masterplan.md) |
 
 ### Training & Knowledge
 | Feature | Status | Spec |
 |---------|--------|------|
+| Training screen (split panel sources) | Done | [Plan](docs/plans/02-screens.md) |
 | Knowledge base (sources, articles, runs) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Bi-directional source sync | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Config migration system | Planned | [Plan](docs/plans/masterplan.md) |
