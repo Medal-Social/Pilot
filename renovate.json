@@ -1,0 +1,34 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":pinVersions",
+    ":semanticCommits",
+    "group:allNonMajor",
+    "schedule:weekly",
+    ":vulnerabilityAlerts"
+  ],
+  "labels": ["dependencies"],
+  "rangeStrategy": "pin",
+  "schedule": ["before 9am on monday"],
+  "timezone": "America/New_York",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "requiredStatusChecks": ["test", "lint"]
+    },
+    {
+      "groupName": "security patches",
+      "matchUpdateTypes": ["patch"],
+      "matchCategories": ["security"],
+      "schedule": ["at any time"],
+      "automerge": true
+    }
+  ]
+}
