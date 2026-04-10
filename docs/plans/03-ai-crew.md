@@ -489,7 +489,11 @@ Expected: PASS
 
 Update `packages/cli/src/screens/Repl.tsx` to transition from Home to Chat when user starts typing.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Update README.md Feature Tracker**
+
+Update the Feature Tracker in README.md — change status from "Planned" to "Done" for features completed in this subplan.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add packages/cli/src/screens/Chat.tsx packages/cli/src/screens/Chat.test.tsx packages/cli/src/screens/Repl.tsx

@@ -465,7 +465,11 @@ jobs:
           path: packages/cli/dist/bin/pilot
 ```
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Update README.md Feature Tracker**
+
+Update the Feature Tracker in README.md — change status from "Planned" to "Done" for features completed in this subplan.
+
+- [ ] **Step 4: Commit**
 
 ```bash
 git add .github/workflows/

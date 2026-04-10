@@ -1,0 +1,26 @@
+{
+  "name": "@medalsocial/pilot",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "pilot": "./dist/bin/pilot.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/bin/pilot.ts",
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "ink": "^5.1.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^18.3.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^18.3.0",
+    "ink-testing-library": "^4.0.0",
+    "tsx": "^4.19.0"
+  }
+}

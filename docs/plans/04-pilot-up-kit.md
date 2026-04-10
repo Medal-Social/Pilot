@@ -764,7 +764,11 @@ network = ["api.example.com"]       # domains it needs access to
 4. Submit PR — we review permissions, quality, and naming
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 2: Update README.md Feature Tracker**
+
+Update the Feature Tracker in README.md — change status from "Planned" to "Done" for features completed in this subplan.
+
+- [ ] **Step 3: Commit**
 
 ```bash
 git add CONTRIBUTING.md

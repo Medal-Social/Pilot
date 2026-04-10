@@ -49,16 +49,16 @@ Phase 15: Sessions + Distribution (persistence, print mode, context management, 
                               06-production-hardening
                                           |
                                           v
-                              07-platform-distribution
+                              07-skill-security
                                           |
                                           v
-                              08-sessions-distribution
+                              08-skill-runtime
                                           |
                                           v
-                              09-skill-security
+                              09-platform-distribution
                                           |
                                           v
-                              10-skill-runtime
+                              10-sessions-distribution
 ```
 
 ## Phase Summary
@@ -70,10 +70,10 @@ Phase 15: Sessions + Distribution (persistence, print mode, context management, 
 | 03 | AI + Crew | 4: AI Layer + Crew | 16-19 | Not started | [03-ai-crew.md](03-ai-crew.md) |
 | 04 | pilot up + Kit | 5-6: pilot up, Kit Integration, Plugin Scaffolds | 20-25 | Not started | [04-pilot-up-kit.md](04-pilot-up-kit.md) |
 | 05 | Skill Deployment | 7: Skill Deployment + Smart Updates | 26-28 | Not started | [05-skill-deployment.md](05-skill-deployment.md) |
-| 06 | Production Hardening | 8-12: Toolchain, Logging, AI Robustness, Config, Binary, E2E, ErrorBoundary | 29-37 | Not started | [06-production-hardening.md](06-production-hardening.md) |
-| 07 | Platform + Distribution | 13-14: XDG, NO_COLOR, Completions, tsup, Changesets, CI | 38-43 | Not started | [07-platform-distribution.md](07-platform-distribution.md) |
-| 08 | Sessions + Distribution | 15: Sessions, Print Mode, Context Management, Homebrew | 44-47 | Not started | [08-sessions-distribution.md](08-sessions-distribution.md) |
-| 09 | Skill Security | Validation, Signing, Script Safety, Sync, Versioning | 48-52 | Not started | [09-skill-security.md](09-skill-security.md) |
-| 10 | Skill Runtime | Preamble, Learnings, Context Recovery, Self-Update, Multi-Host, Docs | 53-58 | Not started | [10-skill-runtime.md](10-skill-runtime.md) |
+| 06 | Production Hardening | 8-12: Toolchain, Logging, AI Robustness, Config, Binary, E2E, ErrorBoundary, Output Scanning, Audit Trail | 29-37, 59, 61 | Not started | [06-production-hardening.md](06-production-hardening.md) |
+| 07 | Skill Security | Validation, Signing + Integrity, Script Safety, Sync, Versioning, Compartmentalization, URL Safety | 48-52, 60 | Not started | [09-skill-security.md](09-skill-security.md) |
+| 08 | Skill Runtime | Preamble, Learnings, Context Recovery, Self-Update, Multi-Host, Docs | 53-58 | Not started | [10-skill-runtime.md](10-skill-runtime.md) |
+| 09 | Platform + Distribution | 13-14: XDG, NO_COLOR, Completions, tsup, Changesets, CI | 38-43 | Not started | [07-platform-distribution.md](07-platform-distribution.md) |
+| 10 | Sessions + Distribution | 15: Sessions, Print Mode, Context Management, Homebrew | 44-47 | Not started | [08-sessions-distribution.md](08-sessions-distribution.md) |
 
-**Total scope: 58 tasks across 10 subplans.**
+**Total scope: 61 tasks across 10 subplans.**

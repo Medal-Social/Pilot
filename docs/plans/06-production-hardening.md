@@ -86,13 +86,55 @@ On load: reads config, checks version, runs migrations if needed, writes back. P
 
 ---
 
-### Task 34: Plugin sandboxing (permission enforcement)
+### Task 34: Plugin permission validation (manifest review)
 
 **Files:**
 - Create: `packages/cli/src/plugins/sandbox.ts` — validatePermissions() rejects wildcard network, isNetworkAllowed() checks against declared domains
 - Test: `packages/cli/src/plugins/sandbox.test.ts`
 
-Plugins declare permissions in plugin.toml. Pilot enforces them at runtime. Undeclared network access is blocked. Permission review shown before install.
+Plugins declare permissions in plugin.toml. Pilot validates them and shows the user a review before install. The `isNetworkAllowed()` function checks whether a domain is declared in the manifest, but does not block requests at runtime — it is a validation check, not an enforcement layer.
+
+Plugins declare allowed domains in `plugin.toml` under `[permissions.network]`. On install, Pilot displays the declared permissions for user review. Undeclared domains are flagged during validation but are not blocked at runtime.
+
+> **Note:** Runtime enforcement via process isolation is planned for v2.
+
+---
+
+### Task 59: Runtime output scanning (secret/PII redaction before display)
+
+**Files:**
+- Create: `packages/cli/src/lib/logger/output-scanner.ts` — scanAndRedact() checks AI responses and tool outputs for secrets/PII before they reach the user
+- Test: `packages/cli/src/lib/logger/output-scanner.test.ts`
+
+Runs automatically on every AI response and tool output before display. Detects patterns: API keys (sk-*, AKIA*, ghp_*, xoxb-*), tokens, passwords, SSNs, email addresses, credit card numbers. Replaces with `[REDACTED]`. Logs redaction events to audit trail with pattern type (never the actual secret).
+
+This is a silent guardrail — the user never sees a prompt or warning. If a crew lead accidentally surfaces a secret from a tool call, it gets scrubbed before rendering.
+
+Pattern: extends the existing `redaction.ts` (Task 30) from log-only to user-facing output. Reuses the same sanitizeContext() patterns plus additional regex matchers for common secret formats.
+
+**Depends on:** Task 30 (structured logging with redaction)
+
+---
+
+### Task 61: Quiet audit trail (~/.pilot/audit.log)
+
+**Files:**
+- Create: `packages/cli/src/lib/logger/audit.ts` — writeAuditEvent() appends structured JSON lines to ~/.pilot/audit.log
+- Create: `packages/cli/src/lib/logger/audit-rotate.ts` — rotateAuditLog() keeps last 7 days, runs on pilot launch
+- Test: `packages/cli/src/lib/logger/audit.test.ts`
+
+Every significant action gets a structured JSON event:
+- **crew.route** — which crew lead was selected and why
+- **tool.call** — MCP tool invoked, inputs (redacted), outputs (redacted), duration
+- **skill.verify** — checksum verification result on launch
+- **plugin.egress.blocked** — outbound request blocked by allowlist
+- **output.redacted** — secret/PII was scrubbed from user-facing output
+
+Format: one JSON object per line (JSONL), fields: `timestamp`, `event`, `detail`, `sessionId`. Sensitive fields redacted using the same patterns as Task 30/59.
+
+Auto-rotation on launch: delete log entries older than 7 days. No user config needed. The log exists for debugging and forensics — users never interact with it directly.
+
+**Depends on:** Task 30 (structured logging with redaction)
 
 ---
 
@@ -142,10 +184,15 @@ Every command entry point wraps its screen in ErrorBoundary. Crashes log to ~/.p
 | Typed error system | Task 31 |
 | AI retry + timeout + offline detection | Task 32 |
 | Config migration | Task 33 |
-| Plugin sandboxing | Task 34 |
+| Plugin permission validation (manifest review) | Task 34 |
 | Binary distribution + install script | Task 35 |
 | E2E test suite | Task 36 |
 | React Ink ErrorBoundary | Task 37 |
 | knip dead code detection | Task 29 |
 | Test coverage thresholds | Task 29 |
 | Quality gate (lint + typecheck + test + e2e) | Tasks 29, 36 |
+| Runtime secret/PII redaction before display | Task 59 |
+| Quiet audit trail with auto-rotation | Task 61 |
+| Egress allowlist validation (manifest review, no runtime enforcement) | Task 34 |
+
+After completing this subplan, update README.md Feature Tracker status from Planned to Done for all features delivered.
