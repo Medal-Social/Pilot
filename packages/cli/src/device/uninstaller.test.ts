@@ -126,7 +126,7 @@ describe('uninstallTemplate', () => {
     expect(result.removed).toEqual([]);
     expect(result.failed).toEqual(['pencil-mcp', 'zed']);
     expect(result.skipped).toEqual([]);
-    expect(state.removeTemplateFromState).toHaveBeenCalledWith('pencil');
+    expect(state.removeTemplateFromState).not.toHaveBeenCalled();
   });
 
   it('returns empty result for unknown template', async () => {

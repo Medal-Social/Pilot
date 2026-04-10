@@ -42,6 +42,8 @@ export async function uninstallTemplate(templateName: string): Promise<Uninstall
     }
   }
 
-  removeTemplateFromState(templateName);
+  if (result.failed.length === 0) {
+    removeTemplateFromState(templateName);
+  }
   return result;
 }

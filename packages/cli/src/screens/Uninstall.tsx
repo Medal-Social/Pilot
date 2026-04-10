@@ -13,6 +13,7 @@ import { uninstallTemplate } from '../device/uninstaller.js';
 
 type Phase =
   | 'intro'
+  | 'backup-failed'
   | 'step1-knowledge'
   | 'step2-skills'
   | 'step3-claude'
@@ -25,6 +26,12 @@ interface CompletedStep {
   skipped: boolean;
 }
 
+/** Track which categories the user opted to keep */
+interface SkippedCategories {
+  knowledge: boolean;
+  skills: boolean;
+}
+
 export function Uninstall() {
   const { exit } = useApp();
   const [phase, setPhase] = useState<Phase>('intro');
@@ -33,6 +40,7 @@ export function Uninstall() {
   const [templates, setTemplates] = useState<string[]>([]);
   const [npmError, setNpmError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [kept, setKept] = useState<SkippedCategories>({ knowledge: false, skills: false });
 
   // Load templates once on mount
   useEffect(() => {
@@ -56,12 +64,22 @@ export function Uninstall() {
           exit();
           return;
         }
-        // Run backup then advance
+        // Run backup then advance — abort if backup fails
         setBusy(true);
         const result = backupKnowledge();
-        if (result.backupPath) setBackupPath(result.backupPath);
         setBusy(false);
+        if (!result.success && !result.skipped) {
+          setPhase('backup-failed');
+          return;
+        }
+        if (result.backupPath) setBackupPath(result.backupPath);
         setPhase('step1-knowledge');
+        return;
+      }
+
+      if (phase === 'backup-failed') {
+        // Any key exits
+        exit();
         return;
       }
 
@@ -78,6 +96,7 @@ export function Uninstall() {
           }
           addStep('Knowledge & sessions removed', false);
         } else {
+          setKept((prev) => ({ ...prev, knowledge: true }));
           addStep('Knowledge & sessions', true);
         }
         setPhase('step2-skills');
@@ -97,6 +116,7 @@ export function Uninstall() {
           }
           addStep('Skills & plugins removed', false);
         } else {
+          setKept((prev) => ({ ...prev, skills: true }));
           addStep('Skills & plugins', true);
         }
         setPhase('step3-claude');
@@ -139,8 +159,30 @@ export function Uninstall() {
         if (yes) {
           setBusy(true);
           const home = homedir();
+          const pilotDir = join(home, '.pilot');
           try {
-            rmSync(join(home, '.pilot'), { recursive: true, force: true });
+            // Only remove settings + templates state; respect earlier skip choices
+            rmSync(join(pilotDir, 'settings.json'), { force: true });
+            rmSync(join(pilotDir, 'templates.json'), { force: true });
+            rmSync(join(pilotDir, 'crew.json'), { force: true });
+            rmSync(join(pilotDir, 'analytics'), { recursive: true, force: true });
+            // Remove knowledge/skills only if user didn't skip those steps
+            if (!kept.knowledge) {
+              rmSync(join(pilotDir, 'knowledge'), { recursive: true, force: true });
+              rmSync(join(pilotDir, 'sessions'), { recursive: true, force: true });
+              rmSync(join(pilotDir, 'audit.log'), { force: true });
+            }
+            if (!kept.skills) {
+              rmSync(join(pilotDir, 'skills'), { recursive: true, force: true });
+              rmSync(join(pilotDir, 'plugins'), { recursive: true, force: true });
+              rmSync(join(pilotDir, 'manifest.json'), { force: true });
+            }
+            // Try to remove the directory itself (will only succeed if empty)
+            try {
+              rmSync(pilotDir, { recursive: false });
+            } catch {
+              // Expected if user kept some files
+            }
           } catch {
             // best-effort
           }
@@ -204,6 +246,16 @@ export function Uninstall() {
           </Text>
           <Text color={colors.text}>Your knowledge files will be backed up before removal.</Text>
           <Text color={colors.text}>Continue? [Y/n]</Text>
+        </Box>
+      )}
+
+      {/* Backup failed — abort */}
+      {phase === 'backup-failed' && (
+        <Box flexDirection="column" gap={1}>
+          <Text color={colors.error} bold>
+            Could not back up knowledge files. Uninstall aborted for safety.
+          </Text>
+          <Text color={colors.muted}>Press any key to exit.</Text>
         </Box>
       )}
 
