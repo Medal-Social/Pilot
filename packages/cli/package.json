@@ -50,12 +50,12 @@
     "prepublishOnly": "tsc"
   },
   "dependencies": {
-    "commander": "13.1.0",
-    "ink": "6.8.0",
+    "commander": "14.0.3",
+    "ink": "7.0.0",
     "ink-text-input": "6.0.0",
     "react": "19.2.5",
     "smol-toml": "1.6.1",
-    "zod": "3.25.76"
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "25.6.0",

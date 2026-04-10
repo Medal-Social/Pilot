@@ -10,13 +10,13 @@ export const manifestSchema = z.object({
       mcpServers: z.array(z.string()).optional().default([]),
     })
     .optional()
-    .default({}),
+    .default({ commands: [], mcpServers: [] }),
   permissions: z
     .object({
       network: z.array(z.string()).optional().default([]),
     })
     .optional()
-    .default({}),
+    .default({ network: [] }),
   roleBindings: z.record(z.string(), z.string()).optional().default({}),
 });
 
