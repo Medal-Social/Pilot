@@ -35,10 +35,7 @@
   "bin": {
     "pilot": "dist/bin/pilot.js"
   },
-  "files": [
-    "dist",
-    "!dist/**/*.test.*"
-  ],
+  "files": ["dist", "!dist/**/*.test.*"],
   "publishConfig": {
     "access": "public",
     "provenance": true

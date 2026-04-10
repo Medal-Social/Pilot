@@ -1,6 +1,6 @@
+import * as fs from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { discoverPlugins } from './discover.js';
-import * as fs from 'node:fs';
 
 vi.mock('node:fs');
 
@@ -89,10 +89,7 @@ network = []
       return false;
     });
 
-    vi.mocked(fs.readdirSync).mockReturnValue([
-      'broken',
-      'good',
-    ] as unknown as fs.Dirent[]);
+    vi.mocked(fs.readdirSync).mockReturnValue(['broken', 'good'] as unknown as fs.Dirent[]);
 
     vi.mocked(fs.readFileSync).mockImplementation((p) => {
       const s = String(p);

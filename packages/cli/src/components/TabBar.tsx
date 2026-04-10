@@ -1,5 +1,5 @@
-import React from 'react';
 import { Box, Text } from 'ink';
+import React from 'react';
 import { colors } from '../colors.js';
 import type { Tab, TabId } from '../types.js';
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
+import { createRequire } from 'node:module';
 import { program } from 'commander';
-import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../../package.json');

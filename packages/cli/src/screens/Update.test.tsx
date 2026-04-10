@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
 import { render } from 'ink-testing-library';
 import React from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import { Update } from './Update.js';
 
 vi.mock('../update/checker.js', () => ({

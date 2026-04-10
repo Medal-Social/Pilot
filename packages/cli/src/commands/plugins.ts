@@ -1,9 +1,9 @@
-import React from 'react';
-import { render } from 'ink';
-import { join } from 'node:path';
 import { homedir } from 'node:os';
-import { Plugins } from '../screens/Plugins.js';
+import { join } from 'node:path';
+import { render } from 'ink';
+import React from 'react';
 import { discoverPlugins } from '../plugins/discover.js';
+import { Plugins } from '../screens/Plugins.js';
 import { loadSettings } from '../settings.js';
 
 export async function runPlugins() {

@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { join } from 'node:path';
 
 const PILOT_DIR = join(homedir(), '.pilot');
 const SETTINGS_FILE = join(PILOT_DIR, 'settings.json');
