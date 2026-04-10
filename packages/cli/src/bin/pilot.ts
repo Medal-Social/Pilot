@@ -71,4 +71,4 @@ program.action(async () => {
   await runRepl();
 });
 
-program.parse();
+program.parseAsync();

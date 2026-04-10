@@ -9,7 +9,8 @@ interface ProgressBarProps {
 }
 
 export function ProgressBar({ progress, width = 40, label }: ProgressBarProps) {
-  const filled = Math.round(progress * width);
+  const clamped = Math.max(0, Math.min(1, progress));
+  const filled = Math.round(clamped * width);
   const empty = width - filled;
   return (
     <Box flexDirection="column" gap={0}>
