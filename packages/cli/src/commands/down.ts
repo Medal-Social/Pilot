@@ -1,8 +1,8 @@
+import { Text, render } from 'ink';
 import React from 'react';
-import { render, Text } from 'ink';
 import { colors } from '../colors.js';
-import { getTemplate } from '../device/templates.js';
 import { getInstalledTemplateNames } from '../device/state.js';
+import { getTemplate } from '../device/templates.js';
 import { uninstallTemplate } from '../device/uninstaller.js';
 import { PilotError, errorCodes } from '../errors.js';
 
@@ -25,31 +25,19 @@ export async function runDown(template: string) {
   }
 
   render(
-    React.createElement(
-      Text,
-      { color: colors.warning },
-      `Removing ${manifest.displayName}...`
-    )
+    React.createElement(Text, { color: colors.warning }, `Removing ${manifest.displayName}...`)
   );
 
   const result = await uninstallTemplate(template);
 
   if (result.removed.length > 0) {
     for (const label of result.removed) {
-      render(
-        React.createElement(Text, { color: colors.success }, `  ✓ ${label} removed`)
-      );
+      render(React.createElement(Text, { color: colors.success }, `  ✓ ${label} removed`));
     }
   }
 
   for (const label of result.failed) {
-    render(
-      React.createElement(
-        Text,
-        { color: colors.error },
-        `  ✗ ${label} could not be removed`
-      )
-    );
+    render(React.createElement(Text, { color: colors.error }, `  ✗ ${label} could not be removed`));
   }
 
   if (result.failed.length > 0) {

@@ -1,10 +1,10 @@
-import React from 'react';
-import { render } from 'ink';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { homedir } from 'node:os';
-import { Uninstall } from '../screens/Uninstall.js';
+import { join } from 'node:path';
+import { render } from 'ink';
+import React from 'react';
 import { PilotError, errorCodes } from '../errors.js';
+import { Uninstall } from '../screens/Uninstall.js';
 
 export async function runUninstall() {
   const pilotDir = join(homedir(), '.pilot');

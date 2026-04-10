@@ -36,7 +36,7 @@ describe('backupKnowledge', () => {
     expect(fs.cpSync).toHaveBeenCalledWith(
       '/mock/home/.pilot/knowledge',
       '/mock/home/pilot-backup-2026-04-10',
-      { recursive: true },
+      { recursive: true }
     );
   });
 

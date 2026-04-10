@@ -12,7 +12,10 @@ vi.mock('node:os', () => ({
 }));
 
 vi.mock('../device/backup.js', () => ({
-  backupKnowledge: vi.fn(() => ({ success: true, backupPath: '/mock/home/pilot-backup-2026-04-10' })),
+  backupKnowledge: vi.fn(() => ({
+    success: true,
+    backupPath: '/mock/home/pilot-backup-2026-04-10',
+  })),
 }));
 
 vi.mock('../device/state.js', () => ({
@@ -62,7 +65,10 @@ describe('Uninstall', () => {
       homedir: vi.fn(() => '/mock/home'),
     }));
     vi.mock('../device/backup.js', () => ({
-      backupKnowledge: vi.fn(() => ({ success: true, backupPath: '/mock/home/pilot-backup-2026-04-10' })),
+      backupKnowledge: vi.fn(() => ({
+        success: true,
+        backupPath: '/mock/home/pilot-backup-2026-04-10',
+      })),
     }));
     vi.mock('../device/state.js', () => ({
       getInstalledTemplateNames: vi.fn(() => []),
@@ -113,7 +119,10 @@ describe('Uninstall', () => {
       homedir: vi.fn(() => '/mock/home'),
     }));
     vi.mock('../device/backup.js', () => ({
-      backupKnowledge: vi.fn(() => ({ success: true, backupPath: '/mock/home/pilot-backup-2026-04-10' })),
+      backupKnowledge: vi.fn(() => ({
+        success: true,
+        backupPath: '/mock/home/pilot-backup-2026-04-10',
+      })),
     }));
     vi.mock('../device/state.js', () => ({
       getInstalledTemplateNames: vi.fn(() => []),
@@ -164,7 +173,10 @@ describe('Uninstall', () => {
       homedir: vi.fn(() => '/mock/home'),
     }));
     vi.mock('../device/backup.js', () => ({
-      backupKnowledge: vi.fn(() => ({ success: true, backupPath: '/mock/home/pilot-backup-2026-04-10' })),
+      backupKnowledge: vi.fn(() => ({
+        success: true,
+        backupPath: '/mock/home/pilot-backup-2026-04-10',
+      })),
     }));
     vi.mock('../device/state.js', () => ({
       getInstalledTemplateNames: vi.fn(() => []),

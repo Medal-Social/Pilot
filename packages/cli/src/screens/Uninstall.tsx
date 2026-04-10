@@ -6,10 +6,10 @@ import { Box, Text, useApp, useInput } from 'ink';
 import React, { useEffect, useState } from 'react';
 import { colors } from '../colors.js';
 import { Step } from '../components/Step.js';
+import { removeRoutingFromClaudeMd, removeSkillSymlink } from '../deploy/deployer.js';
 import { backupKnowledge } from '../device/backup.js';
 import { getInstalledTemplateNames } from '../device/state.js';
 import { uninstallTemplate } from '../device/uninstaller.js';
-import { removeRoutingFromClaudeMd, removeSkillSymlink } from '../deploy/deployer.js';
 
 type Phase =
   | 'intro'
@@ -151,13 +151,13 @@ export function Uninstall() {
             (err) => {
               if (err) {
                 setNpmError(
-                  'Could not uninstall automatically. Run: sudo npm uninstall -g @medalsocial/pilot',
+                  'Could not uninstall automatically. Run: sudo npm uninstall -g @medalsocial/pilot'
                 );
               }
               addStep('Pilot CLI removed', false);
               setBusy(false);
               setPhase('done');
-            },
+            }
           );
         } else {
           addStep('Pilot CLI', true);
@@ -166,13 +166,16 @@ export function Uninstall() {
         return;
       }
     },
-    { isActive: !busy },
+    { isActive: !busy }
   );
 
   // Auto-skip step4 when no templates installed
   useEffect(() => {
     if (phase === 'step4-tools' && templates.length === 0) {
-      addStep('Dev tools (none installed)', true);
+      setCompletedSteps((prev) => [
+        ...prev,
+        { label: 'Dev tools (none installed)', skipped: true },
+      ]);
       setPhase('step5-cli');
     }
   }, [phase, templates]);
@@ -199,9 +202,7 @@ export function Uninstall() {
           <Text color={colors.warning} bold>
             This will remove Pilot from your machine.
           </Text>
-          <Text color={colors.text}>
-            Your knowledge files will be backed up before removal.
-          </Text>
+          <Text color={colors.text}>Your knowledge files will be backed up before removal.</Text>
           <Text color={colors.text}>Continue? [Y/n]</Text>
         </Box>
       )}
@@ -261,9 +262,7 @@ export function Uninstall() {
               ✈ Pilot has been removed. Safe travels!
             </Text>
           </Box>
-          {backupPath && (
-            <Text color={colors.muted}>Knowledge backed up to: {backupPath}</Text>
-          )}
+          {backupPath && <Text color={colors.muted}>Knowledge backed up to: {backupPath}</Text>}
           {npmError && <Text color={colors.warning}>{npmError}</Text>}
           {skippedItems.length > 0 && (
             <Box flexDirection="column">

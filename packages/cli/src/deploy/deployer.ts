@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { join } from 'node:path';
 
 export type RemovalResult = { success: boolean; skipped?: boolean };
 
@@ -36,7 +36,10 @@ export function removeRoutingFromClaudeMd(): RemovalResult {
 
   const kept = [...lines.slice(0, startIndex), ...lines.slice(endIndex)];
   // Collapse triple+ blank lines to double
-  const cleaned = kept.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+  const cleaned = `${kept
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trimEnd()}\n`;
 
   writeFileSync(claudeMdPath, cleaned, 'utf8');
   return { success: true };
