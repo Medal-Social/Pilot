@@ -66,6 +66,22 @@ program
     await runHelp();
   });
 
+program
+  .command('uninstall')
+  .description('Remove Pilot and all its files from your machine')
+  .action(async () => {
+    const { runUninstall } = await import('../commands/uninstall.js');
+    await runUninstall();
+  });
+
+program
+  .command('down <template>')
+  .description("Remove a template's installed tools (inverse of pilot up)")
+  .action(async (template: string) => {
+    const { runDown } = await import('../commands/down.js');
+    await runDown(template);
+  });
+
 program.action(async () => {
   const { runRepl } = await import('../commands/repl.js');
   await runRepl();

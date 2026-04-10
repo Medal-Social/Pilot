@@ -1,0 +1,8 @@
+name = "pilot-landing"
+main = "src/index.ts"
+compatibility_date = "2026-04-10"
+
+# After DNS setup, add:
+# routes = [
+#   { pattern = "pilot.medalsocial.com", custom_domain = true }
+# ]
