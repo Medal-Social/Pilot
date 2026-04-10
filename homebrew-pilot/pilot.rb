@@ -6,7 +6,7 @@ class Pilot < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/Medal-Social/pilot/releases/latest/download/pilot-darwin-arm64"
-      sha256 "PLACEHOLDER_SHA256"
+      sha256 "673ea23d5b3d8d89c328c5d42f12143f6255f78c4b083d0716370734a5b33af1"
 
       def install
         bin.install "pilot-darwin-arm64" => "pilot"

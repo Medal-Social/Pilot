@@ -14,25 +14,15 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            target_os: darwin
-            target_arch: arm64
-            binary_name: pilot-darwin-arm64
+            target: pilot-darwin-arm64
           - os: macos-13
-            target_os: darwin
-            target_arch: x64
-            binary_name: pilot-darwin-x64
+            target: pilot-darwin-x64
           - os: ubuntu-latest
-            target_os: linux
-            target_arch: x64
-            binary_name: pilot-linux-x64
+            target: pilot-linux-x64
           - os: ubuntu-24.04-arm
-            target_os: linux
-            target_arch: arm64
-            binary_name: pilot-linux-arm64
+            target: pilot-linux-arm64
           - os: windows-latest
-            target_os: win
-            target_arch: x64
-            binary_name: pilot-win-x64.exe
+            target: pilot-win-x64.exe
 
     runs-on: ${{ matrix.os }}
 
@@ -45,38 +35,25 @@ jobs:
         with:
           node-version: '24'
 
+      - uses: oven-sh/setup-bun@v2
+
       - run: pnpm install --frozen-lockfile
 
       - name: Build CLI
         run: pnpm --filter @medalsocial/pilot build
 
-      - name: Bundle with ncc
-        run: npx @vercel/ncc build packages/cli/dist/bin/pilot.js -o build/ --minify
+      - name: Install optional deps for bundling
+        run: pnpm add -D react-devtools-core --filter @medalsocial/pilot
 
-      - name: Generate SEA blob
-        run: node --experimental-sea-config scripts/sea-config.json
+      - name: Compile binary (Unix)
+        if: "!contains(matrix.target, 'win')"
+        run: bun build packages/cli/dist/bin/pilot.js --compile --outfile ${{ matrix.target }}
 
-      - name: Create binary (Unix)
-        if: matrix.target_os != 'win'
-        run: |
-          cp $(which node) ${{ matrix.binary_name }}
-          chmod 755 ${{ matrix.binary_name }}
-          npx postject ${{ matrix.binary_name }} NODE_SEA_BLOB sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
-
-      - name: Sign binary (macOS)
-        if: matrix.target_os == 'darwin'
-        run: |
-          codesign --remove-signature ${{ matrix.binary_name }} || true
-          codesign -s - ${{ matrix.binary_name }}
-
-      - name: Create binary (Windows)
-        if: matrix.target_os == 'win'
-        shell: pwsh
-        run: |
-          Copy-Item (Get-Command node).Source ${{ matrix.binary_name }}
-          npx postject ${{ matrix.binary_name }} NODE_SEA_BLOB sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+      - name: Compile binary (Windows)
+        if: contains(matrix.target, 'win')
+        run: bun build packages/cli/dist/bin/pilot.js --compile --outfile ${{ matrix.target }}
 
       - name: Upload binary to release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.binary_name }}
+          files: ${{ matrix.target }}

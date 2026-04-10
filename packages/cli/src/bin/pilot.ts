@@ -1,14 +1,12 @@
 #!/usr/bin/env node
-import { createRequire } from 'node:module';
 import { program } from 'commander';
 
-const require = createRequire(import.meta.url);
-const pkg = require('../../package.json');
+const VERSION = '0.1.5';
 
 program
   .name('pilot')
   .description('Your AI crew, ready to fly.')
-  .version(pkg.version, '-v, --version');
+  .version(VERSION, '-v, --version');
 
 program
   .command('up [template]')
