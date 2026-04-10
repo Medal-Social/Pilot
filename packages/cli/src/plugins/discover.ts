@@ -2,10 +2,10 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { parseManifest, pluginId } from './manifest.js';
+import { bundledPlugins } from './bundled.js';
 import type { LoadedPlugin } from './types.js';
 
 interface DiscoverOptions {
-  bundledDir: string;
   userDir: string;
   enabledState: Record<string, { enabled: boolean }>;
 }
@@ -46,7 +46,13 @@ function scanDir(
 }
 
 export function discoverPlugins(options: DiscoverOptions): LoadedPlugin[] {
-  const bundled = scanDir(options.bundledDir, options.enabledState);
+  // Start with bundled plugins, apply enabled state
+  const bundled = bundledPlugins.map((p) => ({
+    ...p,
+    enabled: options.enabledState[p.id]?.enabled ?? p.enabled,
+  }));
+
+  // Scan user-installed plugins
   const user = scanDir(options.userDir, options.enabledState);
 
   // Deduplicate by id, user plugins override bundled

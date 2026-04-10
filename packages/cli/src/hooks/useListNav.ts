@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useInput } from 'ink';
 import type { Tab, TabId } from '../types.js';
 
@@ -16,6 +16,11 @@ export interface UseListNavResult {
 export function useListNav({ listLength, tabs, initialTab }: UseListNavOptions): UseListNavResult {
   const [selected, setSelected] = useState(0);
   const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? tabs[0]?.id ?? '');
+
+  // Clamp selected when list length changes (e.g. after tab switch filters the list)
+  useEffect(() => {
+    setSelected((s) => (listLength > 0 ? Math.min(s, listLength - 1) : 0));
+  }, [listLength]);
 
   useInput((input, key) => {
     if (key.downArrow) {

@@ -21,11 +21,20 @@ export async function checkForUpdates(currentVersion: string): Promise<UpdateChe
       hasUpdate: latest !== currentVersion,
     };
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    // npm 404 means package isn't published yet — not an error
+    if (message.includes('404') || message.includes('Not Found')) {
+      return {
+        current: currentVersion,
+        latest: currentVersion,
+        hasUpdate: false,
+      };
+    }
     return {
       current: currentVersion,
       latest: currentVersion,
       hasUpdate: false,
-      error: err instanceof Error ? err.message : 'Unknown error',
+      error: message,
     };
   }
 }

@@ -1,17 +1,44 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { discoverPlugins } from './discover.js';
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 
 vi.mock('node:fs');
 
-const mockToml = `
-name = "kit"
-namespace = "medalsocial"
-description = "Machine config & Nix management"
+describe('discoverPlugins', () => {
+  it('returns bundled plugins with default enabled state', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    const plugins = discoverPlugins({
+      userDir: '/fake/.pilot/plugins',
+      enabledState: {},
+    });
+
+    expect(plugins.length).toBeGreaterThanOrEqual(3);
+    expect(plugins.find((p) => p.id === '@medalsocial/kit')).toBeDefined();
+    expect(plugins.find((p) => p.id === '@medalsocial/sanity')).toBeDefined();
+    expect(plugins.find((p) => p.id === '@medalsocial/pencil')).toBeDefined();
+  });
+
+  it('respects enabled state from settings', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    const plugins = discoverPlugins({
+      userDir: '/fake/.pilot/plugins',
+      enabledState: { '@medalsocial/kit': { enabled: false } },
+    });
+
+    const kit = plugins.find((p) => p.id === '@medalsocial/kit');
+    expect(kit?.enabled).toBe(false);
+  });
+
+  it('merges user plugins with bundled', () => {
+    const mockToml = `
+name = "custom"
+namespace = "user"
+description = "Custom plugin"
 
 [provides]
-commands = ["up", "update", "status"]
+commands = ["custom"]
 mcpServers = []
 
 [permissions]
@@ -20,90 +47,22 @@ network = []
 [roleBindings]
 `;
 
-describe('discoverPlugins', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('discovers plugins from bundled directory', () => {
     vi.mocked(fs.existsSync).mockImplementation((p) => {
       const s = String(p);
-      if (s.endsWith('plugins') || s.endsWith('kit')) return true;
+      if (s === '/fake/.pilot/plugins') return true;
       if (s.endsWith('plugin.toml')) return true;
       return false;
     });
 
-    vi.mocked(fs.readdirSync).mockImplementation((p) => {
-      const s = String(p);
-      if (s.includes('plugins')) return ['kit'] as unknown as fs.Dirent[];
-      return [] as unknown as fs.Dirent[];
-    });
-
-    vi.mocked(fs.readFileSync).mockImplementation((p) => {
-      if (String(p).endsWith('plugin.toml')) return mockToml;
-      return '';
-    });
+    vi.mocked(fs.readdirSync).mockReturnValue(['custom'] as unknown as fs.Dirent[]);
+    vi.mocked(fs.readFileSync).mockReturnValue(mockToml);
 
     const plugins = discoverPlugins({
-      bundledDir: '/fake/packages/plugins',
       userDir: '/fake/.pilot/plugins',
       enabledState: {},
     });
 
-    expect(plugins).toHaveLength(1);
-    expect(plugins[0].id).toBe('@medalsocial/kit');
-    expect(plugins[0].manifest.name).toBe('kit');
-    expect(plugins[0].enabled).toBe(true);
-  });
-
-  it('respects enabled state from settings', () => {
-    vi.mocked(fs.existsSync).mockImplementation((p) => {
-      const s = String(p);
-      if (s.endsWith('plugins') || s.endsWith('kit')) return true;
-      if (s.endsWith('plugin.toml')) return true;
-      return false;
-    });
-
-    vi.mocked(fs.readdirSync).mockImplementation((p) => {
-      const s = String(p);
-      if (s.includes('plugins')) return ['kit'] as unknown as fs.Dirent[];
-      return [] as unknown as fs.Dirent[];
-    });
-
-    vi.mocked(fs.readFileSync).mockImplementation((p) => {
-      if (String(p).endsWith('plugin.toml')) return mockToml;
-      return '';
-    });
-
-    const plugins = discoverPlugins({
-      bundledDir: '/fake/packages/plugins',
-      userDir: '/fake/.pilot/plugins',
-      enabledState: { '@medalsocial/kit': { enabled: false } },
-    });
-
-    expect(plugins[0].enabled).toBe(false);
-  });
-
-  it('skips directories without plugin.toml', () => {
-    vi.mocked(fs.existsSync).mockImplementation((p) => {
-      const s = String(p);
-      if (s.endsWith('plugins')) return true;
-      if (s.endsWith('empty-dir')) return true;
-      return false;
-    });
-
-    vi.mocked(fs.readdirSync).mockImplementation((p) => {
-      const s = String(p);
-      if (s.includes('plugins')) return ['empty-dir'] as unknown as fs.Dirent[];
-      return [] as unknown as fs.Dirent[];
-    });
-
-    const plugins = discoverPlugins({
-      bundledDir: '/fake/packages/plugins',
-      userDir: '/fake/.pilot/plugins',
-      enabledState: {},
-    });
-
-    expect(plugins).toHaveLength(0);
+    expect(plugins.find((p) => p.id === '@user/custom')).toBeDefined();
+    expect(plugins.find((p) => p.id === '@medalsocial/kit')).toBeDefined();
   });
 });

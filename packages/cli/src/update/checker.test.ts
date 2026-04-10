@@ -19,9 +19,18 @@ describe('checkForUpdates', () => {
     expect(result.hasUpdate).toBe(false);
   });
 
-  it('handles npm failure gracefully', async () => {
+  it('treats npm 404 as up-to-date (not error)', async () => {
     vi.mocked(child_process.execFileSync).mockImplementation(() => {
-      throw new Error('npm ERR! 404');
+      throw new Error('npm ERR! 404 Not Found');
+    });
+    const result = await checkForUpdates('0.1.0');
+    expect(result.hasUpdate).toBe(false);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('treats network failure as error', async () => {
+    vi.mocked(child_process.execFileSync).mockImplementation(() => {
+      throw new Error('npm ERR! network request failed');
     });
     const result = await checkForUpdates('0.1.0');
     expect(result.hasUpdate).toBe(false);
