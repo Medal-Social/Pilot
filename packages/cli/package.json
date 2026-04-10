@@ -4,10 +4,33 @@
   "type": "module",
   "description": "Your AI crew, ready to fly. Medal Social's AI-powered CLI platform.",
   "license": "MIT",
+  "keywords": [
+    "cli",
+    "ai",
+    "agent",
+    "medal",
+    "social",
+    "pilot",
+    "crew",
+    "anthropic",
+    "claude",
+    "gemini",
+    "codex",
+    "marketing",
+    "cto",
+    "cmo"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Medal-Social/pilot.git",
     "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Medal-Social/pilot/issues"
+  },
+  "homepage": "https://github.com/Medal-Social/pilot#readme",
+  "engines": {
+    "node": ">=24.0.0"
   },
   "bin": {
     "pilot": "dist/bin/pilot.js"
