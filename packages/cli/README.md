@@ -1,5 +1,7 @@
 # @medalsocial/pilot
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Medal-Social/pilot/badge)](https://scorecard.dev/viewer/?uri=github.com/Medal-Social/pilot)
+
 **Your AI crew, ready to fly.**
 
 Pilot is an AI-powered CLI platform by Medal Social. One command gives you a full AI crew that knows your brand, creates content, manages your machine, and works across every AI tool you use.
