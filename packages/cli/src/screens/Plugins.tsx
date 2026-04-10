@@ -1,56 +1,59 @@
 import React, { useState } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import { SplitPanel } from '../components/SplitPanel.js';
 import { TabBar } from '../components/TabBar.js';
 import { StatusBar } from '../components/StatusBar.js';
 import { colors } from '../colors.js';
+import { useListNav } from '../hooks/useListNav.js';
+import { loadSettings, saveSettings } from '../settings.js';
 import type { Tab } from '../types.js';
-
-interface PluginItem {
-  name: string;
-  description: string;
-  installed: boolean;
-  provides: string[];
-}
-
-const PLUGINS: PluginItem[] = [
-  {
-    name: 'kit',
-    description: 'Machine config & Nix management',
-    installed: true,
-    provides: ['pilot up', 'pilot update', 'pilot status'],
-  },
-  {
-    name: 'sanity',
-    description: 'CMS content management',
-    installed: true,
-    provides: ['/content', '/schema', '/publish'],
-  },
-  {
-    name: 'pencil',
-    description: 'Design tool integration',
-    installed: false,
-    provides: ['/design', 'pencil MCP'],
-  },
-];
+import type { LoadedPlugin } from '../plugins/types.js';
 
 const TABS: Tab[] = [
   { id: 'all', label: 'All' },
-  { id: 'installed', label: 'Installed' },
-  { id: 'available', label: 'Available' },
+  { id: 'enabled', label: 'Enabled' },
+  { id: 'disabled', label: 'Disabled' },
 ];
 
-export function Plugins() {
-  const [activeTab, setActiveTab] = useState('all');
-  const [selected, setSelected] = useState(0);
+interface PluginsProps {
+  plugins: LoadedPlugin[];
+}
 
-  const filtered = PLUGINS.filter((p) => {
-    if (activeTab === 'installed') return p.installed;
-    if (activeTab === 'available') return !p.installed;
+export function Plugins({ plugins: initialPlugins }: PluginsProps) {
+  const [plugins, setPlugins] = useState(initialPlugins);
+
+  const nav = useListNav({
+    listLength: Math.max(1, plugins.length),
+    tabs: TABS,
+  });
+
+  const displayPlugins = plugins.filter((p) => {
+    if (nav.activeTab === 'enabled') return p.enabled;
+    if (nav.activeTab === 'disabled') return !p.enabled;
     return true;
   });
 
-  const current = filtered[selected];
+  const current = displayPlugins[nav.selected];
+
+  useInput((input) => {
+    if (!current) return;
+    if (input === 'd' && current.enabled) {
+      const updated = plugins.map((p) =>
+        p.id === current.id ? { ...p, enabled: false } : p
+      );
+      setPlugins(updated);
+      persistPluginState(updated);
+    } else if (input === 'e' && !current.enabled) {
+      const updated = plugins.map((p) =>
+        p.id === current.id ? { ...p, enabled: true } : p
+      );
+      setPlugins(updated);
+      persistPluginState(updated);
+    }
+  });
+
+  const enabledCount = plugins.filter((p) => p.enabled).length;
+  const disabledCount = plugins.filter((p) => !p.enabled).length;
 
   return (
     <Box flexDirection="column" height="100%">
@@ -58,61 +61,77 @@ export function Plugins() {
         <Text bold color={colors.text}>Plugins</Text>
         <Text color={colors.muted}>Extend Pilot with official Medal Social integrations</Text>
       </Box>
-      <TabBar tabs={TABS} activeTab={activeTab} />
+      <TabBar tabs={TABS} activeTab={nav.activeTab} />
       <SplitPanel
         sidebarWidth={28}
         sidebar={
           <Box flexDirection="column">
-            <Text color={colors.primary} bold>
-              {' '}@MEDALSOCIAL
-            </Text>
-            {filtered.map((p, i) => (
-              <Box key={p.name} flexDirection="column" paddingX={1} paddingY={0}>
-                <Text bold color={i === selected ? colors.text : colors.muted}>
-                  {p.name}
-                </Text>
-                <Text color={colors.muted} dimColor>
-                  {p.installed ? '● installed' : '○ available'}
-                </Text>
+            {displayPlugins.length === 0 ? (
+              <Box paddingX={1}>
+                <Text color={colors.muted}>No plugins in this view</Text>
               </Box>
-            ))}
+            ) : (
+              displayPlugins.map((p, i) => (
+                <Box key={p.id} flexDirection="column" paddingX={1} paddingY={0}>
+                  <Text bold color={i === nav.selected ? colors.text : colors.muted}>
+                    {i === nav.selected ? '▸ ' : '  '}{p.manifest.name}
+                  </Text>
+                  <Text color={p.enabled ? colors.success : colors.muted} dimColor>
+                    {'  '}{p.enabled ? '● enabled' : '○ disabled'}
+                  </Text>
+                </Box>
+              ))
+            )}
           </Box>
         }
         detail={
           current ? (
             <Box flexDirection="column" gap={1}>
               <Text bold color={colors.text}>
-                {current.name}
+                {current.manifest.name}
               </Text>
               <Text color={colors.muted}>
-                @medalsocial/{current.name} · {current.description}
+                {current.id} · {current.manifest.description}
               </Text>
               <Box flexDirection="column">
                 <Text color={colors.primary} bold>PROVIDES</Text>
-                {current.provides.map((p) => (
-                  <Text key={p} color={colors.success}>✓ {p}</Text>
+                {(current.manifest.provides.commands ?? []).map((cmd) => (
+                  <Text key={cmd} color={colors.success}>✓ {cmd}</Text>
+                ))}
+                {(current.manifest.provides.mcpServers ?? []).map((srv) => (
+                  <Text key={srv} color={colors.success}>✓ {srv} (MCP)</Text>
                 ))}
               </Box>
-              {current.installed && (
-                <Box gap={2}>
-                  <Text color={colors.warning}>[Disable]</Text>
-                  <Text color={colors.error}>[Remove]</Text>
-                </Box>
-              )}
+              <Box gap={2}>
+                {current.enabled ? (
+                  <Text color={colors.warning}>[d] Disable</Text>
+                ) : (
+                  <Text color={colors.success}>[e] Enable</Text>
+                )}
+              </Box>
             </Box>
-          ) : null
+          ) : (
+            <Box paddingX={1}>
+              <Text color={colors.muted}>Select a plugin to view details</Text>
+            </Box>
+          )
         }
       />
       <StatusBar
         items={[
-          {
-            label: `● ${PLUGINS.filter((p) => p.installed).length} installed`,
-            color: colors.success,
-          },
-          { label: `${PLUGINS.filter((p) => !p.installed).length} available` },
-          { label: 'pilot plugins' },
+          { label: `● ${enabledCount} enabled`, color: colors.success },
+          { label: `${disabledCount} disabled` },
+          { label: '↑↓ navigate · 1-3 tabs · d/e toggle' },
         ]}
       />
     </Box>
   );
+}
+
+function persistPluginState(plugins: LoadedPlugin[]): void {
+  const settings = loadSettings();
+  for (const p of plugins) {
+    settings.plugins[p.id] = { enabled: p.enabled };
+  }
+  saveSettings(settings);
 }
