@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Welcome } from './Welcome.js';
-import { Home } from './Home.js';
 import { loadSettings, markOnboarded } from '../settings.js';
+import { Home } from './Home.js';
+import { Welcome } from './Welcome.js';
 
 type Screen = 'welcome' | 'home' | 'chat';
 

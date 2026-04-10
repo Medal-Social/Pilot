@@ -1,5 +1,8 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
+  "files": {
+    "ignore": ["dist/**", ".turbo/**", "node_modules/**", "coverage/**"]
+  },
   "organizeImports": { "enabled": true },
   "linter": {
     "enabled": true,
@@ -10,8 +13,12 @@
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100,
-    "quoteStyle": "single",
-    "trailingCommas": "es5",
     "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "es5"
+    }
   }
 }

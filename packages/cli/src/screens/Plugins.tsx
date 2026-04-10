@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { SplitPanel } from '../components/SplitPanel.js';
-import { TabBar } from '../components/TabBar.js';
-import { StatusBar } from '../components/StatusBar.js';
+import React, { useEffect, useMemo, useState } from 'react';
 import { colors } from '../colors.js';
+import { SplitPanel } from '../components/SplitPanel.js';
+import { StatusBar } from '../components/StatusBar.js';
+import { TabBar } from '../components/TabBar.js';
 import { useListNav } from '../hooks/useListNav.js';
+import type { LoadedPlugin } from '../plugins/types.js';
 import { loadSettings, saveSettings } from '../settings.js';
 import type { Tab } from '../types.js';
-import type { LoadedPlugin } from '../plugins/types.js';
 
 const TABS: Tab[] = [
   { id: 'all', label: 'All' },
@@ -37,22 +37,20 @@ export function Plugins({ plugins: initialPlugins }: PluginsProps) {
   });
 
   // Sync local activeTab with the hook's tab state so filtered list length stays correct
-  useEffect(() => { setActiveTab(nav.activeTab); }, [nav.activeTab]);
+  useEffect(() => {
+    setActiveTab(nav.activeTab);
+  }, [nav.activeTab]);
 
   const current = displayPlugins[nav.selected];
 
   useInput((input) => {
     if (!current) return;
     if (input === 'd' && current.enabled) {
-      const updated = plugins.map((p) =>
-        p.id === current.id ? { ...p, enabled: false } : p
-      );
+      const updated = plugins.map((p) => (p.id === current.id ? { ...p, enabled: false } : p));
       setPlugins(updated);
       persistPluginState(updated);
     } else if (input === 'e' && !current.enabled) {
-      const updated = plugins.map((p) =>
-        p.id === current.id ? { ...p, enabled: true } : p
-      );
+      const updated = plugins.map((p) => (p.id === current.id ? { ...p, enabled: true } : p));
       setPlugins(updated);
       persistPluginState(updated);
     }
@@ -64,7 +62,9 @@ export function Plugins({ plugins: initialPlugins }: PluginsProps) {
   return (
     <Box flexDirection="column" height="100%">
       <Box paddingX={1} paddingY={0} flexDirection="column">
-        <Text bold color={colors.text}>Plugins</Text>
+        <Text bold color={colors.text}>
+          Plugins
+        </Text>
         <Text color={colors.muted}>Extend Pilot with official Medal Social integrations</Text>
       </Box>
       <TabBar tabs={TABS} activeTab={nav.activeTab} />
@@ -80,10 +80,12 @@ export function Plugins({ plugins: initialPlugins }: PluginsProps) {
               displayPlugins.map((p, i) => (
                 <Box key={p.id} flexDirection="column" paddingX={1} paddingY={0}>
                   <Text bold color={i === nav.selected ? colors.text : colors.muted}>
-                    {i === nav.selected ? '▸ ' : '  '}{p.manifest.name}
+                    {i === nav.selected ? '▸ ' : '  '}
+                    {p.manifest.name}
                   </Text>
                   <Text color={p.enabled ? colors.success : colors.muted} dimColor>
-                    {'  '}{p.enabled ? '● enabled' : '○ disabled'}
+                    {'  '}
+                    {p.enabled ? '● enabled' : '○ disabled'}
                   </Text>
                 </Box>
               ))
@@ -100,12 +102,18 @@ export function Plugins({ plugins: initialPlugins }: PluginsProps) {
                 {current.id} · {current.manifest.description}
               </Text>
               <Box flexDirection="column">
-                <Text color={colors.primary} bold>PROVIDES</Text>
+                <Text color={colors.primary} bold>
+                  PROVIDES
+                </Text>
                 {(current.manifest.provides.commands ?? []).map((cmd) => (
-                  <Text key={cmd} color={colors.success}>✓ {cmd}</Text>
+                  <Text key={cmd} color={colors.success}>
+                    ✓ {cmd}
+                  </Text>
                 ))}
                 {(current.manifest.provides.mcpServers ?? []).map((srv) => (
-                  <Text key={srv} color={colors.success}>✓ {srv} (MCP)</Text>
+                  <Text key={srv} color={colors.success}>
+                    ✓ {srv} (MCP)
+                  </Text>
                 ))}
               </Box>
               <Box gap={2}>

@@ -7,7 +7,8 @@ type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
 
 const userMessages: Record<ErrorCode, string> = {
   UPDATE_CHECK_FAILED: 'Unable to check for updates — are you online?',
-  UPDATE_INSTALL_FAILED: 'Update could not be installed. Please try again or visit medalsocial.com/pilot for help.',
+  UPDATE_INSTALL_FAILED:
+    'Update could not be installed. Please try again or visit medalsocial.com/pilot for help.',
 };
 
 export class PilotError extends Error {

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { render } from 'ink-testing-library';
 import React from 'react';
+import { describe, expect, it } from 'vitest';
 import { Training } from './Training.js';
 
 const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));

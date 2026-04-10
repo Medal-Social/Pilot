@@ -39,9 +39,7 @@ describe('parseManifest', () => {
     };
     const result = parseManifest(raw);
     if (result.success) {
-      expect(`@${result.data.namespace}/${result.data.name}`).toBe(
-        '@medalsocial/sanity'
-      );
+      expect(`@${result.data.namespace}/${result.data.name}`).toBe('@medalsocial/sanity');
     }
   });
 });

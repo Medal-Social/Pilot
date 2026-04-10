@@ -1,5 +1,5 @@
-import React from 'react';
 import { render } from 'ink';
+import React from 'react';
 import { Repl } from '../screens/Repl.js';
 
 export async function runRepl() {

@@ -1,5 +1,5 @@
-import React from 'react';
 import { Box, Text } from 'ink';
+import React from 'react';
 import { colors } from '../colors.js';
 
 interface StatusBarProps {
@@ -17,8 +17,8 @@ export function StatusBar({ items }: StatusBarProps) {
       borderColor={colors.border}
     >
       <Box gap={2} paddingX={1}>
-        {items.map((item, i) => (
-          <Text key={i} color={item.color ?? colors.muted}>
+        {items.map((item) => (
+          <Text key={item.label} color={item.color ?? colors.muted}>
             {item.label}
           </Text>
         ))}

@@ -1,8 +1,8 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { parseManifest, pluginId } from './manifest.js';
 import { bundledPlugins } from './bundled.js';
+import { parseManifest, pluginId } from './manifest.js';
 import type { LoadedPlugin } from './types.js';
 
 interface DiscoverOptions {
@@ -10,10 +10,7 @@ interface DiscoverOptions {
   enabledState: Record<string, { enabled: boolean }>;
 }
 
-function scanDir(
-  dir: string,
-  enabledState: Record<string, { enabled: boolean }>,
-): LoadedPlugin[] {
+function scanDir(dir: string, enabledState: Record<string, { enabled: boolean }>): LoadedPlugin[] {
   if (!existsSync(dir)) return [];
 
   const entries = readdirSync(dir);

@@ -1,5 +1,5 @@
-import React from 'react';
 import { Box, Text } from 'ink';
+import React from 'react';
 import { colors } from '../colors.js';
 import type { StepStatus } from '../types.js';
 
@@ -21,9 +21,7 @@ export function Step({ label, status, detail }: StepProps) {
   return (
     <Box gap={1}>
       <Text color={icon.color}>{icon.char}</Text>
-      <Text color={status === 'waiting' ? colors.muted : colors.text}>
-        {label}
-      </Text>
+      <Text color={status === 'waiting' ? colors.muted : colors.text}>{label}</Text>
       {detail && <Text color={colors.muted}>{detail}</Text>}
     </Box>
   );
