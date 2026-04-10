@@ -2,13 +2,28 @@
   "name": "@medalsocial/pilot",
   "version": "0.1.0",
   "type": "module",
+  "description": "Your AI crew, ready to fly. Medal Social's AI-powered CLI platform.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Medal-Social/pilot.git",
+    "directory": "packages/cli"
+  },
   "bin": {
     "pilot": "./dist/bin/pilot.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "dev": "tsx watch src/bin/pilot.ts",
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "prepublishOnly": "tsc"
   },
   "dependencies": {
     "commander": "^13.0.0",
