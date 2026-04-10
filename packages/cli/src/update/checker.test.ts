@@ -42,10 +42,12 @@ describe('checkForUpdates', () => {
     expect(result.error).toBeUndefined();
   });
 
-  it('treats network failure as error', async () => {
+  it('treats network failure as PilotError', async () => {
     mockExecFileError('npm ERR! network request failed');
     const result = await checkForUpdates('0.1.0');
     expect(result.hasUpdate).toBe(false);
     expect(result.error).toBeDefined();
+    expect(result.error?.code).toBe('UPDATE_CHECK_FAILED');
+    expect(result.error?.message).not.toContain('npm');
   });
 });

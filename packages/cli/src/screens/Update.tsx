@@ -25,7 +25,7 @@ export function Update({ currentVersion }: UpdateProps) {
       if (cancelled) return;
       setCheckResult(result);
       if (result.error) {
-        setUpdateError(result.error);
+        setUpdateError(result.error.message);
         setPhase('error');
       } else if (result.hasUpdate) {
         setPhase('confirm');
@@ -56,7 +56,7 @@ export function Update({ currentVersion }: UpdateProps) {
       if (result.success) {
         setPhase('complete');
       } else {
-        setUpdateError(result.error ?? 'Update failed');
+        setUpdateError(result.error?.message ?? 'Update could not be installed');
         setPhase('error');
       }
     });
@@ -77,7 +77,7 @@ export function Update({ currentVersion }: UpdateProps) {
           <Step label="Version check complete" status="done" />
           <Box marginTop={1}>
             <Text color={colors.success} bold>
-              ✈ Flight systems are current ({currentVersion})
+              ✈ Flight systems are current
             </Text>
           </Box>
         </>
@@ -85,12 +85,10 @@ export function Update({ currentVersion }: UpdateProps) {
 
       {phase === 'confirm' && checkResult && (
         <>
-          <Step label="Update available" status="done" />
+          <Step label="New version available" status="done" />
           <Box marginTop={1} flexDirection="column" gap={1}>
             <Text color={colors.text}>
-              <Text bold>{checkResult.current}</Text>
-              <Text color={colors.muted}> → </Text>
-              <Text bold color={colors.success}>{checkResult.latest}</Text>
+              A newer version of Pilot is available.
             </Text>
             <Text color={colors.text}>Apply update? [Y/n]</Text>
           </Box>
@@ -104,17 +102,17 @@ export function Update({ currentVersion }: UpdateProps) {
         </>
       )}
 
-      {phase === 'complete' && checkResult && (
+      {phase === 'complete' && (
         <>
           <Step label="Update downloaded" status="done" />
           <Step label="Update installed" status="done" />
           <Box marginTop={1}>
             <Text color={colors.success} bold>
-              ✈ Flight systems upgraded to {checkResult.latest}!
+              ✈ Flight systems upgraded!
             </Text>
           </Box>
           <Box marginTop={1}>
-            <Text color={colors.muted}>Restart pilot to use new features</Text>
+            <Text color={colors.muted}>Restart Pilot to use new features</Text>
           </Box>
         </>
       )}
@@ -125,7 +123,7 @@ export function Update({ currentVersion }: UpdateProps) {
           <Box marginTop={1} flexDirection="column" gap={1}>
             <Text color={colors.error}>{updateError}</Text>
             <Text color={colors.muted}>
-              Try manually: npm install -g @medalsocial/pilot@latest
+              Visit medalsocial.com/pilot for help
             </Text>
           </Box>
         </>

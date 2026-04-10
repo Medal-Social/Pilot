@@ -7,7 +7,7 @@ vi.mock('../update/checker.js', () => ({
   checkForUpdates: vi.fn(() =>
     Promise.resolve({ current: '0.1.0', latest: '0.1.0', hasUpdate: false })
   ),
-  applyUpdate: vi.fn(() => ({ success: true })),
+  applyUpdate: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
 describe('Update', () => {

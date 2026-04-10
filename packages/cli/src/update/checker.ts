@@ -1,10 +1,11 @@
 import { execFile } from 'node:child_process';
+import { PilotError, errorCodes } from '../errors.js';
 
 export interface UpdateCheckResult {
   current: string;
   latest: string;
   hasUpdate: boolean;
-  error?: string;
+  error?: PilotError;
 }
 
 function execAsync(cmd: string, args: string[], timeout: number): Promise<string> {
@@ -40,19 +41,20 @@ export async function checkForUpdates(currentVersion: string): Promise<UpdateChe
       current: currentVersion,
       latest: currentVersion,
       hasUpdate: false,
-      error: message,
+      error: new PilotError(errorCodes.UPDATE_CHECK_FAILED, message),
     };
   }
 }
 
-export async function applyUpdate(): Promise<{ success: boolean; error?: string }> {
+export async function applyUpdate(): Promise<{ success: boolean; error?: PilotError }> {
   try {
     await execAsync('npm', ['install', '-g', '@medalsocial/pilot@latest'], 120000);
     return { success: true };
   } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error';
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Unknown error',
+      error: new PilotError(errorCodes.UPDATE_INSTALL_FAILED, detail),
     };
   }
 }
