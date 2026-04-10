@@ -17,7 +17,8 @@ detect_os() {
   case "$(uname -s)" in
     Darwin)  echo "darwin" ;;
     Linux)   echo "linux" ;;
-    MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+    MINGW*|MSYS*|CYGWIN*) echo "win" ;;
+
     *) error "Unsupported operating system: $(uname -s)" ;;
   esac
 }
@@ -79,7 +80,7 @@ fi
 
 # Binary install fallback
 BINARY_NAME="pilot-$OS-$ARCH"
-if [ "$OS" = "windows" ]; then
+if [ "$OS" = "win" ]; then
   BINARY_NAME="$BINARY_NAME.exe"
   BIN_NAME="pilot.exe"
 fi

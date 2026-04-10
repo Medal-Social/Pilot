@@ -17,7 +17,7 @@ jobs:
             target_os: darwin
             target_arch: arm64
             binary_name: pilot-darwin-arm64
-          - os: macos-latest
+          - os: macos-13
             target_os: darwin
             target_arch: x64
             binary_name: pilot-darwin-x64
@@ -25,6 +25,10 @@ jobs:
             target_os: linux
             target_arch: x64
             binary_name: pilot-linux-x64
+          - os: ubuntu-24.04-arm
+            target_os: linux
+            target_arch: arm64
+            binary_name: pilot-linux-arm64
           - os: windows-latest
             target_os: win
             target_arch: x64
