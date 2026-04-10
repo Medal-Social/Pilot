@@ -32,7 +32,7 @@ export function Plugins({ plugins: initialPlugins }: PluginsProps) {
   const displayPlugins = useMemo(() => filterByTab(plugins, activeTab), [plugins, activeTab]);
 
   const nav = useListNav({
-    listLength: Math.max(1, displayPlugins.length),
+    listLength: displayPlugins.length,
     tabs: TABS,
   });
 

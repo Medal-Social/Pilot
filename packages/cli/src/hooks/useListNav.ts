@@ -24,9 +24,9 @@ export function useListNav({ listLength, tabs, initialTab }: UseListNavOptions):
 
   useInput((input, key) => {
     if (key.downArrow) {
-      setSelected((s) => (s + 1) % listLength);
+      if (listLength > 0) setSelected((s) => (s + 1) % listLength);
     } else if (key.upArrow) {
-      setSelected((s) => (s - 1 + listLength) % listLength);
+      if (listLength > 0) setSelected((s) => (s - 1 + listLength) % listLength);
     } else {
       const num = Number.parseInt(input, 10);
       if (num >= 1 && num <= tabs.length) {

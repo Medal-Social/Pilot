@@ -78,4 +78,19 @@ describe('useListNav', () => {
     expect(lastFrame()).toContain('selected=0');
     expect(lastFrame()).toContain('tab=1');
   });
+
+  it('does not navigate when list is empty', async () => {
+    const { lastFrame, stdin } = render(
+      <TestComponent listLength={0} tabs={['A', 'B']} />
+    );
+    expect(lastFrame()).toContain('selected=0');
+    await delay();
+    stdin.write('\x1B[B');
+    await delay();
+    // With 0 items, selected should stay 0 and not wrap
+    expect(lastFrame()).toContain('selected=0');
+    stdin.write('\x1B[A');
+    await delay();
+    expect(lastFrame()).toContain('selected=0');
+  });
 });
