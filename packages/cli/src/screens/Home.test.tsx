@@ -1,0 +1,16 @@
+import { describe, expect, it } from 'vitest';
+import { render } from 'ink-testing-library';
+import React from 'react';
+import { Home } from './Home.js';
+
+describe('Home', () => {
+  it('shows pilot logo', () => {
+    const { lastFrame } = render(<Home />);
+    expect(lastFrame()).toContain('pilot');
+  });
+
+  it('shows input prompt', () => {
+    const { lastFrame } = render(<Home />);
+    expect(lastFrame()).toContain('What would you like to work on?');
+  });
+});

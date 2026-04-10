@@ -1,13 +1,24 @@
-import React from 'react';
-import { Box, Text } from 'ink';
-import { Header } from '../components/Header.js';
-import { colors } from '../colors.js';
+import React, { useState } from 'react';
+import { Welcome } from './Welcome.js';
+import { Home } from './Home.js';
+import { loadSettings, markOnboarded } from '../settings.js';
+
+type Screen = 'welcome' | 'home' | 'chat';
 
 export function Repl() {
-  return (
-    <Box flexDirection="column" gap={1}>
-      <Header subtitle="Your AI crew, ready to fly." />
-      <Text color={colors.muted}>Type a message or /help for commands</Text>
-    </Box>
-  );
+  const settings = loadSettings();
+  const [screen, setScreen] = useState<Screen>(settings.onboarded ? 'home' : 'welcome');
+
+  if (screen === 'welcome') {
+    return (
+      <Welcome
+        onContinue={() => {
+          markOnboarded();
+          setScreen('home');
+        }}
+      />
+    );
+  }
+
+  return <Home />;
 }

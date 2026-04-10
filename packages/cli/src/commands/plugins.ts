@@ -1,9 +1,19 @@
 import React from 'react';
-import { render, Text } from 'ink';
-import { colors } from '../colors.js';
+import { render } from 'ink';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
+import { Plugins } from '../screens/Plugins.js';
+import { discoverPlugins } from '../plugins/discover.js';
+import { loadSettings } from '../settings.js';
 
 export async function runPlugins() {
-  render(
-    React.createElement(Text, { color: colors.muted }, 'pilot plugins — coming soon')
-  );
+  const userDir = join(homedir(), '.pilot', 'plugins');
+  const settings = loadSettings();
+
+  const plugins = discoverPlugins({
+    userDir,
+    enabledState: settings.plugins,
+  });
+
+  render(React.createElement(Plugins, { plugins }));
 }
