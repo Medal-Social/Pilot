@@ -20,8 +20,12 @@ export function loadSettings(): PilotSettings {
   if (!existsSync(SETTINGS_FILE)) {
     return { ...DEFAULT_SETTINGS };
   }
-  const raw = JSON.parse(readFileSync(SETTINGS_FILE, 'utf-8'));
-  return { ...DEFAULT_SETTINGS, ...raw };
+  try {
+    const raw = JSON.parse(readFileSync(SETTINGS_FILE, 'utf-8'));
+    return { ...DEFAULT_SETTINGS, ...raw };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
 }
 
 export function saveSettings(settings: PilotSettings): void {

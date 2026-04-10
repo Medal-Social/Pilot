@@ -3,6 +3,7 @@ export const colors = {
   card: '#18181B',
   border: '#2E2E33',
   primary: '#9A6AC2',
+  info: '#3B82F6',
   success: '#2DD4BF',
   warning: '#FBBF24',
   error: '#EF4444',

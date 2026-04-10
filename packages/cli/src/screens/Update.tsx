@@ -50,13 +50,18 @@ export function Update({ currentVersion }: UpdateProps) {
   useEffect(() => {
     if (phase !== 'updating') return;
 
-    const result = applyUpdate();
-    if (result.success) {
-      setPhase('complete');
-    } else {
-      setUpdateError(result.error ?? 'Update failed');
-      setPhase('error');
-    }
+    let cancelled = false;
+    applyUpdate().then((result) => {
+      if (cancelled) return;
+      if (result.success) {
+        setPhase('complete');
+      } else {
+        setUpdateError(result.error ?? 'Update failed');
+        setPhase('error');
+      }
+    });
+
+    return () => { cancelled = true; };
   }, [phase]);
 
   return (

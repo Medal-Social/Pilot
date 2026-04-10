@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { SplitPanel } from '../components/SplitPanel.js';
 import { TabBar } from '../components/TabBar.js';
@@ -15,23 +15,29 @@ const TABS: Tab[] = [
   { id: 'disabled', label: 'Disabled' },
 ];
 
+function filterByTab(plugins: LoadedPlugin[], tab: string) {
+  if (tab === 'enabled') return plugins.filter((p) => p.enabled);
+  if (tab === 'disabled') return plugins.filter((p) => !p.enabled);
+  return plugins;
+}
+
 interface PluginsProps {
   plugins: LoadedPlugin[];
 }
 
 export function Plugins({ plugins: initialPlugins }: PluginsProps) {
   const [plugins, setPlugins] = useState(initialPlugins);
+  const [activeTab, setActiveTab] = useState('all');
+
+  const displayPlugins = useMemo(() => filterByTab(plugins, activeTab), [plugins, activeTab]);
 
   const nav = useListNav({
-    listLength: Math.max(1, plugins.length),
+    listLength: Math.max(1, displayPlugins.length),
     tabs: TABS,
   });
 
-  const displayPlugins = plugins.filter((p) => {
-    if (nav.activeTab === 'enabled') return p.enabled;
-    if (nav.activeTab === 'disabled') return !p.enabled;
-    return true;
-  });
+  // Sync local activeTab with the hook's tab state so filtered list length stays correct
+  useEffect(() => { setActiveTab(nav.activeTab); }, [nav.activeTab]);
 
   const current = displayPlugins[nav.selected];
 

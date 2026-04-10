@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 
 export interface UpdateCheckResult {
   current: string;
@@ -7,13 +7,19 @@ export interface UpdateCheckResult {
   error?: string;
 }
 
+function execAsync(cmd: string, args: string[], timeout: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile(cmd, args, { encoding: 'utf-8', timeout }, (err, stdout) => {
+      if (err) reject(err);
+      else resolve(stdout);
+    });
+  });
+}
+
 export async function checkForUpdates(currentVersion: string): Promise<UpdateCheckResult> {
   try {
-    const output = execFileSync('npm', ['view', '@medalsocial/pilot', 'version'], {
-      encoding: 'utf-8',
-      timeout: 10000,
-    });
-    const latest = String(output).trim();
+    const output = await execAsync('npm', ['view', '@medalsocial/pilot', 'version'], 10000);
+    const latest = output.trim();
 
     return {
       current: currentVersion,
@@ -39,12 +45,9 @@ export async function checkForUpdates(currentVersion: string): Promise<UpdateChe
   }
 }
 
-export function applyUpdate(): { success: boolean; error?: string } {
+export async function applyUpdate(): Promise<{ success: boolean; error?: string }> {
   try {
-    execFileSync('npm', ['install', '-g', '@medalsocial/pilot@latest'], {
-      encoding: 'utf-8',
-      timeout: 120000,
-    });
+    await execAsync('npm', ['install', '-g', '@medalsocial/pilot@latest'], 120000);
     return { success: true };
   } catch (err) {
     return {
