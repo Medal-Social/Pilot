@@ -3,8 +3,8 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { Repl } from './Repl.js';
 
-vi.mock('../state.js', () => ({
-  loadState: vi.fn(() => ({ onboarded: false })),
+vi.mock('../settings.js', () => ({
+  loadSettings: vi.fn(() => ({ onboarded: false, plugins: {} })),
   markOnboarded: vi.fn(),
 }));
 
