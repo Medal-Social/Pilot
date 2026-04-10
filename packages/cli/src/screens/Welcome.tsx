@@ -1,7 +1,7 @@
-import React from 'react';
 import { Box, Text, useInput } from 'ink';
-import { Header } from '../components/Header.js';
+import React from 'react';
 import { colors } from '../colors.js';
+import { Header } from '../components/Header.js';
 import { defaultCrew } from '../crew/members.js';
 
 interface WelcomeProps {
@@ -35,7 +35,11 @@ export function Welcome({ onContinue }: WelcomeProps) {
       </Box>
       <Box marginTop={1}>
         <Text color={colors.muted}>
-          Press <Text bold color={colors.text}>Enter</Text> to start flying
+          Press{' '}
+          <Text bold color={colors.text}>
+            Enter
+          </Text>{' '}
+          to start flying
         </Text>
       </Box>
     </Box>

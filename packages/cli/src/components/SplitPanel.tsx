@@ -1,5 +1,5 @@
-import React from 'react';
 import { Box } from 'ink';
+import type React from 'react';
 import { colors } from '../colors.js';
 
 interface SplitPanelProps {
@@ -8,11 +8,7 @@ interface SplitPanelProps {
   sidebarWidth?: number;
 }
 
-export function SplitPanel({
-  sidebar,
-  detail,
-  sidebarWidth = 30,
-}: SplitPanelProps) {
+export function SplitPanel({ sidebar, detail, sidebarWidth = 30 }: SplitPanelProps) {
   return (
     <Box flexGrow={1}>
       <Box

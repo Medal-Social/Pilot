@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { Step } from '../components/Step.js';
-import { ProgressBar } from '../components/ProgressBar.js';
+import React, { useEffect, useState } from 'react';
 import { colors } from '../colors.js';
-import { checkForUpdates, applyUpdate } from '../update/checker.js';
+import { ProgressBar } from '../components/ProgressBar.js';
+import { Step } from '../components/Step.js';
+import { applyUpdate, checkForUpdates } from '../update/checker.js';
 import type { UpdateCheckResult } from '../update/checker.js';
 
 type Phase = 'checking' | 'up-to-date' | 'confirm' | 'updating' | 'complete' | 'error';
@@ -34,7 +34,9 @@ export function Update({ currentVersion }: UpdateProps) {
       }
     });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [phase, currentVersion]);
 
   useInput((input, key) => {
@@ -61,16 +63,16 @@ export function Update({ currentVersion }: UpdateProps) {
       }
     });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [phase]);
 
   return (
     <Box flexDirection="column" padding={2} gap={1}>
       <Text color={colors.muted}>$ pilot update</Text>
 
-      {phase === 'checking' && (
-        <Step label="Checking for updates..." status="active" />
-      )}
+      {phase === 'checking' && <Step label="Checking for updates..." status="active" />}
 
       {phase === 'up-to-date' && (
         <>
@@ -87,9 +89,7 @@ export function Update({ currentVersion }: UpdateProps) {
         <>
           <Step label="New version available" status="done" />
           <Box marginTop={1} flexDirection="column" gap={1}>
-            <Text color={colors.text}>
-              A newer version of Pilot is available.
-            </Text>
+            <Text color={colors.text}>A newer version of Pilot is available.</Text>
             <Text color={colors.text}>Apply update? [Y/n]</Text>
           </Box>
         </>
@@ -122,9 +122,7 @@ export function Update({ currentVersion }: UpdateProps) {
           <Step label="Update failed" status="error" />
           <Box marginTop={1} flexDirection="column" gap={1}>
             <Text color={colors.error}>{updateError}</Text>
-            <Text color={colors.muted}>
-              Visit medalsocial.com/pilot for help
-            </Text>
+            <Text color={colors.muted}>Visit medalsocial.com/pilot for help</Text>
           </Box>
         </>
       )}

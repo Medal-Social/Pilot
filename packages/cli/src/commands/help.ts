@@ -1,9 +1,7 @@
+import { Text, render } from 'ink';
 import React from 'react';
-import { render, Text } from 'ink';
 import { colors } from '../colors.js';
 
 export async function runHelp() {
-  render(
-    React.createElement(Text, { color: colors.muted }, 'pilot help — coming soon')
-  );
+  render(React.createElement(Text, { color: colors.muted }, 'pilot help — coming soon'));
 }

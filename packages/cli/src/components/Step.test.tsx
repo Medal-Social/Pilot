@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { render } from 'ink-testing-library';
 import React from 'react';
+import { describe, expect, it } from 'vitest';
 import { Step } from './Step.js';
 
 describe('Step', () => {
@@ -28,9 +28,7 @@ describe('Step', () => {
   });
 
   it('renders detail text when provided', () => {
-    const { lastFrame } = render(
-      <Step label="Task" status="done" detail="extra info" />
-    );
+    const { lastFrame } = render(<Step label="Task" status="done" detail="extra info" />);
     expect(lastFrame()).toContain('extra info');
   });
 });

@@ -1,5 +1,5 @@
-import type { CrewMember } from '../types.js';
 import { colors } from '../colors.js';
+import type { CrewMember } from '../types.js';
 
 export const defaultCrew: CrewMember[] = [
   {

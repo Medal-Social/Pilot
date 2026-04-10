@@ -1,6 +1,6 @@
-import React from 'react';
+import { createRequire } from 'node:module';
 import { render } from 'ink';
-import { createRequire } from 'module';
+import React from 'react';
 import { Update } from '../screens/Update.js';
 
 const require = createRequire(import.meta.url);

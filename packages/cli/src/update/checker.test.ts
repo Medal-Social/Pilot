@@ -1,23 +1,29 @@
+import * as child_process from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { checkForUpdates } from './checker.js';
-import * as child_process from 'node:child_process';
 
 vi.mock('node:child_process');
 
 function mockExecFile(stdout: string) {
-  vi.mocked(child_process.execFile).mockImplementation(
-    ((_cmd: unknown, _args: unknown, _opts: unknown, cb: unknown) => {
-      (cb as (err: null, stdout: string) => void)(null, stdout);
-    }) as typeof child_process.execFile,
-  );
+  vi.mocked(child_process.execFile).mockImplementation(((
+    _cmd: unknown,
+    _args: unknown,
+    _opts: unknown,
+    cb: unknown
+  ) => {
+    (cb as (err: null, stdout: string) => void)(null, stdout);
+  }) as typeof child_process.execFile);
 }
 
 function mockExecFileError(message: string) {
-  vi.mocked(child_process.execFile).mockImplementation(
-    ((_cmd: unknown, _args: unknown, _opts: unknown, cb: unknown) => {
-      (cb as (err: Error) => void)(new Error(message));
-    }) as typeof child_process.execFile,
-  );
+  vi.mocked(child_process.execFile).mockImplementation(((
+    _cmd: unknown,
+    _args: unknown,
+    _opts: unknown,
+    cb: unknown
+  ) => {
+    (cb as (err: Error) => void)(new Error(message));
+  }) as typeof child_process.execFile);
 }
 
 describe('checkForUpdates', () => {

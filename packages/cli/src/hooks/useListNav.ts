@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { useInput } from 'ink';
+import { useEffect, useState } from 'react';
 import type { Tab, TabId } from '../types.js';
 
 export interface UseListNavOptions {
