@@ -25,8 +25,15 @@ function scanDir(
 
     if (!existsSync(tomlPath)) continue;
 
-    const raw = readFileSync(tomlPath, 'utf-8');
-    const parsed = parseToml(raw);
+    let raw: string;
+    let parsed: Record<string, unknown>;
+    try {
+      raw = readFileSync(tomlPath, 'utf-8');
+      parsed = parseToml(raw) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+
     const result = parseManifest(parsed);
 
     if (!result.success) continue;

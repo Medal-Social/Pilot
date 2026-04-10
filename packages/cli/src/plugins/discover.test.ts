@@ -65,4 +65,49 @@ network = []
     expect(plugins.find((p) => p.id === '@user/custom')).toBeDefined();
     expect(plugins.find((p) => p.id === '@medalsocial/kit')).toBeDefined();
   });
+
+  it('skips malformed plugin.toml and continues scanning', () => {
+    const validToml = `
+name = "good"
+namespace = "user"
+description = "Good plugin"
+
+[provides]
+commands = ["good"]
+mcpServers = []
+
+[permissions]
+network = []
+
+[roleBindings]
+`;
+
+    vi.mocked(fs.existsSync).mockImplementation((p) => {
+      const s = String(p);
+      if (s === '/fake/.pilot/plugins') return true;
+      if (s.endsWith('plugin.toml')) return true;
+      return false;
+    });
+
+    vi.mocked(fs.readdirSync).mockReturnValue([
+      'broken',
+      'good',
+    ] as unknown as fs.Dirent[]);
+
+    vi.mocked(fs.readFileSync).mockImplementation((p) => {
+      const s = String(p);
+      if (s.includes('broken')) return '<<<INVALID TOML>>>';
+      return validToml;
+    });
+
+    const plugins = discoverPlugins({
+      userDir: '/fake/.pilot/plugins',
+      enabledState: {},
+    });
+
+    // broken plugin should be skipped, good plugin and bundled plugins present
+    expect(plugins.find((p) => p.id === '@user/good')).toBeDefined();
+    expect(plugins.find((p) => p.id === '@medalsocial/kit')).toBeDefined();
+    expect(plugins.find((p) => p.id.includes('broken'))).toBeUndefined();
+  });
 });
