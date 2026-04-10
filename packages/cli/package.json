@@ -6,18 +6,19 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Medal-Social/pilot.git",
+    "url": "git+https://github.com/Medal-Social/pilot.git",
     "directory": "packages/cli"
   },
   "bin": {
-    "pilot": "./dist/bin/pilot.js"
+    "pilot": "dist/bin/pilot.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.test.*"
   ],
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "scripts": {
     "dev": "tsx watch src/bin/pilot.ts",
