@@ -79,7 +79,7 @@ const userMessages: Record<ErrorCode, string> = {
 
 - [ ] **Step 2: Run existing tests to make sure nothing breaks**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm test -- --run`
+Run: `pnpm test -- --run`
 Expected: All existing tests pass.
 
 - [ ] **Step 3: Commit**
@@ -387,7 +387,7 @@ describe('uninstallTemplate', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm --filter @medalsocial/pilot test -- --run src/device/uninstaller.test.ts`
+Run: `pnpm --filter @medalsocial/pilot test -- --run src/device/uninstaller.test.ts`
 Expected: FAIL — `uninstaller.js` module not found.
 
 - [ ] **Step 3: Implement `src/device/uninstaller.ts`**
@@ -455,7 +455,7 @@ export async function uninstallTemplate(templateName: string): Promise<Uninstall
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm --filter @medalsocial/pilot test -- --run src/device/uninstaller.test.ts`
+Run: `pnpm --filter @medalsocial/pilot test -- --run src/device/uninstaller.test.ts`
 Expected: All 5 tests pass.
 
 - [ ] **Step 5: Commit**
@@ -564,7 +564,7 @@ describe('backupKnowledge', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm --filter @medalsocial/pilot test -- --run src/device/backup.test.ts`
+Run: `pnpm --filter @medalsocial/pilot test -- --run src/device/backup.test.ts`
 Expected: FAIL — module not found.
 
 - [ ] **Step 3: Implement `src/device/backup.ts`**
@@ -609,7 +609,7 @@ export function backupKnowledge(): BackupResult {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm --filter @medalsocial/pilot test -- --run src/device/backup.test.ts`
+Run: `pnpm --filter @medalsocial/pilot test -- --run src/device/backup.test.ts`
 Expected: All 4 tests pass.
 
 - [ ] **Step 5: Commit**
@@ -749,7 +749,7 @@ describe('removeSkillSymlink', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm --filter @medalsocial/pilot test -- --run src/deploy/deployer.test.ts`
+Run: `pnpm --filter @medalsocial/pilot test -- --run src/deploy/deployer.test.ts`
 Expected: FAIL — module not found.
 
 - [ ] **Step 3: Implement `src/deploy/deployer.ts`**
@@ -815,7 +815,7 @@ export function removeSkillSymlink(): RemovalResult {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm --filter @medalsocial/pilot test -- --run src/deploy/deployer.test.ts`
+Run: `pnpm --filter @medalsocial/pilot test -- --run src/deploy/deployer.test.ts`
 Expected: All 7 tests pass.
 
 - [ ] **Step 5: Commit**
@@ -940,7 +940,7 @@ describe('Uninstall', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm --filter @medalsocial/pilot test -- --run src/screens/Uninstall.test.tsx`
+Run: `pnpm --filter @medalsocial/pilot test -- --run src/screens/Uninstall.test.tsx`
 Expected: FAIL — module not found.
 
 - [ ] **Step 3: Implement `src/screens/Uninstall.tsx`**
@@ -1221,7 +1221,7 @@ export function Uninstall() {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm --filter @medalsocial/pilot test -- --run src/screens/Uninstall.test.tsx`
+Run: `pnpm --filter @medalsocial/pilot test -- --run src/screens/Uninstall.test.tsx`
 Expected: All 4 tests pass.
 
 - [ ] **Step 5: Commit**
@@ -1341,7 +1341,7 @@ program
 
 - [ ] **Step 4: Run all tests**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm test -- --run`
+Run: `pnpm test -- --run`
 Expected: All tests pass (existing + new).
 
 - [ ] **Step 5: Commit**
@@ -1357,22 +1357,22 @@ git commit -m "feat: register pilot uninstall and pilot down commands"
 
 - [ ] **Step 1: Build the project**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm build`
+Run: `pnpm build`
 Expected: Build succeeds with no errors.
 
 - [ ] **Step 2: Run all tests**
 
-Run: `cd /Users/ali/Documents/Code/pilot && pnpm test -- --run`
+Run: `pnpm test -- --run`
 Expected: All tests pass.
 
 - [ ] **Step 3: Verify CLI help output**
 
-Run: `cd /Users/ali/Documents/Code/pilot && node packages/cli/dist/bin/pilot.js --help`
+Run: `node packages/cli/dist/bin/pilot.js --help`
 Expected: Output includes `uninstall` and `down <template>` commands.
 
 - [ ] **Step 4: Verify down command rejects unknown template**
 
-Run: `cd /Users/ali/Documents/Code/pilot && node packages/cli/dist/bin/pilot.js down fakename`
+Run: `node packages/cli/dist/bin/pilot.js down fakename`
 Expected: Shows "Unknown template" error message.
 
 - [ ] **Step 5: Final commit if any adjustments were needed**
