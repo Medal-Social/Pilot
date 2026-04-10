@@ -1,9 +1,7 @@
 import React from 'react';
-import { render, Text } from 'ink';
-import { colors } from '../colors.js';
+import { render } from 'ink';
+import { Plugins } from '../screens/Plugins.js';
 
 export async function runPlugins() {
-  render(
-    React.createElement(Text, { color: colors.muted }, 'pilot plugins — coming soon')
-  );
+  render(React.createElement(Plugins));
 }
