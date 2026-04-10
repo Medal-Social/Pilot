@@ -21,4 +21,10 @@ describe('detectMachine', () => {
   it('returns null for unknown hostname', () => {
     expect(detectMachine('random-machine')).toBeNull();
   });
+
+  it('does not match partial segments like production or project', () => {
+    expect(detectMachine('production-node')).toBeNull();
+    expect(detectMachine('project-box')).toBeNull();
+    expect(detectMachine('administrator-pc')).toBeNull();
+  });
 });

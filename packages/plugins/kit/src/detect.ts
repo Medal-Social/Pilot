@@ -9,8 +9,9 @@ const MACHINE_PATTERNS: Array<{ pattern: string; machine: string }> = [
 
 export function detectMachine(hostname: string): string | null {
   const lower = hostname.toLowerCase();
+  const segments = lower.split(/[-_.]/);
   for (const { pattern, machine } of MACHINE_PATTERNS) {
-    if (lower.includes(pattern)) return machine;
+    if (segments.includes(pattern)) return machine;
   }
   return null;
 }
