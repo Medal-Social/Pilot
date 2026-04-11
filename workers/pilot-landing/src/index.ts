@@ -58,7 +58,7 @@ add_to_path() {
     PATH_LINE="fish_add_path \\"$INSTALL_DIR\\""
   fi
 
-  if ! grep -qF "$INSTALL_DIR" "$PROFILE" 2>/dev/null; then
+  if ! grep -qF ".pilot/bin" "$PROFILE" 2>/dev/null; then
     printf "\\n# Pilot CLI\\n%s\\n" "$PATH_LINE" >> "$PROFILE"
     info "Added Pilot to your PATH in $PROFILE"
     info "Run: source $PROFILE  (or open a new terminal)"
