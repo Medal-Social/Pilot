@@ -1,0 +1,490 @@
+- generic [ref=e2]:
+  - region
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner "Global Navigation Menu" [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - button "Open menu" [ref=e12] [cursor=pointer]:
+            - img [ref=e13]
+          - link "Homepage (g then d)" [ref=e15] [cursor=pointer]:
+            - /url: /
+            - img [ref=e16]
+        - generic [ref=e18]:
+          - navigation "Breadcrumbs" [ref=e19]:
+            - list [ref=e20]:
+              - listitem [ref=e21]:
+                - link "Medal-Social" [ref=e22] [cursor=pointer]:
+                  - /url: /Medal-Social
+                  - generic [ref=e23]: Medal-Social
+          - button "Search or jump to…" [ref=e26] [cursor=pointer]:
+            - generic [ref=e27]:
+              - generic:
+                - img
+              - generic [ref=e28]:
+                - generic:
+                  - text: Type
+                  - generic: /
+                  - text: to search
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e33]:
+              - link "Chat with Copilot" [ref=e35] [cursor=pointer]:
+                - /url: /copilot
+                - img [ref=e36]
+              - button "Open Copilot…" [ref=e40] [cursor=pointer]:
+                - generic:
+                  - img
+            - button "Create new..." [ref=e42] [cursor=pointer]:
+              - generic [ref=e43]:
+                - generic:
+                  - img
+              - generic:
+                - img
+            - link "Issues (g then i)" [ref=e44] [cursor=pointer]:
+              - /url: /issues
+              - img [ref=e45]
+            - link "Pull requests (g then p)" [ref=e48] [cursor=pointer]:
+              - /url: /pulls
+              - img [ref=e49]
+            - link "Repositories" [ref=e51] [cursor=pointer]:
+              - /url: /repos
+              - img [ref=e52]
+          - link "You have unread notifications (g then n)" [ref=e54] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e55]
+          - button "Open user navigation menu" [ref=e58] [cursor=pointer]:
+            - img "Ali Aljumaili" [ref=e59]
+      - heading "Organization navigation" [level=2] [ref=e60]
+      - navigation "Organization" [ref=e61]:
+        - list [ref=e62]:
+          - listitem [ref=e63]:
+            - link "Overview" [ref=e64] [cursor=pointer]:
+              - /url: /Medal-Social
+              - generic [ref=e65]: Overview
+          - listitem [ref=e66]:
+            - link "Repositories (11)" [ref=e67] [cursor=pointer]:
+              - /url: /orgs/Medal-Social/repositories
+              - generic [ref=e68]: Repositories
+              - generic [ref=e69]:
+                - generic [ref=e70]: "11"
+                - generic [ref=e71]: (11)
+          - listitem [ref=e72]:
+            - link "Discussions" [ref=e73] [cursor=pointer]:
+              - /url: /orgs/Medal-Social/discussions
+              - generic [ref=e74]: Discussions
+          - listitem [ref=e75]:
+            - link "Projects (1)" [ref=e76] [cursor=pointer]:
+              - /url: /orgs/Medal-Social/projects
+              - generic [ref=e77]: Projects
+              - generic [ref=e78]:
+                - generic [ref=e79]: "1"
+                - generic [ref=e80]: (1)
+          - listitem [ref=e81]:
+            - link "Packages" [ref=e82] [cursor=pointer]:
+              - /url: /orgs/Medal-Social/packages
+              - generic [ref=e83]: Packages
+          - listitem [ref=e84]:
+            - link "Teams" [ref=e85] [cursor=pointer]:
+              - /url: /orgs/Medal-Social/teams
+              - generic [ref=e86]: Teams
+          - listitem [ref=e87]:
+            - link "People (2)" [ref=e88] [cursor=pointer]:
+              - /url: /orgs/Medal-Social/people
+              - generic [ref=e89]: People
+              - generic [ref=e90]:
+                - generic [ref=e91]: "2"
+                - generic [ref=e92]: (2)
+          - listitem [ref=e93]:
+            - link "Security and quality" [ref=e94] [cursor=pointer]:
+              - /url: /orgs/Medal-Social/security/overview
+              - generic [ref=e95]: Security and quality
+          - listitem [ref=e96]:
+            - link "Insights" [ref=e97] [cursor=pointer]:
+              - /url: /orgs/Medal-Social/insights
+              - generic [ref=e98]: Insights
+          - listitem [ref=e99]:
+            - link "Settings" [ref=e100] [cursor=pointer]:
+              - /url: /organizations/Medal-Social/settings/profile
+              - generic [ref=e101]: Settings
+  - generic [ref=e105]:
+    - button "Dismiss this message" [active] [ref=e106] [cursor=pointer]:
+      - img [ref=e107]
+    - alert [ref=e109]: Okay, Medal Bot was installed on the @Medal-Social account.
+  - main [ref=e112]:
+    - generic [ref=e113]:
+      - generic "Medal Social settings" [ref=e115]:
+        - generic [ref=e116]:
+          - img "@Medal-Social" [ref=e117]
+          - generic [ref=e118]:
+            - heading "Medal Social settings" [level=1] [ref=e119]:
+              - link "Medal Social" [ref=e120] [cursor=pointer]:
+                - /url: /Medal-Social
+              - generic [ref=e121]: settings
+            - paragraph [ref=e123]: Organization
+        - generic [ref=e124]:
+          - button "Go to settings page" [ref=e127] [cursor=pointer]:
+            - generic [ref=e128]:
+              - generic:
+                - img
+              - generic [ref=e129]: Go to settings page
+              - generic:
+                - img
+          - link "Go to your organization profile" [ref=e130] [cursor=pointer]:
+            - /url: /Medal-Social
+      - generic [ref=e132]:
+        - navigation "Organization settings" [ref=e135]:
+          - list [ref=e137]:
+            - listitem [ref=e138]:
+              - link "General" [ref=e139] [cursor=pointer]:
+                - /url: /organizations/Medal-Social/settings/profile
+                - generic:
+                  - img
+                - generic [ref=e140]: General
+            - listitem [ref=e141]:
+              - button "Policies" [ref=e142] [cursor=pointer]:
+                - generic:
+                  - img
+                - generic [ref=e143]: Policies
+                - generic:
+                  - img
+            - listitem [ref=e144]
+            - listitem [ref=e145]:
+              - generic [ref=e148]:
+                - heading "Access" [level=2] [ref=e150]
+                - list "Access" [ref=e151]:
+                  - listitem [ref=e152]:
+                    - button "Billing and licensing" [ref=e153] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e154]: Billing and licensing
+                      - generic:
+                        - img
+                  - listitem [ref=e155]:
+                    - button "Organization roles" [ref=e156] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e157]: Organization roles
+                      - generic:
+                        - img
+                  - listitem [ref=e158]:
+                    - link "Repository roles" [ref=e159] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/roles
+                      - generic:
+                        - img
+                      - generic [ref=e160]: Repository roles
+                  - listitem [ref=e161]:
+                    - link "Member privileges" [ref=e162] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/member_privileges
+                      - generic:
+                        - img
+                      - generic [ref=e163]: Member privileges
+                  - listitem [ref=e164]:
+                    - link "Import/Export" [ref=e165] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/import-export
+                      - generic:
+                        - img
+                      - generic [ref=e166]: Import/Export
+                  - listitem [ref=e167]:
+                    - button "Moderation" [ref=e168] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e169]: Moderation
+                      - generic:
+                        - img
+            - listitem [ref=e170]
+            - listitem [ref=e171]:
+              - generic [ref=e174]:
+                - heading "Code, planning, and automation" [level=2] [ref=e176]
+                - list "Code, planning, and automation" [ref=e177]:
+                  - listitem [ref=e178]:
+                    - button "Repository" [ref=e179] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e180]: Repository
+                      - generic:
+                        - img
+                  - listitem [ref=e181]:
+                    - button "Codespaces" [ref=e182] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e183]: Codespaces
+                      - generic:
+                        - img
+                  - listitem [ref=e184]:
+                    - button "Planning" [ref=e185] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e186]: Planning
+                      - generic:
+                        - img
+                  - listitem [ref=e187]:
+                    - button "Copilot" [ref=e188] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e189]: Copilot
+                      - generic:
+                        - img
+                  - listitem [ref=e190]:
+                    - button "Actions" [ref=e191] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e192]: Actions
+                      - generic:
+                        - img
+                  - listitem [ref=e193]:
+                    - button "Models Preview feature" [ref=e194] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e195]: Models
+                      - generic:
+                        - generic "Preview feature": Preview
+                      - generic:
+                        - img
+                  - listitem [ref=e196]:
+                    - link "Webhooks" [ref=e197] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/hooks
+                      - generic:
+                        - img
+                      - generic [ref=e198]: Webhooks
+                  - listitem [ref=e199]:
+                    - link "Discussions" [ref=e200] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/discussions
+                      - generic:
+                        - img
+                      - generic [ref=e201]: Discussions
+                  - listitem [ref=e202]:
+                    - link "Packages" [ref=e203] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/packages
+                      - generic:
+                        - img
+                      - generic [ref=e204]: Packages
+                  - listitem [ref=e205]:
+                    - link "Pages" [ref=e206] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/pages
+                      - generic:
+                        - img
+                      - generic [ref=e207]: Pages
+                  - listitem [ref=e208]:
+                    - link "Hosted compute networking" [ref=e209] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/network_configurations
+                      - generic:
+                        - img
+                      - generic [ref=e210]: Hosted compute networking
+            - listitem [ref=e211]
+            - listitem [ref=e212]:
+              - generic [ref=e215]:
+                - heading "Security" [level=2] [ref=e217]
+                - list "Security" [ref=e218]:
+                  - listitem [ref=e219]:
+                    - link "Authentication security" [ref=e220] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/security
+                      - generic:
+                        - img
+                      - generic [ref=e221]: Authentication security
+                  - listitem [ref=e222]:
+                    - button "Advanced Security" [ref=e223] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e224]: Advanced Security
+                      - generic:
+                        - img
+                  - listitem [ref=e225]:
+                    - link "Deploy keys" [ref=e226] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/deploy_keys
+                      - generic:
+                        - img
+                      - generic [ref=e227]: Deploy keys
+                  - listitem [ref=e228]:
+                    - link "Compliance" [ref=e229] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/compliance
+                      - generic:
+                        - img
+                      - generic [ref=e230]: Compliance
+                  - listitem [ref=e231]:
+                    - link "Verified and approved domains" [ref=e232] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/domains
+                      - generic:
+                        - img
+                      - generic [ref=e233]: Verified and approved domains
+                  - listitem [ref=e234]:
+                    - button "Secrets and variables" [ref=e235] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e236]: Secrets and variables
+                      - generic:
+                        - img
+            - listitem [ref=e237]
+            - listitem [ref=e238]:
+              - generic [ref=e241]:
+                - heading "Third-party Access" [level=2] [ref=e243]
+                - list "Third-party Access" [ref=e244]:
+                  - listitem [ref=e245]:
+                    - link "GitHub Apps" [ref=e246] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/installations
+                      - generic:
+                        - img
+                      - generic [ref=e247]: GitHub Apps
+                  - listitem [ref=e248]:
+                    - link "OAuth app policy" [ref=e249] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/oauth_application_policy
+                      - generic:
+                        - img
+                      - generic [ref=e250]: OAuth app policy
+                  - listitem [ref=e251]:
+                    - button "Personal access tokens" [ref=e252] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e253]: Personal access tokens
+                      - generic:
+                        - img
+            - listitem [ref=e254]
+            - listitem [ref=e255]:
+              - generic [ref=e258]:
+                - heading "Integrations" [level=2] [ref=e260]
+                - list "Integrations" [ref=e261]:
+                  - listitem [ref=e262]:
+                    - link "Scheduled reminders" [ref=e263] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/reminders
+                      - generic:
+                        - img
+                      - generic [ref=e264]: Scheduled reminders
+            - listitem [ref=e265]
+            - listitem [ref=e266]:
+              - generic [ref=e269]:
+                - heading "Archive" [level=2] [ref=e271]
+                - list "Archive" [ref=e272]:
+                  - listitem [ref=e273]:
+                    - button "Logs" [ref=e274] [cursor=pointer]:
+                      - generic:
+                        - img
+                      - generic [ref=e275]: Logs
+                      - generic:
+                        - img
+                  - listitem [ref=e276]:
+                    - link "Deleted repositories" [ref=e277] [cursor=pointer]:
+                      - /url: /organizations/Medal-Social/settings/deleted_repositories
+                      - generic:
+                        - img
+                      - generic [ref=e278]: Deleted repositories
+            - listitem [ref=e279]
+            - listitem [ref=e280]:
+              - button "Developer settings" [ref=e281] [cursor=pointer]:
+                - generic:
+                  - img
+                - generic [ref=e282]: Developer settings
+                - generic:
+                  - img
+        - generic [ref=e285]:
+          - generic [ref=e286]:
+            - img "Medal Bot" [ref=e288]
+            - generic [ref=e289]:
+              - heading "Medal Bot" [level=2] [ref=e290]
+              - generic [ref=e291]:
+                - generic [ref=e292]:
+                  - img [ref=e293]
+                  - text: Installed April 11, 2026 02:45now
+                - generic [ref=e295]:
+                  - img [ref=e296]
+                  - text: Developed by
+                  - link "Medal-Social" [ref=e298] [cursor=pointer]:
+                    - /url: /Medal-Social
+                - generic [ref=e299]:
+                  - img [ref=e300]
+                  - link "App settings" [ref=e302] [cursor=pointer]:
+                    - /url: /organizations/Medal-Social/settings/apps/medal-bot
+                - generic [ref=e303]:
+                  - img [ref=e304]
+                  - link "https://github.com/Medal-Social" [ref=e306] [cursor=pointer]:
+                    - /url: https://github.com/Medal-Social
+          - heading "Permissions" [level=2] [ref=e308]
+          - list [ref=e309]:
+            - listitem [ref=e310]:
+              - img [ref=e311]
+              - strong [ref=e313]: Read
+              - text: access to metadata
+            - listitem [ref=e314]:
+              - img [ref=e315]
+              - strong [ref=e317]: Read
+              - text: and
+              - strong [ref=e318]: write
+              - text: access to pull requests
+          - heading "Repository access" [level=2] [ref=e320]
+          - generic [ref=e321]:
+            - generic [ref=e324]:
+              - radiogroup [ref=e326]:
+                - generic [ref=e327]:
+                  - generic [ref=e328]:
+                    - radio "All repositories" [ref=e329] [cursor=pointer]
+                    - generic [ref=e330]:
+                      - generic [ref=e331] [cursor=pointer]: All repositories
+                      - generic [ref=e332]: This applies to all current and future repositories owned by the resource owner. Also includes public repositories (read-only).
+                  - generic [ref=e333]:
+                    - radio "Only select repositories" [checked] [ref=e334] [cursor=pointer]
+                    - generic [ref=e335]:
+                      - generic [ref=e336] [cursor=pointer]: Only select repositories
+                      - generic [ref=e337]: Select at least one repository. Also includes public repositories (read-only).
+              - generic [ref=e339]:
+                - group [ref=e340]:
+                  - button "Select repositories" [ref=e341] [cursor=pointer]:
+                    - img [ref=e342]
+                    - text: Select repositories
+                - generic [ref=e344]: Selected 1 repository.
+                - generic [ref=e347]:
+                  - img [ref=e348]
+                  - button "Remove pilot" [ref=e350] [cursor=pointer]:
+                    - img [ref=e353]
+                  - generic [ref=e355]:
+                    - generic [ref=e356]: Medal-Social
+                    - text: /pilot
+            - button "Save" [disabled] [ref=e357]:
+              - generic [ref=e359]: Save
+          - button "Cancel" [disabled] [ref=e360]:
+            - generic [ref=e362]: Cancel
+          - heading "Danger zone" [level=2] [ref=e364]
+          - generic [ref=e365]:
+            - generic [ref=e366]:
+              - button "Suspend" [ref=e368] [cursor=pointer]
+              - strong [ref=e369]: Suspend your installation
+              - generic [ref=e370]: This will block the app access to your resources.
+            - generic [ref=e371]:
+              - button "Uninstall" [ref=e373] [cursor=pointer]
+              - strong [ref=e374]: Uninstall "Medal Bot"
+              - generic [ref=e375]: This will remove the app and revoke access to all resources.
+  - contentinfo [ref=e376]:
+    - heading "Footer" [level=2] [ref=e377]
+    - generic [ref=e378]:
+      - generic [ref=e379]:
+        - link "GitHub Homepage" [ref=e380] [cursor=pointer]:
+          - /url: https://github.com
+          - img [ref=e381]
+        - generic [ref=e383]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=e384]:
+        - heading "Footer navigation" [level=3] [ref=e385]
+        - list "Footer navigation" [ref=e386]:
+          - listitem [ref=e387]:
+            - link "Terms" [ref=e388] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=e389]:
+            - link "Privacy" [ref=e390] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=e391]:
+            - link "Security" [ref=e392] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=e393]:
+            - link "Status" [ref=e394] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=e395]:
+            - link "Community" [ref=e396] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=e397]:
+            - link "Docs" [ref=e398] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=e399]:
+            - link "Contact" [ref=e400] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=e401]:
+            - button "Manage cookies" [ref=e403] [cursor=pointer]
+          - listitem [ref=e404]:
+            - button "Do not share my personal information" [ref=e406] [cursor=pointer]
