@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { program } from 'commander';
-
-const VERSION = '0.1.5';
+import { VERSION } from '../version.js';
 
 program.name('pilot').description('Your AI crew, ready to fly.').version(VERSION, '-v, --version');
 

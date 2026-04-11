@@ -35,16 +35,19 @@
   "bin": {
     "pilot": "dist/bin/pilot.js"
   },
-  "files": ["dist", "!dist/**/*.test.*"],
+  "files": [
+    "dist",
+    "!dist/**/*.test.*"
+  ],
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "scripts": {
     "dev": "tsx watch src/bin/pilot.ts",
-    "build": "tsc",
+    "build": "sh scripts/inject-version.sh && tsc",
     "test": "vitest",
-    "prepublishOnly": "tsc"
+    "prepublishOnly": "sh scripts/inject-version.sh && tsc"
   },
   "dependencies": {
     "commander": "14.0.3",
@@ -58,6 +61,7 @@
     "@types/node": "25.6.0",
     "@types/react": "19.2.14",
     "ink-testing-library": "4.0.0",
+    "react-devtools-core": "^7.0.1",
     "tsx": "4.21.0"
   }
 }
