@@ -4,8 +4,7 @@ on:
   pull_request_target:
     branches: [main]
 
-permissions:
-  pull-requests: write
+permissions: {}
 
 jobs:
   auto-approve:
