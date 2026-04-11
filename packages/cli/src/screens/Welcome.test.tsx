@@ -33,4 +33,15 @@ describe('Welcome', () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(onContinue).toHaveBeenCalledTimes(1);
   });
+
+  it('does not call onContinue for non-Enter keys', async () => {
+    const onContinue = vi.fn();
+    const { stdin } = render(<Welcome onContinue={onContinue} />);
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write('a');
+    await new Promise((r) => setTimeout(r, 20));
+    stdin.write(' ');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(onContinue).not.toHaveBeenCalled();
+  });
 });

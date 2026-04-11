@@ -85,4 +85,20 @@ describe('useListNav', () => {
     await delay();
     expect(lastFrame()).toContain('selected=0');
   });
+
+  it('falls back to empty string when tabs array is empty', () => {
+    const { lastFrame } = render(<TestComponent listLength={0} tabs={[]} />);
+    expect(lastFrame()).toContain('selected=0');
+    expect(lastFrame()).toContain('tab=');
+  });
+
+  it('ignores number keys outside tab range', async () => {
+    const { lastFrame, stdin } = render(<TestComponent listLength={3} tabs={['A', 'B']} />);
+    await delay();
+    // Press '9' which is out of tabs range (only 2 tabs)
+    stdin.write('9');
+    await delay();
+    // Tab should remain unchanged
+    expect(lastFrame()).toContain('tab=0');
+  });
 });

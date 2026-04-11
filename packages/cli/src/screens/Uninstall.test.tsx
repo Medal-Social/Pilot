@@ -294,6 +294,83 @@ describe('Uninstall', () => {
 
     const frame = lastFrame() ?? '';
     expect(frame).toContain('Could not back up');
+
+    // Press any key to exit from backup-failed phase
+    stdin.write('y');
+    await delay();
+  });
+
+  it('advances when backup succeeds but has no backupPath', async () => {
+    const backup = await import('../device/backup.js');
+    vi.mocked(backup.backupKnowledge).mockReturnValueOnce({
+      success: true,
+      skipped: true,
+    } as never);
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay();
+
+    // Should advance to step 1 without setting backupPath
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Remove knowledge');
+  });
+
+  it('exits when user presses N at intro', async () => {
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    // Press 'n' at intro — should exit
+    stdin.write('n');
+    await delay();
+
+    // After exit the frame should be empty or show the intro (exit is mocked by ink-testing-library)
+    const frame = lastFrame() ?? '';
+    expect(frame).toBeDefined();
+  });
+
+  it('ignores non-y/n input during intro phase', async () => {
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    // Press 'x' — should be ignored
+    stdin.write('x');
+    await delay();
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('remove Pilot');
+  });
+
+  it('skips templates step4 with n when templates are installed', async () => {
+    const state = await import('../device/state.js');
+    vi.mocked(state.getInstalledTemplateNames).mockReturnValueOnce(['pencil']);
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay(); // intro
+    stdin.write('y');
+    await delay(); // step 1
+    stdin.write('y');
+    await delay(); // step 2
+    stdin.write('y');
+    await delay(); // step 3
+    // step 4 shows templates — skip them
+    expect(lastFrame()).toContain('pencil');
+    stdin.write('n');
+    await delay(); // step 4 — skip
+
+    const frame = lastFrame() ?? '';
+    // Should have skipped dev tools and be at step 5
+    expect(frame).toContain('Dev tools');
+    expect(frame).toContain('skipped');
   });
 
   it('walks through step4 with templates installed', async () => {

@@ -81,6 +81,26 @@ describe('Update', () => {
     expect(lastFrame()).toContain('Downloading update');
   });
 
+  it('transitions to updating phase when user presses Enter at confirm', async () => {
+    const { checkForUpdates, applyUpdate } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+    // Keep applyUpdate pending so we can observe the 'updating' state
+    vi.mocked(applyUpdate).mockReturnValue(new Promise(() => {}));
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    // Now in 'confirm' phase — press Enter
+    stdin.write('\r');
+    await delay();
+    expect(lastFrame()).toContain('Downloading update');
+  });
+
   it('dismisses confirm with n and shows up-to-date', async () => {
     const { checkForUpdates } = await import('../update/checker.js');
     vi.mocked(checkForUpdates).mockResolvedValue({
@@ -136,6 +156,59 @@ describe('Update', () => {
     stdin.write('y');
     await delay(150);
     expect(lastFrame()).toContain('permission denied');
+  });
+
+  it('transitions to updating phase when user presses Y (uppercase) at confirm', async () => {
+    const { checkForUpdates, applyUpdate } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+    vi.mocked(applyUpdate).mockReturnValue(new Promise(() => {}));
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    stdin.write('Y');
+    await delay();
+    expect(lastFrame()).toContain('Downloading update');
+  });
+
+  it('dismisses confirm with N (uppercase) and shows up-to-date', async () => {
+    const { checkForUpdates } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    stdin.write('N');
+    await delay();
+    expect(lastFrame()).toContain('current');
+  });
+
+  it('ignores unrecognized keys at confirm prompt', async () => {
+    const { checkForUpdates } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    stdin.write('x');
+    await delay();
+    // Should still be on confirm
+    expect(lastFrame()).toContain('newer version');
   });
 
   it('shows generic error when applyUpdate fails without message', async () => {

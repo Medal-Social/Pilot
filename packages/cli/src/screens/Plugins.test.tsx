@@ -111,6 +111,50 @@ describe('Plugins', () => {
     expect(lastFrame()).toContain('pencil');
   });
 
+  it('shows provided commands in detail pane', () => {
+    const { lastFrame } = render(<Plugins plugins={mockPlugins} />);
+    // kit is selected by default, and it provides commands: ['up', 'update', 'status']
+    expect(lastFrame()).toContain('PROVIDES');
+    expect(lastFrame()).toContain('✓ up');
+    expect(lastFrame()).toContain('✓ update');
+    expect(lastFrame()).toContain('✓ status');
+  });
+
+  it('shows provided MCP servers in detail pane', async () => {
+    const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
+    const { lastFrame, stdin } = render(<Plugins plugins={mockPlugins} />);
+    await delay();
+    // Navigate down to sanity which has mcpServers: ['sanity']
+    stdin.write('\x1B[B');
+    await delay();
+    expect(lastFrame()).toContain('✓ sanity (MCP)');
+  });
+
+  it('does not toggle when pressing d on already disabled plugin', async () => {
+    const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
+    const { lastFrame, stdin } = render(<Plugins plugins={mockPlugins} />);
+    await delay();
+    // Navigate to pencil (index 2, disabled)
+    stdin.write('\x1B[B');
+    await delay();
+    stdin.write('\x1B[B');
+    await delay();
+    // Press 'd' on a disabled plugin — should be a no-op
+    stdin.write('d');
+    await delay();
+    expect(lastFrame()).toContain('○ disabled');
+  });
+
+  it('does not toggle when pressing e on already enabled plugin', async () => {
+    const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
+    const { lastFrame, stdin } = render(<Plugins plugins={mockPlugins} />);
+    await delay();
+    // kit is selected (index 0, enabled) — press 'e' should be a no-op
+    stdin.write('e');
+    await delay();
+    expect(lastFrame()).toContain('● enabled');
+  });
+
   it('recovers toggle after disabling only enabled plugin on Enabled tab', async () => {
     // One enabled, one disabled — Enabled tab has exactly 1 plugin
     const plugins: LoadedPlugin[] = [
