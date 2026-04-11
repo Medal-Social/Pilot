@@ -12,4 +12,12 @@ describe('Repl', () => {
     const { lastFrame } = render(<Repl />);
     expect(lastFrame()).toContain('Welcome aboard');
   });
+
+  it('shows Home screen when already onboarded', async () => {
+    const { loadSettings } = await import('../settings.js');
+    vi.mocked(loadSettings).mockReturnValue({ onboarded: true, plugins: {} });
+
+    const { lastFrame } = render(<Repl />);
+    expect(lastFrame()).toContain('pilot');
+  });
 });

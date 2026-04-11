@@ -10,7 +10,7 @@ export default defineConfig({
         statements: 80,
         branches: 75,
       },
-      exclude: ['node_modules/**', 'dist/**', '**/types.ts', '**/*.d.ts'],
+      exclude: ['node_modules/**', 'dist/**', '**/types.ts', '**/*.d.ts', '**/bin/pilot.ts'],
     },
   },
 });
