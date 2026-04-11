@@ -25,7 +25,13 @@ jobs:
 
       - run: pnpm build
 
-      - run: pnpm test -- --run
+      - run: pnpm test -- --run --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67ab1fd00d0d27f # v5.4.3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   lint:
     runs-on: ubuntu-latest

@@ -2,6 +2,7 @@
 
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Medal-Social/pilot/badge)](https://scorecard.dev/viewer/?uri=github.com/Medal-Social/pilot)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12447/badge)](https://www.bestpractices.dev/projects/12447)
+[![codecov](https://codecov.io/gh/Medal-Social/pilot/graph/badge.svg)](https://codecov.io/gh/Medal-Social/pilot)
 
 **Your AI crew, ready to fly.**
 
