@@ -1,14 +1,14 @@
-# OpenSSF Silver Badge Implementation Plan
+# Security Hardening Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Meet all OpenSSF Best Practices Silver badge criteria for project 12447
+**Goal:** Meet all OpenSSF Best Practices Silver + Gold criteria for project 12447
 
-**Architecture:** Criterion-by-criterion, grouped by deliverable file. Each task produces one or more doc/code changes and identifies the badge-page answers it unlocks. TDD for any code changes.
+**Architecture:** Criterion-by-criterion, grouped by deliverable file. Each task produces one or more doc/code changes and identifies the badge-page answers it unlocks. TDD for any code changes. Tasks 1-17 cover Silver, Tasks 18-23 cover Gold additions.
 
-**Tech Stack:** Markdown docs, GitHub Actions (Sigstore cosign), Vitest (coverage), Zod (validation)
+**Tech Stack:** Markdown docs, GitHub Actions (Sigstore cosign), Vitest (coverage), Zod (validation), Cloudflare Workers (security headers)
 
-**Spec:** `docs/superpowers/specs/2026-04-11-openssf-silver-badge-design.md`
+**Spec:** `docs/superpowers/specs/2026-04-11-security-hardening-design.md`
 
 ---
 
@@ -874,7 +874,7 @@ git commit -m "ci: add Sigstore cosign signing to binary releases"
 
 ### Task 12: Add Coverage Thresholds to Vitest Config
 
-**Criteria covered:** `test_statement_coverage80` (partial — config only)
+**Criteria covered:** `test_statement_coverage80` (partial — config only, will be raised to 90% in Task 20 for Gold)
 
 **Files:**
 - Modify: `vitest.config.ts`
@@ -1286,4 +1286,331 @@ After all criteria are filled and the badge is awarded, add the Silver badge to 
 ```bash
 git add README.md
 git commit -m "docs: add OpenSSF Silver badge to README"
+```
+
+---
+
+## Gold Tasks (18-23)
+
+These tasks build on top of Silver. Complete Tasks 1-17 first.
+
+---
+
+### Task 18: Add SPDX Copyright and License Headers
+
+**Criteria covered:** `copyright_per_file`, `license_per_file`
+
+**Files:**
+- Modify: All `.ts` and `.tsx` source files in `packages/`
+
+- [ ] **Step 1: Create a script to add headers**
+
+Create a temporary script that prepends the SPDX header to all source files that don't already have it:
+
+```bash
+HEADER="// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+"
+
+find packages -name "*.ts" -o -name "*.tsx" | while read -r file; do
+  if ! head -1 "$file" | grep -q "Copyright"; then
+    printf '%s\n\n' "$HEADER" | cat - "$file" > /tmp/spdx-tmp && mv /tmp/spdx-tmp "$file"
+  fi
+done
+```
+
+- [ ] **Step 2: Verify headers were added**
+
+Run: `head -2 packages/cli/src/colors.ts`
+Expected:
+```
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+```
+
+- [ ] **Step 3: Verify no double-headers**
+
+Run: `grep -rl "Copyright.*Copyright" packages/ --include="*.ts" --include="*.tsx" | wc -l`
+Expected: `0`
+
+- [ ] **Step 4: Run linter to fix any formatting issues**
+
+Run: `pnpm lint:fix`
+Expected: Clean or auto-fixed
+
+- [ ] **Step 5: Run tests to make sure nothing broke**
+
+Run: `pnpm test -- --run`
+Expected: All tests pass
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/
+git commit -m "chore: add SPDX copyright and license headers to all source files"
+```
+
+**Badge answers unlocked:**
+- `copyright_per_file` → Met: "All source files include `// Copyright (c) Medal Social. All rights reserved.`"
+- `license_per_file` → Met: "All source files include `// SPDX-License-Identifier: MIT`"
+
+---
+
+### Task 19: Add HSTS Header to Landing Page
+
+**Criteria covered:** `hardened_site`
+
+**Files:**
+- Modify: `workers/pilot-landing/src/index.ts`
+
+The landing page already has CSP, X-Content-Type-Options, and X-Frame-Options. Only HSTS is missing.
+
+- [ ] **Step 1: Add Strict-Transport-Security header**
+
+In `workers/pilot-landing/src/index.ts`, in the `buildLandingPage()` function, add the HSTS header to the response headers object (after the `X-Frame-Options` line):
+
+```typescript
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+```
+
+- [ ] **Step 2: Also add security headers to the /install endpoint**
+
+In the `/install` route handler, add security headers:
+
+```typescript
+      return new Response(INSTALL_SCRIPT, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'public, max-age=300',
+          'Content-Disposition': 'inline',
+          'X-Content-Type-Options': 'nosniff',
+          'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+        },
+      });
+```
+
+- [ ] **Step 3: Verify the TypeScript compiles**
+
+Run: `cd workers/pilot-landing && npx wrangler deploy --dry-run 2>&1 | tail -3`
+Expected: No TypeScript errors
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add workers/pilot-landing/src/index.ts
+git commit -m "security: add HSTS header to landing page and install endpoint"
+```
+
+**Badge answers unlocked:**
+- `hardened_site` → Met: "CSP, HSTS, X-Content-Type-Options, X-Frame-Options all set — see workers/pilot-landing/src/index.ts"
+
+---
+
+### Task 20: Raise Coverage to 90% Statements, 80% Branches
+
+**Criteria covered:** `test_statement_coverage90`, `test_branch_coverage80`
+
+**Files:**
+- Modify: `vitest.config.ts`
+- Create: Additional test files as needed
+
+This task supersedes the Silver 80% target. After Tasks 13-15 bring coverage to ~80%, push it to 90%.
+
+- [ ] **Step 1: Update vitest.config.ts thresholds**
+
+Change the thresholds in `vitest.config.ts`:
+
+```typescript
+      thresholds: {
+        statements: 90,
+        branches: 80,
+      },
+```
+
+- [ ] **Step 2: Run coverage to identify gaps**
+
+Run: `pnpm test -- --run --coverage 2>&1 | grep -E "^\s+\S+\.(ts|tsx)" | awk -F'|' '$2 < 90 {print}' | head -20`
+
+This shows files below 90% statement coverage. Focus on the largest uncovered files first.
+
+- [ ] **Step 3: Write tests for remaining gaps**
+
+Common files that will need tests (based on current coverage):
+
+- `src/device/state.ts` (32%) — test `getInstalledTemplateNames`, `getDeviceState`, `saveDeviceState`
+- `src/screens/Update.tsx` (48%) — test update check states (checking, available, up-to-date, error)
+- `src/screens/Uninstall.tsx` (77%) — test confirmation flow edge cases
+- `src/screens/Repl.tsx` (72%) — test screen routing
+- `src/components/ProgressBar.tsx` (20%) — already covered in Task 14, verify after running
+- Remaining placeholder commands (`help.ts`, `status.ts`, `plugins.ts`, `up.ts`) — add to commands.test.ts
+
+For each file, follow TDD: write failing test, verify it fails, implement/fix, verify it passes.
+
+- [ ] **Step 4: Run full coverage and verify thresholds**
+
+Run: `pnpm test -- --run --coverage`
+Expected: All packages pass 90% statement / 80% branch thresholds
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add vitest.config.ts packages/cli/src/**/*.test.{ts,tsx}
+git commit -m "test: raise coverage to 90% statements, 80% branches for Gold badge"
+```
+
+**Badge answers unlocked:**
+- `test_statement_coverage90` → Met: "90% statement coverage enforced by vitest thresholds"
+- `test_branch_coverage80` → Met: "80% branch coverage enforced by vitest thresholds"
+
+---
+
+### Task 21: Create Good First Issues
+
+**Criteria covered:** `small_tasks`
+
+**Files:** None (GitHub issue creation)
+
+- [ ] **Step 1: Create good first issues on GitHub**
+
+Run the following commands to create labeled issues:
+
+```bash
+gh issue create --title "Add NO_COLOR / FORCE_COLOR environment variable support" \
+  --body "Pilot should respect the NO_COLOR environment variable (https://no-color.org/) to disable colored output, and FORCE_COLOR to enable it even in non-TTY contexts.
+
+**Acceptance criteria:**
+- When NO_COLOR is set, all Ink components render without color
+- When FORCE_COLOR is set, colors are enabled even in piped output
+- Add tests verifying both behaviors
+
+**Good first issue** — the color system is in \`packages/cli/src/colors.ts\`." \
+  --label "good first issue"
+
+gh issue create --title "Add --json output flag for pilot status command" \
+  --body "Add a \`--json\` flag to \`pilot status\` that outputs machine-readable JSON instead of the TUI.
+
+**Acceptance criteria:**
+- \`pilot status --json\` outputs a JSON object with system info
+- JSON schema is documented
+- Add tests for JSON output mode
+
+**Good first issue** — the status command is a placeholder at \`packages/cli/src/commands/status.ts\`." \
+  --label "good first issue"
+
+gh issue create --title "Add shell completions for bash, zsh, and fish" \
+  --body "Generate shell completion scripts for all supported shells.
+
+**Acceptance criteria:**
+- \`pilot completions bash\` outputs a bash completion script
+- \`pilot completions zsh\` outputs a zsh completion script  
+- \`pilot completions fish\` outputs a fish completion script
+- Commander.js has built-in completion support to leverage
+
+**Good first issue** — Commander.js provides completion helpers." \
+  --label "good first issue"
+```
+
+- [ ] **Step 2: Verify issues exist**
+
+Run: `gh issue list --label "good first issue"`
+Expected: 3 issues listed
+
+**Badge answers unlocked:**
+- `small_tasks` → Met: "Issues labeled 'good first issue' — see GitHub Issues"
+
+---
+
+### Task 22: Enable Branch Protection for Two-Person Review
+
+**Criteria covered:** `two_person_review`
+
+**Files:**
+- Modify: `CONTRIBUTING.md` (add review policy section)
+
+- [ ] **Step 1: Add review policy to CONTRIBUTING.md**
+
+Add after the Testing Policy section:
+
+```markdown
+
+## Code Review Policy
+
+All pull requests require approval from at least one reviewer who is not the author before merging. This is enforced by GitHub branch protection on the `main` branch.
+
+**Reviewers should check:**
+- Code correctness and edge cases
+- Test coverage for new functionality
+- Documentation updates for behavior changes
+- Security implications (input validation, credential handling)
+- Adherence to coding standards (Biome will catch most style issues)
+```
+
+- [ ] **Step 2: Configure branch protection on GitHub**
+
+Run:
+
+```bash
+gh api repos/Medal-Social/pilot/branches/main/protection -X PUT \
+  --input - <<'EOF'
+{
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true
+  },
+  "required_status_checks": {
+    "strict": true,
+    "contexts": []
+  },
+  "enforce_admins": false,
+  "restrictions": null
+}
+EOF
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add CONTRIBUTING.md
+git commit -m "docs: add code review policy for two-person review requirement"
+```
+
+**Badge answers unlocked:**
+- `two_person_review` → Met: "Branch protection requires 1 approving review — see CONTRIBUTING.md"
+
+---
+
+### Task 23: Fill Gold Badge Page Answers
+
+**Criteria covered:** All Gold criteria
+
+This task is manual — go to https://www.bestpractices.dev/en/projects/12447/gold and fill in each criterion.
+
+- [ ] **Step 1: Fill Gold badge page**
+
+| Criterion | Answer | Justification |
+|-----------|--------|---------------|
+| `achieve_silver` | Met | Silver badge awarded |
+| `bus_factor` | Met | Two active contributors — see git log |
+| `contributors_unassociated` | Met | Two unassociated significant contributors |
+| `copyright_per_file` | Met | SPDX headers on all source files |
+| `license_per_file` | Met | SPDX-License-Identifier: MIT on all source files |
+| `small_tasks` | Met | Issues labeled 'good first issue' |
+| `two_person_review` | Met | Branch protection requires 1 approving review |
+| `test_statement_coverage90` | Met | 90% enforced by vitest thresholds |
+| `test_branch_coverage80` | Met | 80% branch coverage enforced by vitest thresholds |
+| `hardened_site` | Met | CSP, HSTS, X-Content-Type-Options, X-Frame-Options |
+
+- [ ] **Step 2: Add Gold badge to README.md**
+
+Replace the Silver badge line with:
+
+```markdown
+[![OpenSSF Best Practices Gold](https://www.bestpractices.dev/projects/12447/badge?level=gold)](https://www.bestpractices.dev/projects/12447)
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add README.md
+git commit -m "docs: add OpenSSF Gold badge to README"
 ```
