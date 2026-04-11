@@ -22,8 +22,19 @@ type ColorKey = keyof typeof brandColors;
 type Colors = { [K in ColorKey]: string };
 
 // When NO_COLOR is set, all color values become empty strings so Ink renders plain text.
-export const colors: Colors = noColor
-  ? (Object.fromEntries(Object.keys(brandColors).map((k) => [k, ''])) as Colors)
-  : { ...brandColors };
+const emptyColors: Colors = {
+  bg: '',
+  card: '',
+  border: '',
+  primary: '',
+  info: '',
+  success: '',
+  warning: '',
+  error: '',
+  text: '',
+  muted: '',
+};
+
+export const colors: Colors = noColor ? emptyColors : { ...brandColors };
 
 export const isColorEnabled = !noColor;
