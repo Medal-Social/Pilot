@@ -1,5 +1,4 @@
 import { render } from 'ink-testing-library';
-import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { LoadedPlugin } from '../plugins/types.js';
 import { Plugins } from './Plugins.js';

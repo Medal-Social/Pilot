@@ -1,5 +1,4 @@
 import { Box, Text } from 'ink';
-import React from 'react';
 import { colors } from '../colors.js';
 
 interface ThinkingRowProps {

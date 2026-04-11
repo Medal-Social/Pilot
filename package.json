@@ -11,8 +11,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@fast-check/vitest": "~0.2.4",
+    "@biomejs/biome": "2.4.11",
     "@vitest/coverage-v8": "^4.1.4",
     "fast-check": "^4.6.0",
     "husky": "^9.1.7",

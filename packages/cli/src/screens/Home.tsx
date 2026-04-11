@@ -1,5 +1,4 @@
 import { Box, Text } from 'ink';
-import React from 'react';
 import { colors } from '../colors.js';
 import { Header } from '../components/Header.js';
 import { StatusBar } from '../components/StatusBar.js';

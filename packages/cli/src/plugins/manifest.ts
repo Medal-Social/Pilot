@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PilotError, errorCodes } from '../errors.js';
+import { errorCodes, PilotError } from '../errors.js';
 
 export const manifestSchema = z.object({
   name: z.string().min(1),

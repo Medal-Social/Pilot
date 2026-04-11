@@ -1,10 +1,10 @@
 import { Box, Text, useInput } from 'ink';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { colors } from '../colors.js';
 import { ProgressBar } from '../components/ProgressBar.js';
 import { Step } from '../components/Step.js';
-import { applyUpdate, checkForUpdates } from '../update/checker.js';
 import type { UpdateCheckResult } from '../update/checker.js';
+import { applyUpdate, checkForUpdates } from '../update/checker.js';
 
 type Phase = 'checking' | 'up-to-date' | 'confirm' | 'updating' | 'complete' | 'error';
 
