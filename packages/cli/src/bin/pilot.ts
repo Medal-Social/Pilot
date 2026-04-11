@@ -1,14 +1,8 @@
 #!/usr/bin/env node
-import { createRequire } from 'node:module';
 import { program } from 'commander';
+import { VERSION } from '../version.js';
 
-const require = createRequire(import.meta.url);
-const pkg = require('../../package.json');
-
-program
-  .name('pilot')
-  .description('Your AI crew, ready to fly.')
-  .version(pkg.version, '-v, --version');
+program.name('pilot').description('Your AI crew, ready to fly.').version(VERSION, '-v, --version');
 
 program
   .command('up [template]')

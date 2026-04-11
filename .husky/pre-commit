@@ -1,0 +1,3 @@
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm test -- --run

@@ -1,0 +1,21 @@
+name: Auto Approve
+
+on:
+  pull_request_target:
+    branches: [main]
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    if: github.actor == 'alioftech' || github.actor == 'dependabot[bot]' || github.actor == 'renovate[bot]'
+    steps:
+      - name: Generate token from Medal Bot app
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: hmarr/auto-approve-action@8f929096a962e83ccdfa8afcf855f39f12d4dac7 # v4
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
