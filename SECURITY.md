@@ -68,7 +68,7 @@ Binary releases are signed with [Sigstore cosign](https://docs.sigstore.dev/) us
 ```bash
 cosign verify-blob \
   --signature pilot-darwin-arm64.sig \
-  --bundle pilot-darwin-arm64.bundle \
+  --certificate pilot-darwin-arm64.pem \
   --certificate-identity "https://github.com/Medal-Social/pilot/.github/workflows/build-binaries.yml@refs/tags/v*" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   pilot-darwin-arm64

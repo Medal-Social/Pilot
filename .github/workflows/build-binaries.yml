@@ -69,11 +69,6 @@ jobs:
           & ".\${{ matrix.target }}" --version
           & ".\${{ matrix.target }}" --help
 
-      - name: Upload binary to release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
-        with:
-          files: ${{ matrix.target }}
-
       - name: Install cosign
         uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
 
@@ -85,10 +80,11 @@ jobs:
         if: contains(matrix.target, 'win')
         run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
 
-      - name: Upload signatures to release
-        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.3.2
+      - name: Upload binary and signatures to release
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           files: |
+            ${{ matrix.target }}
             ${{ matrix.target }}.sig
             ${{ matrix.target }}.pem
 
