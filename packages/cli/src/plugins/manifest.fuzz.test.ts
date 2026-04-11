@@ -17,24 +17,27 @@ describe('parseManifest fuzz', () => {
     fc.assert(
       fc.property(
         fc.record({
-          name: fc.string(),
-          namespace: fc.string(),
+          name: fc.string({ minLength: 1 }),
+          namespace: fc.string({ minLength: 1 }),
           description: fc.string(),
           provides: fc.option(
             fc.record({
-              commands: fc.option(fc.array(fc.string())),
-              mcpServers: fc.option(fc.array(fc.string())),
-            })
+              commands: fc.option(fc.array(fc.string()), { nil: undefined }),
+              mcpServers: fc.option(fc.array(fc.string()), { nil: undefined }),
+            }),
+            { nil: undefined }
           ),
           permissions: fc.option(
             fc.record({
-              network: fc.option(fc.array(fc.string())),
-            })
+              network: fc.option(fc.array(fc.string()), { nil: undefined }),
+            }),
+            { nil: undefined }
           ),
         }),
         (input) => {
           const result = parseManifest(input);
-          expect(result).toHaveProperty('success');
+          // A well-formed structured input must always parse successfully
+          expect(result.success).toBe(true);
           if (result.success) {
             expect(typeof result.data.name).toBe('string');
             expect(typeof result.data.namespace).toBe('string');

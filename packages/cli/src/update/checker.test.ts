@@ -4,26 +4,20 @@ import { checkForUpdates } from './checker.js';
 
 vi.mock('node:child_process');
 
+type ExecFileCallback = (err: NodeJS.ErrnoException | null, stdout: string, stderr: string) => void;
+
 function mockExecFile(stdout: string) {
-  vi.mocked(child_process.execFile).mockImplementation(((
-    _cmd: unknown,
-    _args: unknown,
-    _opts: unknown,
-    cb: unknown
-  ) => {
-    (cb as (err: null, stdout: string) => void)(null, stdout);
-  }) as typeof child_process.execFile);
+  vi.mocked(child_process.execFile).mockImplementation((_cmd, _args, _opts, cb) => {
+    (cb as ExecFileCallback)(null, stdout, '');
+    return undefined as unknown as ReturnType<typeof child_process.execFile>;
+  });
 }
 
 function mockExecFileError(message: string) {
-  vi.mocked(child_process.execFile).mockImplementation(((
-    _cmd: unknown,
-    _args: unknown,
-    _opts: unknown,
-    cb: unknown
-  ) => {
-    (cb as (err: Error) => void)(new Error(message));
-  }) as typeof child_process.execFile);
+  vi.mocked(child_process.execFile).mockImplementation((_cmd, _args, _opts, cb) => {
+    (cb as ExecFileCallback)(Object.assign(new Error(message), { code: 'ENOENT' }), '', '');
+    return undefined as unknown as ReturnType<typeof child_process.execFile>;
+  });
 }
 
 describe('checkForUpdates', () => {

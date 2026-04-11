@@ -27,5 +27,8 @@ export function parseManifest(raw: unknown) {
 }
 
 export function pluginId(manifest: PluginManifest): string {
+  if (!manifest.namespace || !manifest.name) {
+    throw new Error('Plugin manifest must have non-empty namespace and name');
+  }
   return `@${manifest.namespace}/${manifest.name}`;
 }
