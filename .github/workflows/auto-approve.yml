@@ -1,0 +1,17 @@
+name: Auto Approve
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    if: github.actor == 'alioftech' || github.actor == 'dependabot[bot]' || github.actor == 'renovate[bot]'
+    steps:
+      - uses: hmarr/auto-approve-action@8f929096a962e83ccdfa8afcf855f39f12d4dac7 # v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
