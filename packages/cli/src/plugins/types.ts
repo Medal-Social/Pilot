@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import type { PluginManifest } from './manifest.js';
 
 export interface LoadedPlugin {

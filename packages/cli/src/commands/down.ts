@@ -1,10 +1,13 @@
-import { Text, render } from 'ink';
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
+import { render, Text } from 'ink';
 import React from 'react';
 import { colors } from '../colors.js';
 import { getInstalledTemplateNames } from '../device/state.js';
 import { getTemplate } from '../device/templates.js';
 import { uninstallTemplate } from '../device/uninstaller.js';
-import { PilotError, errorCodes } from '../errors.js';
+import { errorCodes, PilotError } from '../errors.js';
 
 export async function runDown(template: string) {
   const manifest = getTemplate(template);

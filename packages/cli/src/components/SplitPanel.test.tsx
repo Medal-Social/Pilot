@@ -1,6 +1,8 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { Text } from 'ink';
 import { render } from 'ink-testing-library';
-import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { SplitPanel } from './SplitPanel.js';
 

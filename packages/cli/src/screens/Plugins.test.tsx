@@ -1,5 +1,7 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { render } from 'ink-testing-library';
-import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { LoadedPlugin } from '../plugins/types.js';
 import { Plugins } from './Plugins.js';
@@ -81,6 +83,76 @@ describe('Plugins', () => {
     const { lastFrame } = render(<Plugins plugins={mockPlugins} />);
     expect(lastFrame()).toContain('@medalsocial/kit');
     expect(lastFrame()).toContain('Machine config');
+  });
+
+  it('shows empty detail pane message when no plugins provided', () => {
+    const { lastFrame } = render(<Plugins plugins={[]} />);
+    expect(lastFrame()).toContain('No plugins in this view');
+    expect(lastFrame()).toContain('Select a plugin');
+  });
+
+  it('enables a disabled plugin with e key', async () => {
+    const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
+    const { lastFrame, stdin } = render(<Plugins plugins={mockPlugins} />);
+    await delay();
+
+    // Switch to Disabled tab (press 3) — pencil is there and selected
+    stdin.write('3');
+    await delay();
+    expect(lastFrame()).toContain('▸ pencil');
+
+    // Enable pencil (press e)
+    stdin.write('e');
+    await delay();
+
+    // Switch to All tab to verify pencil is now enabled
+    stdin.write('1');
+    await delay();
+    expect(lastFrame()).toContain('pencil');
+  });
+
+  it('shows provided commands in detail pane', () => {
+    const { lastFrame } = render(<Plugins plugins={mockPlugins} />);
+    // kit is selected by default, and it provides commands: ['up', 'update', 'status']
+    expect(lastFrame()).toContain('PROVIDES');
+    expect(lastFrame()).toContain('✓ up');
+    expect(lastFrame()).toContain('✓ update');
+    expect(lastFrame()).toContain('✓ status');
+  });
+
+  it('shows provided MCP servers in detail pane', async () => {
+    const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
+    const { lastFrame, stdin } = render(<Plugins plugins={mockPlugins} />);
+    await delay();
+    // Navigate down to sanity which has mcpServers: ['sanity']
+    stdin.write('\x1B[B');
+    await delay();
+    expect(lastFrame()).toContain('✓ sanity (MCP)');
+  });
+
+  it('does not toggle when pressing d on already disabled plugin', async () => {
+    const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
+    const { lastFrame, stdin } = render(<Plugins plugins={mockPlugins} />);
+    await delay();
+    // Navigate to pencil (index 2, disabled)
+    stdin.write('\x1B[B');
+    await delay();
+    stdin.write('\x1B[B');
+    await delay();
+    // Press 'd' on a disabled plugin — should be a no-op
+    stdin.write('d');
+    await delay();
+    expect(lastFrame()).toContain('○ disabled');
+  });
+
+  it('does not toggle when pressing e on already enabled plugin', async () => {
+    const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
+    const { lastFrame, stdin } = render(<Plugins plugins={mockPlugins} />);
+    await delay();
+    // kit is selected (index 0, enabled) — press 'e' should be a no-op
+    stdin.write('e');
+    await delay();
+    expect(lastFrame()).toContain('● enabled');
   });
 
   it('recovers toggle after disabling only enabled plugin on Enabled tab', async () => {

@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 const MACHINE_PATTERNS: Array<{ pattern: string; machine: string }> = [
   { pattern: 'mini', machine: 'ali-mini' },
   { pattern: 'studio', machine: 'ali-studio' },

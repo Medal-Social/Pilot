@@ -1,4 +1,7 @@
-import { Text, render } from 'ink';
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
+import { render, Text } from 'ink';
 import React from 'react';
 import { colors } from '../colors.js';
 

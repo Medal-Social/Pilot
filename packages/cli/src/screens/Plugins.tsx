@@ -1,5 +1,8 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { Box, Text, useInput } from 'ink';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { colors } from '../colors.js';
 import { SplitPanel } from '../components/SplitPanel.js';
 import { StatusBar } from '../components/StatusBar.js';

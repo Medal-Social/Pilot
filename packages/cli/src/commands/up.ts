@@ -1,7 +1,10 @@
-import { Text, render } from 'ink';
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
+import { render, Text } from 'ink';
 import React from 'react';
 import { colors } from '../colors.js';
 
-export async function runUp(template?: string) {
+export async function runUp(_template?: string) {
   render(React.createElement(Text, { color: colors.muted }, 'pilot up — coming soon'));
 }

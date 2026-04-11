@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

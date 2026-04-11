@@ -28,7 +28,7 @@ Medal Social's AI-powered CLI platform. Your AI crew, ready to fly.
 - Co-located tests: `Step.tsx` → `Step.test.tsx`
 - ink-testing-library for component tests
 - E2E tests in `tests/e2e/` with isolated `PILOT_HOME`
-- Coverage thresholds: 80% statements, 75% branches
+- Coverage target: 100% (hard minimums: 95% statements, 90% branches, 100% functions)
 
 ## Architecture
 

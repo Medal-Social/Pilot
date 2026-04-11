@@ -53,12 +53,12 @@ add_to_path() {
     *)     PROFILE="$HOME/.profile" ;;
   esac
 
-  PATH_LINE="export PATH=\\"$INSTALL_DIR:\$PATH\\""
+  PATH_LINE='export PATH="$HOME/.pilot/bin:$PATH"'
   if [ "$SHELL_NAME" = "fish" ]; then
     PATH_LINE="fish_add_path \\"$INSTALL_DIR\\""
   fi
 
-  if ! grep -qF "$INSTALL_DIR" "$PROFILE" 2>/dev/null; then
+  if ! grep -qF ".pilot/bin" "$PROFILE" 2>/dev/null; then
     printf "\\n# Pilot CLI\\n%s\\n" "$PATH_LINE" >> "$PROFILE"
     info "Added Pilot to your PATH in $PROFILE"
     info "Run: source $PROFILE  (or open a new terminal)"
@@ -734,6 +734,7 @@ function buildLandingPage(): Response {
         "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src https://cdn.jsdelivr.net; script-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'",
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
     },
   });
 }
@@ -748,6 +749,8 @@ export default {
           'Content-Type': 'text/plain; charset=utf-8',
           'Cache-Control': 'public, max-age=300',
           'Content-Disposition': 'inline',
+          'X-Content-Type-Options': 'nosniff',
+          'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
         },
       });
     }

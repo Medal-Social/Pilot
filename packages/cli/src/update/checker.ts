@@ -1,5 +1,8 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { execFile } from 'node:child_process';
-import { PilotError, errorCodes } from '../errors.js';
+import { errorCodes, PilotError } from '../errors.js';
 
 export interface UpdateCheckResult {
   current: string;

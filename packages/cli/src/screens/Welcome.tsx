@@ -1,5 +1,7 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { Box, Text, useInput } from 'ink';
-import React from 'react';
 import { colors } from '../colors.js';
 import { Header } from '../components/Header.js';
 import { defaultCrew } from '../crew/members.js';

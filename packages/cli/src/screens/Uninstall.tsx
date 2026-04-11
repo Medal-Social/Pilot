@@ -1,9 +1,12 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { execFile } from 'node:child_process';
 import { rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { Box, Text, useApp, useInput } from 'ink';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { colors } from '../colors.js';
 import { Step } from '../components/Step.js';
 import { removeRoutingFromClaudeMd, removeSkillSymlink } from '../deploy/deployer.js';
