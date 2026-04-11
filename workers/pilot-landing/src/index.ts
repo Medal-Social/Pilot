@@ -140,8 +140,18 @@ const X_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentCol
   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.26 5.632 5.905-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
 </svg>`;
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function buildLandingPage(): Response {
   const INSTALL_COMMAND = 'curl -fsSL https://pilot.medalsocial.com/install | sh';
+  const year = new Date().getFullYear();
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -616,7 +626,7 @@ function buildLandingPage(): Response {
             <div style="width:48px"></div>
           </div>
           <div class="install-box-body">
-            <span class="install-command" id="install-cmd">${INSTALL_COMMAND}</span>
+            <span class="install-command" id="install-cmd">${escapeHtml(INSTALL_COMMAND)}</span>
             <button class="copy-btn" id="copy-btn" onclick="copyInstall()" aria-label="Copy install command">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -661,7 +671,7 @@ function buildLandingPage(): Response {
 
     <footer>
       <p class="footer-copy">
-        &copy; ${new Date().getFullYear()} <a href="https://medal.tv" target="_blank" rel="noopener">Medal Social</a>. Open source under MIT.
+        &copy; ${year} <a href="https://medal.tv" target="_blank" rel="noopener">Medal Social</a>. Open source under MIT.
       </p>
       <div class="footer-socials">
         <a href="https://www.linkedin.com/company/medalsocial/" class="social-link" target="_blank" rel="noopener" aria-label="LinkedIn">
@@ -681,8 +691,9 @@ function buildLandingPage(): Response {
   </div>
 
   <script>
+    var INSTALL_CMD = ${JSON.stringify(INSTALL_COMMAND)};
     function copyInstall() {
-      const cmd = document.getElementById('install-cmd').textContent;
+      var cmd = INSTALL_CMD;
       const btn = document.getElementById('copy-btn');
       const label = document.getElementById('copy-label');
 
@@ -719,6 +730,10 @@ function buildLandingPage(): Response {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=300',
+      'Content-Security-Policy':
+        "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src https://cdn.jsdelivr.net; script-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'",
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
     },
   });
 }
