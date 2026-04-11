@@ -88,8 +88,9 @@ Pilot uses [Biome](https://biomejs.dev/) as its linter and formatter. The config
 - Co-locate tests: `Component.tsx` → `Component.test.tsx`
 - Use `ink-testing-library` for React Ink component tests
 - Use `vitest` with `describe`/`it`/`expect`
-- Coverage must not decrease below **80% statement coverage**
-- CI enforces coverage thresholds — PRs that drop coverage are blocked
+- Coverage target is **100%** — we aim for full coverage on all new code
+- Hard minimums enforced by CI: **95% statements, 90% branches, 100% functions**
+- PRs that drop coverage below these thresholds are blocked
 
 **Regression tests:** When fixing a bug, first write a test that reproduces the bug (it should fail), then fix the bug and verify the test passes. This prevents the same bug from recurring.
 
