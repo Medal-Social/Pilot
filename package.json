@@ -7,10 +7,12 @@
     "build": "turbo build",
     "test": "turbo test",
     "lint": "biome check .",
-    "lint:fix": "biome check --fix ."
+    "lint:fix": "biome check --fix .",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "husky": "^9.1.7",
     "turbo": "2.9.5",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
