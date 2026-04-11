@@ -72,6 +72,7 @@ main() {
       esac
       echo "" >> "$PROFILE"
       echo "# Pilot CLI" >> "$PROFILE"
+      # shellcheck disable=SC2016
       echo 'export PATH="$HOME/.pilot/bin:$PATH"' >> "$PROFILE"
       echo ""
       echo "Pilot installed! Restart your terminal, then run \`pilot\` to get started."

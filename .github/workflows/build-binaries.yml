@@ -53,6 +53,20 @@ jobs:
         if: contains(matrix.target, 'win')
         run: bun build packages/cli/dist/bin/pilot.js --compile --outfile ${{ matrix.target }}
 
+      - name: Smoke test binary (Unix)
+        if: "!contains(matrix.target, 'win')"
+        run: |
+          chmod +x ${{ matrix.target }}
+          ./${{ matrix.target }} --version
+          ./${{ matrix.target }} --help
+
+      - name: Smoke test binary (Windows)
+        if: contains(matrix.target, 'win')
+        shell: pwsh
+        run: |
+          & ".\${{ matrix.target }}" --version
+          & ".\${{ matrix.target }}" --help
+
       - name: Upload binary to release
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.3.2
         with:
