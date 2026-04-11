@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { render } from 'ink';

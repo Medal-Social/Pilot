@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { colors } from '../colors.js';
 import type { CrewMember } from '../types.js';
 

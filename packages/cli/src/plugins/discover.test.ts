@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import * as fs from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { discoverPlugins } from './discover.js';

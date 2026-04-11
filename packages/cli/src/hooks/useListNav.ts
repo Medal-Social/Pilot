@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { useInput } from 'ink';
 import { useEffect, useState } from 'react';
 import type { Tab, TabId } from '../types.js';

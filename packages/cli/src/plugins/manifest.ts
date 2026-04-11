@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { z } from 'zod';
 import { errorCodes, PilotError } from '../errors.js';
 

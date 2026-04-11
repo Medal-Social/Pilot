@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('ink', () => ({

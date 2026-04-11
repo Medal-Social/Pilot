@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import * as child_process from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { applyUpdate, checkForUpdates } from './checker.js';

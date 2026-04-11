@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 export { Header } from './Header.js';
 export { Modal } from './Modal.js';
 export { ProgressBar } from './ProgressBar.js';
