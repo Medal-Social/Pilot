@@ -19,6 +19,7 @@ Steps to verify this works.
 - [ ] No dead code (`pnpm dead-code`)
 - [ ] One concern per PR — no unrelated changes
 - [ ] README Feature Tracker updated (if new feature)
+- [ ] Docs updated (if behavior changed — see [CONTRIBUTING.md](../CONTRIBUTING.md#documentation-policy))
 
 ## AI-assisted?
 
