@@ -47,9 +47,10 @@ program
 program
   .command('status')
   .description('Machine and system health')
-  .action(async () => {
+  .option('--json', 'Output in JSON format')
+  .action(async (options) => {
     const { runStatus } = await import('../commands/status.js');
-    await runStatus();
+    await runStatus(options);
   });
 
 program
