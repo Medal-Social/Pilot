@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { useState } from 'react';
 import { loadSettings, markOnboarded } from '../settings.js';
 import { Home } from './Home.js';

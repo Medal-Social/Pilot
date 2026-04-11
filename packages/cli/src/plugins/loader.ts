@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import type { LoadedPlugin, PluginRegistry } from './types.js';
 
 export function createRegistry(initial: LoadedPlugin[]): PluginRegistry {

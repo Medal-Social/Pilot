@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import * as child_process from 'node:child_process';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as state from './state.js';

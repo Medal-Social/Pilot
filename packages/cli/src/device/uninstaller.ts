@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { execFile } from 'node:child_process';
 import { loadTemplateState, removeTemplateFromState } from './state.js';
 import { getTemplate } from './templates.js';

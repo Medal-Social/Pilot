@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 export const errorCodes = {
   UPDATE_CHECK_FAILED: 'UPDATE_CHECK_FAILED',
   UPDATE_INSTALL_FAILED: 'UPDATE_INSTALL_FAILED',

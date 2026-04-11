@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import * as fs from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { discoverPlugins } from './discover.js';
@@ -106,5 +109,96 @@ network = []
     expect(plugins.find((p) => p.id === '@user/good')).toBeDefined();
     expect(plugins.find((p) => p.id === '@medalsocial/kit')).toBeDefined();
     expect(plugins.find((p) => p.id.includes('broken'))).toBeUndefined();
+  });
+
+  it('skips entries without plugin.toml', () => {
+    vi.mocked(fs.existsSync).mockImplementation((p) => {
+      const s = String(p);
+      if (s === '/fake/.pilot/plugins') return true;
+      // no-toml dir does NOT have a plugin.toml
+      if (s.includes('no-toml') && s.endsWith('plugin.toml')) return false;
+      if (s.endsWith('plugin.toml')) return true;
+      return false;
+    });
+
+    const validToml = `
+name = "good"
+namespace = "user"
+description = "Good plugin"
+
+[provides]
+commands = ["good"]
+mcpServers = []
+
+[permissions]
+network = []
+
+[roleBindings]
+`;
+
+    vi.mocked(fs.readdirSync).mockReturnValue(['no-toml', 'good'] as unknown as fs.Dirent[]);
+    vi.mocked(fs.readFileSync).mockReturnValue(validToml);
+
+    const plugins = discoverPlugins({
+      userDir: '/fake/.pilot/plugins',
+      enabledState: {},
+    });
+
+    expect(plugins.find((p) => p.id === '@user/good')).toBeDefined();
+    expect(plugins.find((p) => p.id.includes('no-toml'))).toBeUndefined();
+  });
+
+  it('skips plugins that fail manifest validation', () => {
+    // Valid TOML but missing required fields (no name/namespace)
+    const invalidManifestToml = `
+description = "Missing name and namespace"
+
+[provides]
+commands = []
+mcpServers = []
+
+[permissions]
+network = []
+
+[roleBindings]
+`;
+
+    const validToml = `
+name = "valid"
+namespace = "user"
+description = "Valid plugin"
+
+[provides]
+commands = ["valid"]
+mcpServers = []
+
+[permissions]
+network = []
+
+[roleBindings]
+`;
+
+    vi.mocked(fs.existsSync).mockImplementation((p) => {
+      const s = String(p);
+      if (s === '/fake/.pilot/plugins') return true;
+      if (s.endsWith('plugin.toml')) return true;
+      return false;
+    });
+
+    vi.mocked(fs.readdirSync).mockReturnValue(['invalid', 'valid'] as unknown as fs.Dirent[]);
+
+    vi.mocked(fs.readFileSync).mockImplementation((p) => {
+      const s = String(p);
+      if (s.includes('invalid')) return invalidManifestToml;
+      return validToml;
+    });
+
+    const plugins = discoverPlugins({
+      userDir: '/fake/.pilot/plugins',
+      enabledState: {},
+    });
+
+    expect(plugins.find((p) => p.id === '@user/valid')).toBeDefined();
+    expect(plugins.find((p) => p.id.includes('invalid'))).toBeUndefined();
   });
 });

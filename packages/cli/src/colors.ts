@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 export const colors = {
   bg: '#09090B',
   card: '#18181B',

@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { program } from 'commander';
 import { VERSION } from '../version.js';
 

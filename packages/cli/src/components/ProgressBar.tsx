@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { Box, Text } from 'ink';
 import { colors } from '../colors.js';
 

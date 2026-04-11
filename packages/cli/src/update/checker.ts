@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { execFile } from 'node:child_process';
 import { errorCodes, PilotError } from '../errors.js';
 

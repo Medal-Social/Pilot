@@ -1,3 +1,6 @@
+// Copyright (c) Medal Social. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 import { execFile } from 'node:child_process';
 import { rmSync } from 'node:fs';
 import { homedir } from 'node:os';

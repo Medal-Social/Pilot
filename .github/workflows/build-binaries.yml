@@ -11,6 +11,7 @@ jobs:
   build:
     permissions:
       contents: write
+      id-token: write
     strategy:
       matrix:
         include:
@@ -68,10 +69,24 @@ jobs:
           & ".\${{ matrix.target }}" --version
           & ".\${{ matrix.target }}" --help
 
-      - name: Upload binary to release
+      - name: Install cosign
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+
+      - name: Sign binary (Unix)
+        if: "!contains(matrix.target, 'win')"
+        run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
+
+      - name: Sign binary (Windows)
+        if: contains(matrix.target, 'win')
+        run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
+
+      - name: Upload binary and signatures to release
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
-          files: ${{ matrix.target }}
+          files: |
+            ${{ matrix.target }}
+            ${{ matrix.target }}.sig
+            ${{ matrix.target }}.pem
 
   sync-homebrew:
     needs: build
