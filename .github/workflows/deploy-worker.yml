@@ -1,0 +1,30 @@
+name: Deploy Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/pilot-landing/**'
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+
+      - name: Install wrangler
+        run: npm install -g wrangler
+
+      - name: Deploy to Cloudflare
+        working-directory: workers/pilot-landing
+        run: wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

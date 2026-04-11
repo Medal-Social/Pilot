@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PilotError, errorCodes } from '../errors.js';
 
 export const manifestSchema = z.object({
   name: z.string().min(1),
@@ -28,7 +29,7 @@ export function parseManifest(raw: unknown) {
 
 export function pluginId(manifest: PluginManifest): string {
   if (!manifest.namespace || !manifest.name) {
-    throw new Error('Plugin manifest must have non-empty namespace and name');
+    throw new PilotError(errorCodes.PLUGIN_INVALID_MANIFEST);
   }
   return `@${manifest.namespace}/${manifest.name}`;
 }

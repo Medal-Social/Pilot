@@ -8,6 +8,7 @@ export const errorCodes = {
   DOWN_UNKNOWN_TEMPLATE: 'DOWN_UNKNOWN_TEMPLATE',
   DOWN_NOT_INSTALLED: 'DOWN_NOT_INSTALLED',
   DOWN_REMOVE_FAILED: 'DOWN_REMOVE_FAILED',
+  PLUGIN_INVALID_MANIFEST: 'PLUGIN_INVALID_MANIFEST',
 } as const;
 
 type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
@@ -24,6 +25,7 @@ const userMessages: Record<ErrorCode, string> = {
   DOWN_UNKNOWN_TEMPLATE: 'Unknown template. Run pilot up to see available templates.',
   DOWN_NOT_INSTALLED: 'That template is not installed. Nothing to remove.',
   DOWN_REMOVE_FAILED: 'Could not remove template dependencies. Some files may remain.',
+  PLUGIN_INVALID_MANIFEST: 'Plugin has an invalid manifest — missing name or namespace.',
 };
 
 export class PilotError extends Error {
