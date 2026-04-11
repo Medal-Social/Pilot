@@ -57,3 +57,42 @@ jobs:
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.3.2
         with:
           files: ${{ matrix.target }}
+
+  sync-homebrew:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download binaries and compute SHA256s
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          BASE="https://github.com/Medal-Social/pilot/releases/download/${TAG}"
+
+          for bin in pilot-darwin-arm64 pilot-darwin-x64 pilot-linux-x64 pilot-linux-arm64; do
+            curl -fsSL "${BASE}/${bin}" -o "/tmp/${bin}"
+            sha=$(sha256sum "/tmp/${bin}" | cut -d' ' -f1)
+            key=$(echo "${bin}" | tr '-' '_')
+            echo "SHA_${key}=${sha}" >> "$GITHUB_ENV"
+          done
+
+      - name: Update formula with real SHA256s
+        run: |
+          sed -i "s|sha256 \".*\" # darwin-arm64|sha256 \"${SHA_pilot_darwin_arm64}\" # darwin-arm64|" homebrew-pilot/pilot.rb
+          sed -i "s|sha256 \".*\" # darwin-x64|sha256 \"${SHA_pilot_darwin_x64}\" # darwin-x64|" homebrew-pilot/pilot.rb
+          sed -i "s|sha256 \".*\" # linux-arm64|sha256 \"${SHA_pilot_linux_arm64}\" # linux-arm64|" homebrew-pilot/pilot.rb
+          sed -i "s|sha256 \".*\" # linux-x64|sha256 \"${SHA_pilot_linux_x64}\" # linux-x64|" homebrew-pilot/pilot.rb
+
+      - name: Sync to homebrew-pilot repo
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_SYNC_TOKEN }}
+        run: |
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/Medal-Social/homebrew-pilot.git" /tmp/homebrew-pilot
+          cp homebrew-pilot/pilot.rb /tmp/homebrew-pilot/pilot.rb
+          cp homebrew-pilot/README.md /tmp/homebrew-pilot/README.md
+          cd /tmp/homebrew-pilot
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "chore: update formula for ${GITHUB_REF_NAME}"
+          git push
