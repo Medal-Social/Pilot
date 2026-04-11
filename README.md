@@ -125,8 +125,45 @@ pilot
 | `pilot training` | Knowledge base — teach your crew about your brand |
 | `pilot plugins` | Browse and manage plugins |
 | `pilot update` | Check for and apply updates |
-| `pilot status` | Machine and system health (supports `--json`) |
+| `pilot status` | Machine and system health |
+| `pilot status --json` | Machine-readable JSON output (see [schema](#status---json)) |
+| `pilot completions <shell>` | Generate shell completions (bash, zsh, fish) |
 | `pilot help` | Help reference |
+
+### `status --json`
+
+Outputs machine-readable JSON for scripting and CI:
+
+```json
+{
+  "pilot": "0.1.5",
+  "node": "v24.0.0",
+  "platform": "darwin",
+  "arch": "arm64"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `pilot` | `string` | Installed Pilot version |
+| `node` | `string` | Node.js version (with `v` prefix) |
+| `platform` | `string` | OS platform (`darwin`, `linux`, `win32`) |
+| `arch` | `string` | CPU architecture (`arm64`, `x64`) |
+
+### Shell Completions
+
+Generate tab-completion scripts for your shell:
+
+```bash
+# Bash — add to ~/.bashrc
+pilot completions bash >> ~/.bashrc
+
+# Zsh — add to ~/.zshrc
+pilot completions zsh >> ~/.zshrc
+
+# Fish — add to Fish completions
+pilot completions fish > ~/.config/fish/completions/pilot.fish
+```
 
 ---
 
@@ -205,8 +242,8 @@ Status: **Pre-release** · Building v1
 | Changesets versioning | Planned | [Plan](docs/plans/masterplan.md) |
 | GitHub Actions CI + release | Planned | [Plan](docs/plans/masterplan.md) |
 | E2E test suite | Planned | [Plan](docs/plans/masterplan.md) |
-| Shell completions (bash, zsh, fish) | Planned | [Plan](docs/plans/masterplan.md) |
-| NO_COLOR / FORCE_COLOR support | Planned | [Plan](docs/plans/masterplan.md) |
+| Shell completions (bash, zsh, fish) | Done | [Plan](docs/plans/masterplan.md) |
+| NO_COLOR / FORCE_COLOR support | Done | [Plan](docs/plans/masterplan.md) |
 | Local-only telemetry | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Themes (dark/light from design tokens) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 
