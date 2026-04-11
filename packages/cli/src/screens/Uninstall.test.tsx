@@ -225,4 +225,101 @@ describe('Uninstall', () => {
     const frame = lastFrame() ?? '';
     expect(frame).toContain('removed');
   });
+
+  it('shows backup path and skipped items in done phase', async () => {
+    // Top-level mock already returns backupPath='/mock/home/pilot-backup-2026-04-10'
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay(); // intro — backup runs, sets backupPath
+    stdin.write('n');
+    await delay(); // skip step 1
+    stdin.write('n');
+    await delay(); // skip step 2
+    stdin.write('n');
+    await delay(); // skip step 3
+    // step 4 auto-skipped
+    stdin.write('n');
+    await delay(); // skip step 5 → done
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('pilot-backup');
+    expect(frame).toContain('Skipped');
+  });
+
+  it('shows npm error when execFile fails in step5', async () => {
+    const cp = await import('node:child_process');
+    vi.mocked(cp.execFile).mockImplementationOnce(
+      (_cmd: string, _args: string[], _opts: unknown, cb: unknown) => {
+        (cb as (err: Error) => void)(new Error('EACCES'));
+        return undefined as never;
+      }
+    );
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay(); // intro
+    stdin.write('y');
+    await delay(); // step 1
+    stdin.write('y');
+    await delay(); // step 2
+    stdin.write('y');
+    await delay(); // step 3
+    // step 4 auto-skipped
+    stdin.write('y');
+    await delay(300); // step 5 (triggers npm error)
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('uninstall');
+  });
+
+  it('shows backup-failed phase when backup returns failure', async () => {
+    const backup = await import('../device/backup.js');
+    vi.mocked(backup.backupKnowledge).mockReturnValueOnce({
+      success: false,
+      skipped: false,
+    } as never);
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay();
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('Could not back up');
+  });
+
+  it('walks through step4 with templates installed', async () => {
+    const state = await import('../device/state.js');
+    vi.mocked(state.getInstalledTemplateNames).mockReturnValueOnce(['pencil']);
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay(); // intro
+    stdin.write('y');
+    await delay(); // step 1
+    stdin.write('y');
+    await delay(); // step 2
+    stdin.write('y');
+    await delay(); // step 3
+    // step 4 NOT auto-skipped — shows template list
+    expect(lastFrame()).toContain('pencil');
+    stdin.write('y');
+    await delay(200); // step 4 — uninstall templates
+    stdin.write('n');
+    await delay(); // step 5 — skip CLI
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('removed');
+  });
 });

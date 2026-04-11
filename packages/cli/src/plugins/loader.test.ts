@@ -31,6 +31,38 @@ describe('createRegistry', () => {
     expect(reg.getPlugin('@medalsocial/nope')).toBeUndefined();
   });
 
+  it('remove deletes a plugin by id', () => {
+    const reg = createRegistry([
+      {
+        manifest: {
+          name: 'kit',
+          namespace: 'medalsocial',
+          description: 'Machine config',
+          provides: { commands: ['up'], mcpServers: [] },
+          permissions: { network: [] },
+          roleBindings: {},
+        },
+        id: '@medalsocial/kit',
+        enabled: true,
+        path: '/plugins/kit',
+      },
+    ]);
+    expect(reg.plugins).toHaveLength(1);
+    reg.remove('@medalsocial/kit');
+    expect(reg.plugins).toHaveLength(0);
+  });
+
+  it('remove is a no-op for unknown id', () => {
+    const reg = createRegistry([]);
+    expect(() => reg.remove('@medalsocial/nope')).not.toThrow();
+  });
+
+  it('enable/disable are no-ops for unknown id', () => {
+    const reg = createRegistry([]);
+    expect(() => reg.enable('@nope')).not.toThrow();
+    expect(() => reg.disable('@nope')).not.toThrow();
+  });
+
   it('enables and disables plugins', () => {
     const reg = createRegistry([
       {

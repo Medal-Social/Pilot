@@ -10,6 +10,8 @@ vi.mock('../update/checker.js', () => ({
   applyUpdate: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
+const delay = (ms = 80) => new Promise((r) => setTimeout(r, ms));
+
 describe('Update', () => {
   it('shows checking state initially', () => {
     const { lastFrame } = render(<Update currentVersion="0.1.0" />);
@@ -25,7 +27,7 @@ describe('Update', () => {
     });
 
     const { lastFrame, rerender } = render(<Update currentVersion="0.1.0" />);
-    await new Promise((r) => setTimeout(r, 50));
+    await delay();
     rerender(<Update currentVersion="0.1.0" />);
     expect(lastFrame()).toContain('current');
   });
@@ -39,7 +41,7 @@ describe('Update', () => {
     });
 
     const { lastFrame, rerender } = render(<Update currentVersion="0.1.0" />);
-    await new Promise((r) => setTimeout(r, 50));
+    await delay();
     rerender(<Update currentVersion="0.1.0" />);
     expect(lastFrame()).toContain('newer version');
   });
@@ -54,8 +56,103 @@ describe('Update', () => {
     });
 
     const { lastFrame, rerender } = render(<Update currentVersion="0.1.0" />);
-    await new Promise((r) => setTimeout(r, 50));
+    await delay();
     rerender(<Update currentVersion="0.1.0" />);
     expect(lastFrame()).toContain('network timeout');
+  });
+
+  it('transitions to updating phase when user presses y at confirm', async () => {
+    const { checkForUpdates, applyUpdate } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+    // Keep applyUpdate pending so we can observe the 'updating' state
+    vi.mocked(applyUpdate).mockReturnValue(new Promise(() => {}));
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    // Now in 'confirm' phase — press y
+    stdin.write('y');
+    await delay();
+    expect(lastFrame()).toContain('Downloading update');
+  });
+
+  it('dismisses confirm with n and shows up-to-date', async () => {
+    const { checkForUpdates } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    // Press n to decline
+    stdin.write('n');
+    await delay();
+    expect(lastFrame()).toContain('current');
+  });
+
+  it('shows complete state after successful update', async () => {
+    const { checkForUpdates, applyUpdate } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+    vi.mocked(applyUpdate).mockResolvedValue({ success: true });
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    stdin.write('y');
+    await delay(150);
+    expect(lastFrame()).toContain('upgraded');
+  });
+
+  it('shows error state when applyUpdate fails', async () => {
+    const { checkForUpdates, applyUpdate } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+    vi.mocked(applyUpdate).mockResolvedValue({
+      success: false,
+      error: { message: 'permission denied', code: 'UPDATE_INSTALL_FAILED' } as never,
+    });
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    stdin.write('y');
+    await delay(150);
+    expect(lastFrame()).toContain('permission denied');
+  });
+
+  it('shows generic error when applyUpdate fails without message', async () => {
+    const { checkForUpdates, applyUpdate } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValue({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+    vi.mocked(applyUpdate).mockResolvedValue({ success: false });
+
+    const { lastFrame, stdin, rerender } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    stdin.write('y');
+    await delay(150);
+    expect(lastFrame()).toContain('Update');
   });
 });

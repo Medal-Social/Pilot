@@ -85,6 +85,32 @@ describe('Plugins', () => {
     expect(lastFrame()).toContain('Machine config');
   });
 
+  it('shows empty detail pane message when no plugins provided', () => {
+    const { lastFrame } = render(<Plugins plugins={[]} />);
+    expect(lastFrame()).toContain('No plugins in this view');
+    expect(lastFrame()).toContain('Select a plugin');
+  });
+
+  it('enables a disabled plugin with e key', async () => {
+    const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
+    const { lastFrame, stdin } = render(<Plugins plugins={mockPlugins} />);
+    await delay();
+
+    // Switch to Disabled tab (press 3) — pencil is there and selected
+    stdin.write('3');
+    await delay();
+    expect(lastFrame()).toContain('▸ pencil');
+
+    // Enable pencil (press e)
+    stdin.write('e');
+    await delay();
+
+    // Switch to All tab to verify pencil is now enabled
+    stdin.write('1');
+    await delay();
+    expect(lastFrame()).toContain('pencil');
+  });
+
   it('recovers toggle after disabling only enabled plugin on Enabled tab', async () => {
     // One enabled, one disabled — Enabled tab has exactly 1 plugin
     const plugins: LoadedPlugin[] = [

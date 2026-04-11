@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { describe, expect, it } from 'vitest';
-import { parseManifest } from './manifest.js';
+import { parseManifest, pluginId } from './manifest.js';
 
 describe('parseManifest', () => {
   it('parses a valid manifest', () => {
@@ -44,5 +44,45 @@ describe('parseManifest', () => {
     if (result.success) {
       expect(`@${result.data.namespace}/${result.data.name}`).toBe('@medalsocial/sanity');
     }
+  });
+});
+
+describe('pluginId', () => {
+  it('returns formatted id from manifest', () => {
+    const result = parseManifest({
+      name: 'kit',
+      namespace: 'medalsocial',
+      description: 'Machine config',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(pluginId(result.data)).toBe('@medalsocial/kit');
+    }
+  });
+
+  it('throws PilotError when namespace is empty', () => {
+    expect(() =>
+      pluginId({
+        name: 'kit',
+        namespace: '',
+        description: '',
+        provides: { commands: [], mcpServers: [] },
+        permissions: { network: [] },
+        roleBindings: {},
+      })
+    ).toThrow();
+  });
+
+  it('throws PilotError when name is empty', () => {
+    expect(() =>
+      pluginId({
+        name: '',
+        namespace: 'medalsocial',
+        description: '',
+        provides: { commands: [], mcpServers: [] },
+        permissions: { network: [] },
+        roleBindings: {},
+      })
+    ).toThrow();
   });
 });
