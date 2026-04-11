@@ -12,6 +12,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@fast-check/vitest": "~0.2.4",
+    "fast-check": "^4.6.0",
     "husky": "^9.1.7",
     "turbo": "2.9.5",
     "typescript": "5.9.3",
