@@ -50,9 +50,10 @@ program
 program
   .command('status')
   .description('Machine and system health')
-  .action(async () => {
+  .option('--json', 'Output status as JSON')
+  .action(async (opts: { json?: boolean }) => {
     const { runStatus } = await import('../commands/status.js');
-    await runStatus();
+    await runStatus({ json: opts.json });
   });
 
 program
@@ -77,6 +78,14 @@ program
   .action(async (template: string) => {
     const { runDown } = await import('../commands/down.js');
     await runDown(template);
+  });
+
+program
+  .command('completions <shell>')
+  .description('Output shell completion script (bash, zsh, fish)')
+  .action(async (shell: string) => {
+    const { runCompletions } = await import('../commands/completions.js');
+    await runCompletions(shell);
   });
 
 program.action(async () => {

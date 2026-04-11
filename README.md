@@ -125,7 +125,7 @@ pilot
 | `pilot training` | Knowledge base — teach your crew about your brand |
 | `pilot plugins` | Browse and manage plugins |
 | `pilot update` | Check for and apply updates |
-| `pilot status` | Machine and system health |
+| `pilot status` | Machine and system health (supports `--json`) |
 | `pilot help` | Help reference |
 
 ---
