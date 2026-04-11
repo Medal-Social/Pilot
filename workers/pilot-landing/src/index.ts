@@ -53,7 +53,7 @@ add_to_path() {
     *)     PROFILE="$HOME/.profile" ;;
   esac
 
-  PATH_LINE="export PATH=\\"$INSTALL_DIR:$PATH\\""
+  PATH_LINE='export PATH="$HOME/.pilot/bin:$PATH"'
   if [ "$SHELL_NAME" = "fish" ]; then
     PATH_LINE="fish_add_path \\"$INSTALL_DIR\\""
   fi
