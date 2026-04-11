@@ -28,14 +28,16 @@ main() {
   esac
 
   # Check for Node.js 24+
-  if command -v node >/dev/null 2>&1; then
+  if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
     NODE_MAJOR="$(node -v | sed 's/v//' | cut -d. -f1)"
     if [ "$NODE_MAJOR" -ge 24 ] 2>/dev/null; then
       echo "Installing Pilot..."
-      npm install -g @medalsocial/pilot
-      echo ""
-      echo "Pilot installed! Run \`pilot\` to get started."
-      exit 0
+      if npm install -g @medalsocial/pilot 2>/dev/null; then
+        echo ""
+        echo "Pilot installed! Run \`pilot\` to get started."
+        exit 0
+      fi
+      echo "npm install failed, falling back to binary download..."
     fi
   fi
 

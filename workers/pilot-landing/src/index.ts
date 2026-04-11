@@ -70,12 +70,14 @@ printf "\\n  \\033[35m◆\\033[0m Pilot CLI — by Medal Social\\n\\n"
 OS=$(detect_os)
 ARCH=$(detect_arch)
 
-if check_node; then
+if check_node && command -v npm >/dev/null 2>&1; then
   info "Installing via npm..."
-  npm install -g @medalsocial/pilot
-  success "Pilot installed successfully!"
-  printf "\\n  Run \\033[36mpilot\\033[0m to get started.\\n\\n"
-  exit 0
+  if npm install -g @medalsocial/pilot 2>/dev/null; then
+    success "Pilot installed successfully!"
+    printf "\\n  Run \\033[36mpilot\\033[0m to get started.\\n\\n"
+    exit 0
+  fi
+  info "npm install failed, falling back to binary download..."
 fi
 
 # Binary install fallback
