@@ -1,8 +1,10 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: MIT
 
+import { errorCodes, PilotError } from '../errors.js';
+
 const BASH_COMPLETION = `_pilot_completions() {
-  local commands="crew down help plugins repl status training uninstall up update completions"
+  local commands="crew down help plugins status training uninstall up update completions"
   COMPREPLY=($(compgen -W "$commands" -- "\${COMP_WORDS[COMP_CWORD]}"))
 }
 complete -F _pilot_completions pilot
@@ -10,10 +12,10 @@ complete -F _pilot_completions pilot
 
 const ZSH_COMPLETION = `#compdef pilot
 _pilot() {
-  local commands=(crew down help plugins repl status training uninstall up update completions)
+  local commands=(crew down help plugins status training uninstall up update completions)
   _describe 'command' commands
 }
-_pilot
+compdef _pilot pilot
 `;
 
 const FISH_COMPLETION = `complete -c pilot -f
@@ -38,8 +40,7 @@ const SCRIPTS: Record<string, string> = {
 export async function runCompletions(shell: string) {
   const script = SCRIPTS[shell];
   if (!script) {
-    process.stderr.write(`Unknown shell: ${shell}. Supported shells: bash, zsh, fish\n`);
-    process.exit(1);
+    throw new PilotError(errorCodes.COMPLETIONS_UNKNOWN_SHELL, shell);
   }
   process.stdout.write(script);
 }

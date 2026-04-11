@@ -5,27 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('runCompletions', () => {
   let writtenOutput: string;
-  let writtenError: string;
-  let exitCode: number | undefined;
 
   beforeEach(() => {
     writtenOutput = '';
-    writtenError = '';
-    exitCode = undefined;
 
     vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
       writtenOutput += String(chunk);
       return true;
-    });
-
-    vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
-      writtenError += String(chunk);
-      return true;
-    });
-
-    vi.spyOn(process, 'exit').mockImplementation((code?: number) => {
-      exitCode = code;
-      throw new Error(`process.exit(${code})`);
     });
   });
 
@@ -41,7 +27,7 @@ describe('runCompletions', () => {
     expect(writtenOutput).toContain('complete -F _pilot_completions pilot');
   });
 
-  it('bash script includes all commands', async () => {
+  it('bash script includes all commands but not repl', async () => {
     const { runCompletions } = await import('./completions.js');
     await runCompletions('bash');
     for (const cmd of [
@@ -58,6 +44,7 @@ describe('runCompletions', () => {
     ]) {
       expect(writtenOutput).toContain(cmd);
     }
+    expect(writtenOutput).not.toContain('repl');
   });
 
   it('outputs a zsh completion script for zsh shell', async () => {
@@ -65,10 +52,10 @@ describe('runCompletions', () => {
     await runCompletions('zsh');
     expect(writtenOutput).toContain('#compdef pilot');
     expect(writtenOutput).toContain('_describe');
-    expect(writtenOutput).toContain('_pilot');
+    expect(writtenOutput).toContain('compdef _pilot pilot');
   });
 
-  it('zsh script includes all commands', async () => {
+  it('zsh script includes all commands but not repl', async () => {
     const { runCompletions } = await import('./completions.js');
     await runCompletions('zsh');
     for (const cmd of [
@@ -85,6 +72,7 @@ describe('runCompletions', () => {
     ]) {
       expect(writtenOutput).toContain(cmd);
     }
+    expect(writtenOutput).not.toContain('repl');
   });
 
   it('outputs a fish completion script for fish shell', async () => {
@@ -94,19 +82,21 @@ describe('runCompletions', () => {
     expect(writtenOutput).toContain('__fish_use_subcommand');
   });
 
-  it('fish script includes all commands with descriptions', async () => {
+  it('fish script includes all commands with descriptions but not repl', async () => {
     const { runCompletions } = await import('./completions.js');
     await runCompletions('fish');
     expect(writtenOutput).toContain("-a crew -d 'Manage your AI crew'");
     expect(writtenOutput).toContain("-a down -d 'Remove a template'");
     expect(writtenOutput).toContain("-a completions -d 'Shell completions'");
+    expect(writtenOutput).not.toContain('repl');
   });
 
-  it('writes error and exits for unknown shell', async () => {
+  it('throws PilotError for unknown shell', async () => {
     const { runCompletions } = await import('./completions.js');
-    await expect(runCompletions('powershell')).rejects.toThrow('process.exit(1)');
-    expect(writtenError).toContain('Unknown shell: powershell');
-    expect(writtenError).toContain('bash, zsh, fish');
-    expect(exitCode).toBe(1);
+    await expect(runCompletions('powershell')).rejects.toThrow('Unknown shell');
+    await expect(runCompletions('powershell')).rejects.toMatchObject({
+      name: 'PilotError',
+      code: 'COMPLETIONS_UNKNOWN_SHELL',
+    });
   });
 });
