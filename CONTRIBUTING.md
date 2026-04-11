@@ -93,6 +93,17 @@ Pilot uses [Biome](https://biomejs.dev/) as its linter and formatter. The config
 
 **Regression tests:** When fixing a bug, first write a test that reproduces the bug (it should fail), then fix the bug and verify the test passes. This prevents the same bug from recurring.
 
+## Code Review Policy
+
+All pull requests require approval from at least one reviewer who is not the author before merging. This is enforced by GitHub branch protection on the `main` branch.
+
+**Reviewers should check:**
+- Code correctness and edge cases
+- Test coverage for new functionality
+- Documentation updates for behavior changes
+- Security implications (input validation, credential handling)
+- Adherence to coding standards (Biome will catch most style issues)
+
 ## Documentation Policy
 
 PRs that change user-facing behavior must update the relevant documentation:
