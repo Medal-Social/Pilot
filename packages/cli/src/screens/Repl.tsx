@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { loadSettings, markOnboarded } from '../settings.js';
 import { Home } from './Home.js';
 import { Welcome } from './Welcome.js';

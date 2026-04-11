@@ -1,4 +1,4 @@
-import { Text, render } from 'ink';
+import { render, Text } from 'ink';
 import React from 'react';
 import { colors } from '../colors.js';
 

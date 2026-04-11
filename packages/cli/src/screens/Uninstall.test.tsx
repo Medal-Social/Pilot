@@ -1,5 +1,4 @@
 import { render } from 'ink-testing-library';
-import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:fs', () => ({

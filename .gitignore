@@ -12,3 +12,5 @@ dist/
 coverage/
 *.log
 .turbo
+.playwright-mcp/
+.claude/scheduled_tasks*

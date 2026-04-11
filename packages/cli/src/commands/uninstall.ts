@@ -3,7 +3,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { render } from 'ink';
 import React from 'react';
-import { PilotError, errorCodes } from '../errors.js';
+import { errorCodes, PilotError } from '../errors.js';
 import { Uninstall } from '../screens/Uninstall.js';
 
 export async function runUninstall() {

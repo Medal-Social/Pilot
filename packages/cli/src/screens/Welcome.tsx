@@ -1,5 +1,4 @@
 import { Box, Text, useInput } from 'ink';
-import React from 'react';
 import { colors } from '../colors.js';
 import { Header } from '../components/Header.js';
 import { defaultCrew } from '../crew/members.js';
