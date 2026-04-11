@@ -734,6 +734,7 @@ function buildLandingPage(): Response {
         "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src https://cdn.jsdelivr.net; script-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'",
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
     },
   });
 }
@@ -748,6 +749,8 @@ export default {
           'Content-Type': 'text/plain; charset=utf-8',
           'Cache-Control': 'public, max-age=300',
           'Content-Disposition': 'inline',
+          'X-Content-Type-Options': 'nosniff',
+          'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
         },
       });
     }
