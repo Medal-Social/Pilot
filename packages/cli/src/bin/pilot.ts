@@ -3,10 +3,7 @@ import { program } from 'commander';
 
 const VERSION = '0.1.5';
 
-program
-  .name('pilot')
-  .description('Your AI crew, ready to fly.')
-  .version(VERSION, '-v, --version');
+program.name('pilot').description('Your AI crew, ready to fly.').version(VERSION, '-v, --version');
 
 program
   .command('up [template]')
