@@ -1,12 +1,12 @@
-# Default: Ali reviews everything
-* @alioftech
+# Default: require review from both maintainers
+* @alioftech @adaadev
 
 # Plugin manifests need careful review
-packages/plugins/*/plugin.toml @alioftech
+packages/plugins/*/plugin.toml @alioftech @adaadev
 
 # Skill deployment and security
-packages/cli/src/deploy/ @alioftech
-packages/cli/src/skills/ @alioftech
+packages/cli/src/deploy/ @alioftech @adaadev
+packages/cli/src/skills/ @alioftech @adaadev
 
 # CI and release pipeline
-.github/ @alioftech
+.github/ @alioftech @adaadev
