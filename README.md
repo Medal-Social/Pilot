@@ -227,6 +227,11 @@ Status: **Pre-release** · Building v1
 | Bi-directional source sync | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Config migration system | Planned | [Plan](docs/plans/masterplan.md) |
 
+### Admin
+| Feature | Status | Spec | Description |
+|---------|--------|------|-------------|
+| Admin Dashboard | In Progress | [Spec](docs/superpowers/specs/2026-04-19-admin-dashboard-design.md) | CLI command center with health strip, tabbed panels, SDK-powered data |
+
 ### pilot up (One-Click Setup)
 | Feature | Status | Spec |
 |---------|--------|------|
