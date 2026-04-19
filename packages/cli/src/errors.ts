@@ -13,6 +13,8 @@ export const errorCodes = {
   DOWN_REMOVE_FAILED: 'DOWN_REMOVE_FAILED',
   PLUGIN_INVALID_MANIFEST: 'PLUGIN_INVALID_MANIFEST',
   COMPLETIONS_UNKNOWN_SHELL: 'COMPLETIONS_UNKNOWN_SHELL',
+  ADMIN_NOT_AUTHENTICATED: 'ADMIN_NOT_AUTHENTICATED',
+  ADMIN_ACCESS_DENIED: 'ADMIN_ACCESS_DENIED',
 } as const;
 
 type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
@@ -31,6 +33,8 @@ const userMessages: Record<ErrorCode, string> = {
   DOWN_REMOVE_FAILED: 'Could not remove template dependencies. Some files may remain.',
   PLUGIN_INVALID_MANIFEST: 'Plugin has an invalid manifest — missing name or namespace.',
   COMPLETIONS_UNKNOWN_SHELL: 'Unknown shell. Supported shells: bash, zsh, fish.',
+  ADMIN_NOT_AUTHENTICATED: 'You must be signed in to access the admin dashboard. Run: pilot login',
+  ADMIN_ACCESS_DENIED: "You don't have permission to access the admin dashboard.",
 };
 
 export class PilotError extends Error {

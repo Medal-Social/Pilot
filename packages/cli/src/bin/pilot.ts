@@ -88,6 +88,14 @@ program
     await runCompletions(shell);
   });
 
+program
+  .command('admin')
+  .description('Admin dashboard and command center')
+  .action(async () => {
+    const { runAdmin } = await import('../commands/admin.js');
+    await runAdmin();
+  });
+
 program.action(async () => {
   const { runRepl } = await import('../commands/repl.js');
   await runRepl();
