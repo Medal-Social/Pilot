@@ -25,12 +25,23 @@ describe('runEdit', () => {
     );
   });
 
-  it('spawns the resolved editor', async () => {
+  it('spawns the resolved editor in interactive mode', async () => {
     const exec = {
       run: vi.fn().mockResolvedValue({ stdout: '', stderr: '', code: 0 }),
       spawn: vi.fn(),
     };
     await runEdit('/tmp/x.nix', { env: { EDITOR: 'zed' }, available: ['zed'], exec });
-    expect(exec.run).toHaveBeenCalledWith('zed', ['/tmp/x.nix']);
+    // Editor must be invoked with interactive: true so vim/nvim/zed get a real TTY.
+    expect(exec.run).toHaveBeenCalledWith('zed', ['/tmp/x.nix'], { interactive: true });
+  });
+
+  it('throws KitError when editor exits non-zero', async () => {
+    const exec = {
+      run: vi.fn().mockResolvedValue({ stdout: '', stderr: 'oops', code: 130 }),
+      spawn: vi.fn(),
+    };
+    await expect(
+      runEdit('/tmp/x.nix', { env: { EDITOR: 'zed' }, available: ['zed'], exec })
+    ).rejects.toBeInstanceOf(KitError);
   });
 });

@@ -2,12 +2,38 @@
 
 Medal Social's AI-powered CLI platform. Your AI crew, ready to fly.
 
+## Commands
+
+```bash
+# Workspace-wide
+pnpm install                              # bootstrap deps
+pnpm build                                # turbo: build all packages
+pnpm test                                 # turbo: run all tests
+pnpm lint                                 # biome check (warnings OK, errors block)
+pnpm lint:fix                             # biome check --write (auto-fix)
+pnpm dev                                  # filter to cli dev mode
+
+# Per-package (preferred — much faster than full workspace)
+pnpm --filter @medalsocial/pilot test <pattern> -- --run
+pnpm --filter @medalsocial/kit test -- --run
+pnpm --filter @medalsocial/kit exec tsc --noEmit
+
+# Run the locally-built pilot binary
+node packages/cli/dist/bin/pilot.js <command>
+# Or globally link after `pnpm build`:
+cd packages/cli && npm link
+```
+
+Pre-commit (husky): runs `pnpm lint` + `pnpm test`. Biome warnings (e.g. unused
+admin imports on pre-existing files) are tolerated; errors block. Don't use
+`--no-verify` — fix the underlying issue.
+
 ## Project Overview
 
 - **Monorepo**: pnpm workspaces + Turborepo
 - **CLI**: React Ink + Commander.js
 - **AI**: Vercel AI SDK + @ai-sdk/anthropic (Claude)
-- **Plugins**: @medalsocial/kit, @medalsocial/sanity, @medalsocial/pencil
+- **Plugins**: @medalsocial/kit (sanity, pencil are planned)
 - **Build**: tsup (dual CJS/ESM) + @vercel/ncc (binary)
 - **Test**: Vitest + ink-testing-library + E2E
 - **Lint**: Biome (strict, matching medal-monorepo)
@@ -18,7 +44,7 @@ Medal Social's AI-powered CLI platform. Your AI crew, ready to fly.
 - TypeScript strict mode, no `any` (use `unknown` + type narrowing)
 - Use `import type` for type-only imports (enforced by Biome)
 - Single quotes, 2-space indent, 100-char line width, trailing commas ES5
-- No console.log — use the structured logger (`getLogger('scope')`)
+- No `console.log` for user output — use `process.stdout.write` (CLI output) or `console.error` (errors). There is no shared logger.
 - Error codes via `PilotError(errorCodes.CODE, 'message')`, never raw throws to users
 - All colors via design token system (`colors.ts`), never hardcoded hex in components
 
@@ -51,6 +77,24 @@ packages/
 - **Smart updates**: manifest.json checksums protect user-modified files
 - **Design tokens**: from Pencil (05-cli.pen), light/dark theme via T:mode
 
+## Kit Plugin (machine management)
+
+Source: `packages/plugins/kit/` (the plugin) + `packages/cli/src/commands/kit.ts` (the dispatcher that wires `pilot kit ...` subcommands).
+
+- `pilot kit init [machine]` — bootstrap a fresh machine
+- `pilot kit new` — scaffold a new kit repo
+- `pilot kit update` — pull + rebuild (with progress UI)
+- `pilot kit status [--json]` — health checks (TTY = human, piped = JSON)
+- `pilot kit apps add|remove|list [cask:NAME|brew:NAME]`
+- `pilot kit edit` — open machine .nix in $EDITOR (interactive, real TTY)
+- `pilot kit config show|path` — inspect loaded config
+
+Errors use `KitError(errorCodes.KIT_*, detail?)` — per-plugin pattern, not wrapped in `PilotError`. Each plugin owns its own error namespace.
+
+`Exec` interface (in `shell/exec.ts`) is the only place that touches `child_process`. Pass `interactive: true` for commands that need a real TTY (editors, prompts) — otherwise stdin/stdout/stderr are piped and captured.
+
+Spec: `docs/superpowers/specs/2026-04-20-kit-machine-package-v1-design.md`
+
 ## User-Facing Language
 
 - Never expose: package managers (Nix, npm), file paths, version numbers, checksums
@@ -69,13 +113,4 @@ The tracker is the single source of truth for what Pilot can do and what's comin
 
 ## Skill Routing
 
-When the user's request matches Pilot functionality, invoke /pilot.
-Pilot routes to the right crew lead automatically.
-
-Key routing rules:
-- Brand voice, tone, style, guidelines → invoke /pilot
-- Social posts, campaigns, content, email → invoke /pilot
-- Build, deploy, scaffold, code review → invoke /pilot
-- Support tickets, customer issues → invoke /pilot
-- Sales outreach, pipeline → invoke /pilot
-- Machine setup, dev tools → invoke /pilot
+For brand/marketing/content/support/sales/machine-setup requests, invoke `/pilot`. The root agent routes to the right crew lead automatically.

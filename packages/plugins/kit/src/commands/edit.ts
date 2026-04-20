@@ -27,7 +27,9 @@ export async function runEdit(filePath: string, opts: RunEditOpts): Promise<void
   if (!editor) {
     throw new KitError(errorCodes.KIT_NO_EDITOR, FALLBACKS.join(', '));
   }
-  const result = await opts.exec.run(editor, [filePath]);
+  // Editors need a real TTY (vim/nvim/zed/code all draw their own UI).
+  // Interactive mode attaches the child to the parent's stdio directly.
+  const result = await opts.exec.run(editor, [filePath], { interactive: true });
   if (result.code !== 0) {
     throw new KitError(
       errorCodes.KIT_NO_EDITOR,
