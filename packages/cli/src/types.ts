@@ -13,7 +13,8 @@ export interface CrewMember {
   role: string;
   description: string;
   skills: string[];
-  color: string;
+  // Optional/undefinable so NO_COLOR mode (where colors.* are undefined) is type-safe.
+  color: string | undefined;
 }
 
 export interface PluginManifest {

@@ -5,7 +5,7 @@ import { Box, Text } from 'ink';
 import { colors } from '../colors.js';
 import type { StepStatus } from '../types.js';
 
-const icons: Record<StepStatus, { char: string; color: string }> = {
+const icons: Record<StepStatus, { char: string; color: string | undefined }> = {
   done: { char: '✓', color: colors.success },
   active: { char: '⠸', color: colors.warning },
   waiting: { char: '○', color: colors.muted },

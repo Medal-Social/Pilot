@@ -5,7 +5,7 @@ import { Box, Text } from 'ink';
 import type { SiteStatus, WorkspaceDetail } from '../../admin/types.js';
 import { colors } from '../../colors.js';
 
-const siteStatusDisplay: Record<SiteStatus, { label: string; color: string }> = {
+const siteStatusDisplay: Record<SiteStatus, { label: string; color: string | undefined }> = {
   live: { label: 'Live', color: colors.success },
   setup: { label: 'Setup', color: colors.warning },
   down: { label: 'Down', color: colors.error },

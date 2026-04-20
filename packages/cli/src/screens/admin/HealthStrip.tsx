@@ -5,7 +5,7 @@ import { Box, Text } from 'ink';
 import type { QuickStats, ServiceHealth, ServiceStatus } from '../../admin/types.js';
 import { colors } from '../../colors.js';
 
-const statusColor: Record<ServiceStatus, string> = {
+const statusColor: Record<ServiceStatus, string | undefined> = {
   healthy: colors.success,
   warning: colors.warning,
   critical: colors.error,

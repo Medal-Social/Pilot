@@ -5,7 +5,7 @@ import { Box, Text } from 'ink';
 import type { WorkspaceDetail, WorkspaceStatus } from '../../admin/types.js';
 import { colors } from '../../colors.js';
 
-const statusDisplay: Record<WorkspaceStatus, { label: string; color: string }> = {
+const statusDisplay: Record<WorkspaceStatus, { label: string; color: string | undefined }> = {
   active: { label: 'Active', color: colors.success },
   trial: { label: 'Trial', color: colors.warning },
   suspended: { label: 'Suspended', color: colors.error },
