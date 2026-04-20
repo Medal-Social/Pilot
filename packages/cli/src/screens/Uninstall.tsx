@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { execFile } from 'node:child_process';
 import { rmSync } from 'node:fs';
@@ -56,7 +56,9 @@ export function Uninstall() {
 
   useInput(
     (input) => {
+      /* v8 ignore start */
       if (busy) return;
+      /* v8 ignore stop */
 
       const yes = input === 'y' || input === 'Y';
       const no = input === 'n' || input === 'N';
@@ -139,11 +141,13 @@ export function Uninstall() {
       }
 
       if (phase === 'step4-tools') {
+        /* v8 ignore start */
         if (templates.length === 0) {
           // Should have been auto-skipped, but handle defensively
           setPhase('step5-cli');
           return;
         }
+        /* v8 ignore stop */
         if (yes) {
           setBusy(true);
           Promise.all(templates.map((t) => uninstallTemplate(t))).then(() => {

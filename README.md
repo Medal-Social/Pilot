@@ -3,7 +3,7 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Medal-Social/pilot/badge)](https://scorecard.dev/viewer/?uri=github.com/Medal-Social/pilot)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12447/badge)](https://www.bestpractices.dev/projects/12447)
 [![codecov](https://codecov.io/gh/Medal-Social/pilot/graph/badge.svg)](https://codecov.io/gh/Medal-Social/pilot)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 **Your AI crew, ready to fly.**
 
@@ -125,8 +125,53 @@ pilot
 | `pilot training` | Knowledge base — teach your crew about your brand |
 | `pilot plugins` | Browse and manage plugins |
 | `pilot update` | Check for and apply updates |
-| `pilot status` | Machine and system health (supports `--json`) |
+| `pilot status` | Machine and system health |
+| `pilot status --json` | Machine-readable JSON output (see [schema](#status---json)) |
+| `pilot completions <shell>` | Generate shell completions (bash, zsh, fish) |
 | `pilot help` | Help reference |
+
+## Contributor Guardrails
+
+- Use `pnpm install` only; the repo blocks other package managers.
+- Commit with conventional commits; Husky runs `commitlint` on every commit message.
+- Release-worthy changes must include a changeset via `pnpm changeset` unless the PR is explicitly internal-only.
+- Do not commit generated `dist/` or `coverage/` output.
+- AI-assisted changes are welcome, but PR descriptions and commits must explain intent in human-written terms and include tests for behavior changes.
+
+### `status --json`
+
+Outputs machine-readable JSON for scripting and CI:
+
+```json
+{
+  "pilot": "0.1.5",
+  "node": "v24.0.0",
+  "platform": "darwin",
+  "arch": "arm64"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `pilot` | `string` | Installed Pilot version |
+| `node` | `string` | Node.js version (with `v` prefix) |
+| `platform` | `string` | OS platform (`darwin`, `linux`, `win32`) |
+| `arch` | `string` | CPU architecture (`arm64`, `x64`) |
+
+### Shell Completions
+
+Generate tab-completion scripts for your shell:
+
+```bash
+# Bash — add to ~/.bashrc
+pilot completions bash >> ~/.bashrc
+
+# Zsh — add to ~/.zshrc
+pilot completions zsh >> ~/.zshrc
+
+# Fish — add to Fish completions
+pilot completions fish > ~/.config/fish/completions/pilot.fish
+```
 
 ---
 
@@ -190,6 +235,11 @@ Status: **Pre-release** · Building v1
 | Bi-directional source sync | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Config migration system | Planned | [Plan](docs/plans/masterplan.md) |
 
+### Admin
+| Feature | Status | Spec | Description |
+|---------|--------|------|-------------|
+| Admin Dashboard | In Progress | [Spec](docs/superpowers/specs/2026-04-19-admin-dashboard-design.md) | CLI command center with health strip, tabbed panels, SDK-powered data |
+
 ### pilot up (One-Click Setup)
 | Feature | Status | Spec |
 |---------|--------|------|
@@ -205,8 +255,8 @@ Status: **Pre-release** · Building v1
 | Changesets versioning | Planned | [Plan](docs/plans/masterplan.md) |
 | GitHub Actions CI + release | Planned | [Plan](docs/plans/masterplan.md) |
 | E2E test suite | Planned | [Plan](docs/plans/masterplan.md) |
-| Shell completions (bash, zsh, fish) | Planned | [Plan](docs/plans/masterplan.md) |
-| NO_COLOR / FORCE_COLOR support | Planned | [Plan](docs/plans/masterplan.md) |
+| Shell completions (bash, zsh, fish) | Done | [Plan](docs/plans/masterplan.md) |
+| NO_COLOR / FORCE_COLOR support | Done | [Plan](docs/plans/masterplan.md) |
 | Local-only telemetry | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 | Themes (dark/light from design tokens) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
 
@@ -220,4 +270,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for plugin development guidelines and PR 
 
 ## License
 
-MIT
+Apache-2.0

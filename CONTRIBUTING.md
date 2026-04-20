@@ -13,9 +13,13 @@ Thanks for your interest in contributing to Pilot!
 
 ```bash
 pnpm dev          # Start CLI in watch mode
+pnpm quality      # Lint, typecheck, repo tests, package tests
 pnpm test         # Run tests
+pnpm test:repo    # Verify repo guardrails (hooks, workflows, metadata)
 pnpm lint         # Check code style
 pnpm lint:fix     # Auto-fix code style
+pnpm secret:scan  # Scan the repo for committed secrets
+pnpm knip:check   # Detect unused files, exports, and dependencies
 ```
 
 ## Project Structure
@@ -35,6 +39,8 @@ packages/
 - Write tests for new functionality
 - Ensure all tests pass before submitting
 - Follow existing code conventions (TypeScript strict, Biome linting)
+- Add a changeset with `pnpm changeset` for release-worthy changes unless the PR is explicitly internal-only
+- Do not commit generated `dist/` or `coverage/` artifacts
 
 ## Code Style
 
@@ -81,6 +87,22 @@ Pilot uses [Biome](https://biomejs.dev/) as its linter and formatter. The config
 
 **Enforcement:** Biome runs automatically in the pre-commit hook (`.husky/pre-commit`) and in CI. PRs that fail linting cannot be merged.
 
+## AI-Assisted Changes
+
+AI assistance is allowed, but contributors are responsible for the final patch.
+
+- Review every AI-generated change before committing it
+- Write or update tests for any behavior change
+- Use your own commit message and PR summary; do not paste raw model transcripts
+- Call out security-sensitive changes explicitly when touching auth, install flows, shell execution, manifests, or permissions
+
+## Release Discipline
+
+- Pilot uses Changesets for releases; create one with `pnpm changeset`
+- Conventional commits are enforced through the `commit-msg` hook
+- `pnpm quality` is the baseline maintainer check before opening a PR
+- Releases are published only through GitHub Actions after the controlled release workflow validates the branch
+
 ## Testing Policy
 
 **All new features must include tests.** Bug fixes must include a regression test that fails without the fix and passes with it.
@@ -104,6 +126,8 @@ All pull requests require approval from at least one reviewer who is not the aut
 - Documentation updates for behavior changes
 - Security implications (input validation, credential handling)
 - Adherence to coding standards (Biome will catch most style issues)
+- Whether release-worthy changes include a changeset
+- Whether generated output or copied AI content slipped into the PR
 
 ## Documentation Policy
 
@@ -115,6 +139,15 @@ PRs that change user-facing behavior must update the relevant documentation:
 - Security changes → update `SECURITY.md` or `docs/SECURITY-EXPECTATIONS.md`
 
 The PR template checklist includes a documentation check.
+
+## Manifest and Install-Script Policy
+
+Changes to plugin manifests, install scripts, machine bootstrap logic, or permission declarations need extra scrutiny.
+
+- Plugin manifests and config files must remain schema-validated
+- Shell execution paths must stay explicit and reviewable; do not add unchecked dynamic shell snippets
+- Permission changes must be called out in the PR summary
+- Install and bootstrap changes should include a reviewer test path or smoke-test notes
 
 ## Accessibility
 

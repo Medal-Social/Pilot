@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import type { LoadedPlugin } from './types.js';
 
@@ -8,9 +8,13 @@ export const bundledPlugins: LoadedPlugin[] = [
     manifest: {
       name: 'kit',
       namespace: 'medalsocial',
-      description: 'Machine configuration & Nix management',
-      provides: { commands: ['up', 'update', 'status'], mcpServers: [] },
-      permissions: { network: [] },
+      description:
+        'Open-source MDM and dotfiles for engineers — machine config, version-controlled.',
+      provides: {
+        commands: ['kit init', 'kit new', 'kit update', 'kit status', 'kit apps', 'kit edit'],
+        mcpServers: [],
+      },
+      permissions: { network: ['github.com'] },
       roleBindings: {},
     },
     id: '@medalsocial/kit',

@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -39,10 +39,10 @@ describe('colors (NO_COLOR mode)', () => {
     delete process.env.NO_COLOR;
   });
 
-  it('all color values are empty strings when NO_COLOR is set', async () => {
+  it('all color values are undefined when NO_COLOR is set (so Ink omits styling)', async () => {
     const { colors } = await import('./colors.js');
     for (const key of Object.keys(colors)) {
-      expect(colors[key as keyof typeof colors]).toBe('');
+      expect(colors[key as keyof typeof colors]).toBeUndefined();
     }
   });
 
@@ -56,7 +56,7 @@ describe('colors (NO_COLOR mode)', () => {
     process.env.NO_COLOR = '1';
     const { colors, isColorEnabled } = await import('./colors.js');
     expect(isColorEnabled).toBe(false);
-    expect(colors.primary).toBe('');
+    expect(colors.primary).toBeUndefined();
   });
 });
 

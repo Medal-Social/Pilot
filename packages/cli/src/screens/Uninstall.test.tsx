@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it, vi } from 'vitest';
@@ -59,40 +59,6 @@ describe('Uninstall', () => {
   it('advances through steps on Y input', async () => {
     vi.resetModules();
 
-    vi.mock('node:fs', () => ({
-      existsSync: vi.fn(() => true),
-      rmSync: vi.fn(),
-    }));
-    vi.mock('node:os', () => ({
-      homedir: vi.fn(() => '/mock/home'),
-    }));
-    vi.mock('../device/backup.js', () => ({
-      backupKnowledge: vi.fn(() => ({
-        success: true,
-        backupPath: '/mock/home/pilot-backup-2026-04-10',
-      })),
-    }));
-    vi.mock('../device/state.js', () => ({
-      getInstalledTemplateNames: vi.fn(() => []),
-    }));
-    vi.mock('../device/uninstaller.js', () => ({
-      uninstallTemplate: vi.fn(async (name: string) => ({
-        template: name,
-        removed: [],
-        failed: [],
-        skipped: [],
-      })),
-    }));
-    vi.mock('../deploy/deployer.js', () => ({
-      removeRoutingFromClaudeMd: vi.fn(() => ({ success: true })),
-      removeSkillSymlink: vi.fn(() => ({ success: true })),
-    }));
-    vi.mock('node:child_process', () => ({
-      execFile: vi.fn((_cmd: string, _args: string[], _opts: unknown, cb: (err: null) => void) => {
-        cb(null);
-      }),
-    }));
-
     const { Uninstall } = await import('./Uninstall.js');
     const { lastFrame, stdin } = render(<Uninstall />);
     await delay();
@@ -113,40 +79,6 @@ describe('Uninstall', () => {
   it('skips a step on N input', async () => {
     vi.resetModules();
 
-    vi.mock('node:fs', () => ({
-      existsSync: vi.fn(() => true),
-      rmSync: vi.fn(),
-    }));
-    vi.mock('node:os', () => ({
-      homedir: vi.fn(() => '/mock/home'),
-    }));
-    vi.mock('../device/backup.js', () => ({
-      backupKnowledge: vi.fn(() => ({
-        success: true,
-        backupPath: '/mock/home/pilot-backup-2026-04-10',
-      })),
-    }));
-    vi.mock('../device/state.js', () => ({
-      getInstalledTemplateNames: vi.fn(() => []),
-    }));
-    vi.mock('../device/uninstaller.js', () => ({
-      uninstallTemplate: vi.fn(async (name: string) => ({
-        template: name,
-        removed: [],
-        failed: [],
-        skipped: [],
-      })),
-    }));
-    vi.mock('../deploy/deployer.js', () => ({
-      removeRoutingFromClaudeMd: vi.fn(() => ({ success: true })),
-      removeSkillSymlink: vi.fn(() => ({ success: true })),
-    }));
-    vi.mock('node:child_process', () => ({
-      execFile: vi.fn((_cmd: string, _args: string[], _opts: unknown, cb: (err: null) => void) => {
-        cb(null);
-      }),
-    }));
-
     const { Uninstall } = await import('./Uninstall.js');
     const { lastFrame, stdin } = render(<Uninstall />);
     await delay();
@@ -166,40 +98,6 @@ describe('Uninstall', () => {
 
   it('shows done message after walking through all steps with Y', async () => {
     vi.resetModules();
-
-    vi.mock('node:fs', () => ({
-      existsSync: vi.fn(() => true),
-      rmSync: vi.fn(),
-    }));
-    vi.mock('node:os', () => ({
-      homedir: vi.fn(() => '/mock/home'),
-    }));
-    vi.mock('../device/backup.js', () => ({
-      backupKnowledge: vi.fn(() => ({
-        success: true,
-        backupPath: '/mock/home/pilot-backup-2026-04-10',
-      })),
-    }));
-    vi.mock('../device/state.js', () => ({
-      getInstalledTemplateNames: vi.fn(() => []),
-    }));
-    vi.mock('../device/uninstaller.js', () => ({
-      uninstallTemplate: vi.fn(async (name: string) => ({
-        template: name,
-        removed: [],
-        failed: [],
-        skipped: [],
-      })),
-    }));
-    vi.mock('../deploy/deployer.js', () => ({
-      removeRoutingFromClaudeMd: vi.fn(() => ({ success: true })),
-      removeSkillSymlink: vi.fn(() => ({ success: true })),
-    }));
-    vi.mock('node:child_process', () => ({
-      execFile: vi.fn((_cmd: string, _args: string[], _opts: unknown, cb: (err: null) => void) => {
-        cb(null);
-      }),
-    }));
 
     const { Uninstall } = await import('./Uninstall.js');
     const { lastFrame, stdin } = render(<Uninstall />);
@@ -371,6 +269,54 @@ describe('Uninstall', () => {
     // Should have skipped dev tools and be at step 5
     expect(frame).toContain('Dev tools');
     expect(frame).toContain('skipped');
+  });
+
+  it('respects kept.knowledge and kept.skills flags in step5 removal', async () => {
+    vi.resetModules();
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay(); // intro — backup runs
+    stdin.write('n');
+    await delay(); // skip step 1 → kept.knowledge = true
+    stdin.write('n');
+    await delay(); // skip step 2 → kept.skills = true
+    stdin.write('y');
+    await delay(); // step 3
+    // step 4 auto-skipped
+    stdin.write('y');
+    await delay(300); // step 5 with yes — !kept.knowledge=false, !kept.skills=false → branches covered
+
+    expect(lastFrame()).toContain('removed');
+  });
+
+  it('ignores all input once done phase is reached', async () => {
+    vi.resetModules();
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay(); // intro
+    stdin.write('y');
+    await delay(); // step 1
+    stdin.write('y');
+    await delay(); // step 2
+    stdin.write('y');
+    await delay(); // step 3
+    // step 4 auto-skipped
+    stdin.write('n');
+    await delay(); // skip step 5 → done phase
+
+    // Press a key in done phase — no phase condition matches (covers step5 false branch)
+    stdin.write('y');
+    await delay();
+
+    expect(lastFrame()).toContain('removed');
   });
 
   it('walks through step4 with templates installed', async () => {

@@ -1,10 +1,10 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { errorCodes, PilotError } from '../errors.js';
 
 const BASH_COMPLETION = `_pilot_completions() {
-  local commands="crew down help plugins status training uninstall up update completions"
+  local commands="admin completions crew down help kit plugins status training uninstall up update"
   COMPREPLY=($(compgen -W "$commands" -- "\${COMP_WORDS[COMP_CWORD]}"))
 }
 complete -F _pilot_completions pilot
@@ -12,23 +12,25 @@ complete -F _pilot_completions pilot
 
 const ZSH_COMPLETION = `#compdef pilot
 _pilot() {
-  local commands=(crew down help plugins status training uninstall up update completions)
+  local commands=(admin completions crew down help kit plugins status training uninstall up update)
   _describe 'command' commands
 }
 compdef _pilot pilot
 `;
 
 const FISH_COMPLETION = `complete -c pilot -f
+complete -c pilot -n '__fish_use_subcommand' -a admin -d 'Admin dashboard'
+complete -c pilot -n '__fish_use_subcommand' -a completions -d 'Shell completions'
 complete -c pilot -n '__fish_use_subcommand' -a crew -d 'Manage your AI crew'
 complete -c pilot -n '__fish_use_subcommand' -a down -d 'Remove a template'
 complete -c pilot -n '__fish_use_subcommand' -a help -d 'Show help'
+complete -c pilot -n '__fish_use_subcommand' -a kit -d 'Machine configuration & Nix management'
 complete -c pilot -n '__fish_use_subcommand' -a plugins -d 'Manage plugins'
 complete -c pilot -n '__fish_use_subcommand' -a status -d 'System status'
 complete -c pilot -n '__fish_use_subcommand' -a training -d 'Knowledge base'
 complete -c pilot -n '__fish_use_subcommand' -a uninstall -d 'Uninstall Pilot'
 complete -c pilot -n '__fish_use_subcommand' -a up -d 'Setup templates'
 complete -c pilot -n '__fish_use_subcommand' -a update -d 'Check for updates'
-complete -c pilot -n '__fish_use_subcommand' -a completions -d 'Shell completions'
 `;
 
 const SCRIPTS: Record<string, string> = {

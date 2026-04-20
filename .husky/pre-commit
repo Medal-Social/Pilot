@@ -1,3 +1,2 @@
-pnpm install --frozen-lockfile
-pnpm lint
-pnpm test -- --run
+pnpm lint-staged
+pnpm secret:scan:staged

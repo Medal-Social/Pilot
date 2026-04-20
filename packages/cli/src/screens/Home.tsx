@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../colors.js';
@@ -20,7 +20,7 @@ export function Home() {
           <Text color={colors.warning}>● Tip</Text> Type /help to see all available commands
         </Text>
         <StatusBar
-          items={[{ label: '● ready', color: colors.success }, { label: 'pilot · content' }]}
+          items={[{ label: '● ready', color: colors.success }, { label: 'Pilot · content' }]}
         />
       </Box>
     </Box>
