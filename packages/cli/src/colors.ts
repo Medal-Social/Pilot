@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 // https://no-color.org/ — if NO_COLOR is present (any value), disable colors.
 // FORCE_COLOR overrides piped/non-TTY output suppression (handled natively by chalk/Ink).

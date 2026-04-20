@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 export const errorCodes = {
   UPDATE_CHECK_FAILED: 'UPDATE_CHECK_FAILED',

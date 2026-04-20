@@ -1,6 +1,7 @@
 {
   "name": "@medalsocial/pilot-monorepo",
   "private": true,
+  "license": "Apache-2.0",
   "packageManager": "pnpm@10.30.3",
   "scripts": {
     "dev": "pnpm --filter @medalsocial/pilot dev",

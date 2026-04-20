@@ -1309,7 +1309,7 @@ Create a temporary script that prepends the SPDX header to all source files that
 
 ```bash
 HEADER="// Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 "
 
 find packages -name "*.ts" -o -name "*.tsx" | while read -r file; do
@@ -1325,7 +1325,7 @@ Run: `head -2 packages/cli/src/colors.ts`
 Expected:
 ```
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 ```
 
 - [ ] **Step 3: Verify no double-headers**
@@ -1352,7 +1352,7 @@ git commit -m "chore: add SPDX copyright and license headers to all source files
 
 **Badge answers unlocked:**
 - `copyright_per_file` → Met: "All source files include `// Copyright (c) Medal Social. All rights reserved.`"
-- `license_per_file` → Met: "All source files include `// SPDX-License-Identifier: MIT`"
+- `license_per_file` → Met: "All source files include `// SPDX-License-Identifier: Apache-2.0`"
 
 ---
 
@@ -1593,7 +1593,7 @@ This task is manual — go to https://www.bestpractices.dev/en/projects/12447/go
 | `bus_factor` | Met | Two active contributors — see git log |
 | `contributors_unassociated` | Met | Two unassociated significant contributors |
 | `copyright_per_file` | Met | SPDX headers on all source files |
-| `license_per_file` | Met | SPDX-License-Identifier: MIT on all source files |
+| `license_per_file` | Met | SPDX-License-Identifier: Apache-2.0 on all source files |
 | `small_tasks` | Met | Issues labeled 'good first issue' |
 | `two_person_review` | Met | Branch protection requires 1 approving review |
 | `test_statement_coverage90` | Met | 90% enforced by vitest thresholds |
