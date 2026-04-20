@@ -155,6 +155,31 @@ describe('Plugins', () => {
     expect(lastFrame()).toContain('● enabled');
   });
 
+  it('renders PROVIDES section when plugin has no commands or mcpServers', () => {
+    const pluginWithNoProvides: LoadedPlugin[] = [
+      {
+        manifest: {
+          name: 'bare',
+          namespace: 'medalsocial',
+          description: 'A plugin with no commands or MCP servers',
+          // Cast to bypass Zod defaults and exercise the `?? []` null branches
+          provides: {
+            commands: undefined as unknown as string[],
+            mcpServers: undefined as unknown as string[],
+          },
+          permissions: { network: [] },
+          roleBindings: {},
+        },
+        id: '@medalsocial/bare',
+        enabled: true,
+        path: '/fake/plugins/bare',
+      },
+    ];
+    const { lastFrame } = render(<Plugins plugins={pluginWithNoProvides} />);
+    expect(lastFrame()).toContain('PROVIDES');
+    expect(lastFrame()).toContain('bare');
+  });
+
   it('recovers toggle after disabling only enabled plugin on Enabled tab', async () => {
     // One enabled, one disabled — Enabled tab has exactly 1 plugin
     const plugins: LoadedPlugin[] = [

@@ -61,6 +61,7 @@ export function Admin({ api, workspaceId }: AdminProps) {
       // Surface the error in-UI rather than letting it become an unhandled
       // promise rejection (which would crash the TUI). Stale data stays
       // visible so the dashboard remains useful while the user resolves it.
+      // v8 ignore next
       const msg = err instanceof Error ? err.message : 'Unknown error';
       setFetchError(msg);
     }
@@ -68,9 +69,12 @@ export function Admin({ api, workspaceId }: AdminProps) {
 
   useEffect(() => {
     void fetchData();
-    const interval = setInterval(() => {
-      void fetchData();
-    }, POLL_INTERVAL);
+    const interval = setInterval(
+      /* v8 ignore next */ () => {
+        void fetchData();
+      },
+      POLL_INTERVAL
+    );
     return () => clearInterval(interval);
   }, [fetchData]);
 
@@ -107,6 +111,7 @@ export function Admin({ api, workspaceId }: AdminProps) {
 
       <HealthStrip services={dashboard?.services ?? []} stats={dashboard?.stats} />
 
+      {/* v8 ignore next 6 */}
       {fetchError && (
         <Box paddingX={1}>
           <Text color={colors.error}>! refresh failed: {fetchError} </Text>

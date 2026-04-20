@@ -58,4 +58,10 @@ describe('SitePanel', () => {
     const { lastFrame } = render(<SitePanel />);
     expect(lastFrame()).toContain('Loading');
   });
+
+  it('shows warning when DNS is not configured', () => {
+    const ws = { ...mockWorkspace, dnsConfigured: false };
+    const { lastFrame } = render(<SitePanel workspace={ws} />);
+    expect(lastFrame()).toContain('Not configured');
+  });
 });
