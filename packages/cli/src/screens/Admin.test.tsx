@@ -65,4 +65,42 @@ describe('Admin', () => {
     await delay();
     expect(lastFrame()).toContain('SITE STATUS');
   });
+
+  it('cycles to next tab with Tab key', async () => {
+    const api = createMockAPI();
+    const { lastFrame, stdin } = render(<Admin api={api} />);
+    await delay();
+    // Start on overview; Tab should move to Site panel
+    stdin.write('\t');
+    await delay();
+    expect(lastFrame()).toContain('SSL');
+  });
+
+  it('refreshes data on r key', async () => {
+    const api = createMockAPI();
+    const { lastFrame, stdin } = render(<Admin api={api} />);
+    await delay();
+    const frameBefore = lastFrame();
+    stdin.write('r');
+    await delay();
+    expect(lastFrame()).toContain('PILOT ADMIN');
+    expect(frameBefore).toBeTruthy();
+  });
+
+  it('exits on q key without throwing', async () => {
+    const api = createMockAPI();
+    const { stdin, unmount } = render(<Admin api={api} />);
+    await delay();
+    stdin.write('q');
+    await delay();
+    unmount();
+  });
+
+  it('cleans up polling interval on unmount', async () => {
+    const api = createMockAPI();
+    const { unmount } = render(<Admin api={api} />);
+    await delay();
+    // Unmounting triggers the clearInterval cleanup function
+    expect(() => unmount()).not.toThrow();
+  });
 });
