@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { type Apps, HOMEBREW_NAME } from '../apps/schema.js';
 import { loadAppsJson, writeAppsJson } from '../apps/store.js';

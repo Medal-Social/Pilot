@@ -3,7 +3,7 @@
   "version": "0.1.5",
   "type": "module",
   "description": "Your AI crew, ready to fly. Medal Social's AI-powered CLI platform.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "keywords": [
     "cli",
     "ai",

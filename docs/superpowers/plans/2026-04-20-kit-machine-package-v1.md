@@ -143,7 +143,7 @@ Create `packages/plugins/kit/src/errors.test.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
 import { KitError, errorCodes } from './errors.js';
@@ -181,7 +181,7 @@ Create `packages/plugins/kit/src/errors.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 export const errorCodes = {
   KIT_SUDO_DENIED: 'KIT_SUDO_DENIED',
@@ -262,7 +262,7 @@ Expected: 3 tests pass; commit created.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
 import { realExec } from './exec.js';
@@ -302,7 +302,7 @@ Create `packages/plugins/kit/src/shell/exec.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { type ChildProcess, spawn as nodeSpawn } from 'node:child_process';
 
@@ -399,7 +399,7 @@ git commit -m "feat(kit): add Exec interface with real implementation"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
 import { kitConfigSchema } from './schema.js';
@@ -449,7 +449,7 @@ Create `packages/plugins/kit/src/config/schema.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod';
 
@@ -491,7 +491,7 @@ git commit -m "feat(kit): add KitConfig Zod schema"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -564,7 +564,7 @@ Create `packages/plugins/kit/src/config/load.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -629,7 +629,7 @@ git commit -m "feat(kit): load and validate kit.config.json"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { getSystemInfo } from './system.js';
@@ -678,7 +678,7 @@ Create `packages/plugins/kit/src/machine/system.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import type { Exec } from '../shell/exec.js';
 
@@ -737,7 +737,7 @@ git commit -m "feat(kit): detect OS, version, and chip"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 export interface ProviderContext {
   readonly machineId: string;
@@ -826,7 +826,7 @@ git commit -m "feat(kit): define FleetProvider interface"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
 import { LocalProvider } from './local.js';
@@ -882,7 +882,7 @@ Create `packages/plugins/kit/src/provider/local.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import type {
   FleetProvider,
@@ -939,7 +939,7 @@ Create `packages/plugins/kit/src/provider/conformance.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { expect } from 'vitest';
 import type { FleetProvider, ProviderContext } from './types.js';
@@ -985,7 +985,7 @@ Create `packages/plugins/kit/src/provider/conformance.test.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, it } from 'vitest';
 import { LocalProvider } from './local.js';
@@ -1004,7 +1004,7 @@ Create `packages/plugins/kit/src/provider/resolve.test.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
 import { LocalProvider } from './local.js';
@@ -1024,7 +1024,7 @@ Create `packages/plugins/kit/src/provider/resolve.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { LocalProvider } from './local.js';
 import type { FleetProvider } from './types.js';
@@ -1062,7 +1062,7 @@ Create `packages/plugins/kit/src/steps/runner.test.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { KitError, errorCodes } from '../errors.js';
@@ -1134,7 +1134,7 @@ Create `packages/plugins/kit/src/steps/types.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import type { Exec } from '../shell/exec.js';
 
@@ -1204,7 +1204,7 @@ For tasks 10-17, the pattern is identical: write tests with a fake `Exec`, imple
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { xcodeStep } from './xcode.js';
@@ -1254,7 +1254,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { KitError, errorCodes } from '../errors.js';
 import type { Step, StepContext } from './types.js';
@@ -1304,7 +1304,7 @@ git commit -m "feat(kit): add xcode CLT step"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { rosettaStep } from './rosetta.js';
@@ -1338,7 +1338,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { KitError, errorCodes } from '../errors.js';
 import type { Step } from './types.js';
@@ -1378,7 +1378,7 @@ git commit -m "feat(kit): add Rosetta 2 step"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { KitError } from '../errors.js';
@@ -1434,7 +1434,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { KitError, errorCodes } from '../errors.js';
 import type { Step } from './types.js';
@@ -1486,7 +1486,7 @@ git commit -m "feat(kit): add Nix install step"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1530,7 +1530,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -1584,7 +1584,7 @@ git commit -m "feat(kit): add SSH keygen step"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { githubStep } from './github.js';
@@ -1632,7 +1632,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { join } from 'node:path';
 import { KitError, errorCodes } from '../errors.js';
@@ -1721,7 +1721,7 @@ git commit -m "feat(kit): add GitHub auth step (SSH → gh → upload key)"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1777,7 +1777,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -1833,7 +1833,7 @@ git commit -m "feat(kit): add repo clone-or-pull step"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1888,7 +1888,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -1934,7 +1934,7 @@ git commit -m "feat(kit): add secrets step (delegates to scripts/secrets-init.sh
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { rebuildStep } from './rebuild.js';
@@ -1984,7 +1984,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { KitError, errorCodes } from '../errors.js';
 import type { Step } from './types.js';
@@ -2033,7 +2033,7 @@ git commit -m "feat(kit): add nix rebuild step"
 
 ```tsx
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -2057,7 +2057,7 @@ describe('<Header />', () => {
 
 ```tsx
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 
@@ -2109,7 +2109,7 @@ git commit -m "feat(kit): add Header UI component"
 
 ```tsx
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -2133,7 +2133,7 @@ describe('<StepRow />', () => {
 
 ```tsx
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 
@@ -2190,7 +2190,7 @@ git commit -m "feat(kit): add StepRow UI component"
 
 ```tsx
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -2213,7 +2213,7 @@ describe('<Spinner />', () => {
 
 ```tsx
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 
@@ -2266,7 +2266,7 @@ git commit -m "feat(kit): add Spinner UI component"
 
 ```tsx
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -2291,7 +2291,7 @@ describe('<Completion />', () => {
 
 ```tsx
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 
@@ -2351,7 +2351,7 @@ git commit -m "feat(kit): add Completion UI component"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
 import { appsSchema } from './schema.js';
@@ -2380,7 +2380,7 @@ describe('appsSchema', () => {
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod';
 
@@ -2400,7 +2400,7 @@ export type Apps = z.infer<typeof appsSchema>;
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -2443,7 +2443,7 @@ describe('writeAppsJson', () => {
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { KitError, errorCodes } from '../errors.js';
@@ -2500,7 +2500,7 @@ git commit -m "feat(kit): add apps.json schema and atomic store"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -2550,7 +2550,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { HOMEBREW_NAME } from '../apps/schema.js';
 import { type Apps, loadAppsJson, writeAppsJson } from '../apps/store.js';
@@ -2598,7 +2598,7 @@ git commit -m "feat(kit): add apps add/remove/list command"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -2664,7 +2664,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -2736,7 +2736,7 @@ git commit -m "feat(kit): add idempotent apps.json migration"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { KitError } from '../errors.js';
@@ -2778,7 +2778,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { KitError, errorCodes } from '../errors.js';
 import type { Exec } from '../shell/exec.js';
@@ -2830,7 +2830,7 @@ git commit -m "feat(kit): add edit command with editor resolution"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -2886,7 +2886,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { existsSync } from 'node:fs';
 import { loadAppsJson } from '../apps/store.js';
@@ -2968,7 +2968,7 @@ git commit -m "feat(kit): add status command (data layer)"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -3037,7 +3037,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { KitError, errorCodes } from '../errors.js';
 import type { FleetProvider } from '../provider/types.js';
@@ -3130,7 +3130,7 @@ git commit -m "feat(kit): add update command with sudo keeper"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { LocalProvider } from '../provider/local.js';
@@ -3173,7 +3173,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import type { FleetProvider } from '../provider/types.js';
 import type { Exec } from '../shell/exec.js';
@@ -3262,7 +3262,7 @@ git commit -m "feat(kit): add init command orchestrator"
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -3308,7 +3308,7 @@ Expected: FAIL.
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -3399,7 +3399,7 @@ Replace the contents of `packages/plugins/kit/src/index.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 export { detectMachine } from './detect.js';
 export { getSystemInfo } from './machine/system.js';
@@ -3511,7 +3511,7 @@ Create `packages/cli/src/commands/kit.ts`:
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { hostname } from 'node:os';
 import { join } from 'node:path';
@@ -3722,7 +3722,7 @@ in {
 
 ```ts
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { cpSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';

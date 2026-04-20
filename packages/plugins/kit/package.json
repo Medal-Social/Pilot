@@ -2,7 +2,7 @@
   "name": "@medalsocial/kit",
   "version": "0.1.0",
   "type": "module",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "main": "dist/index.js",
   "exports": {
     ".": "./dist/index.js",

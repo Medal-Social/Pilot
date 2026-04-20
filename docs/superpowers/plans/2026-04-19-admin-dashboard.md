@@ -22,7 +22,7 @@
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 export type ServiceStatus = 'healthy' | 'warning' | 'critical' | 'idle';
 
@@ -120,7 +120,7 @@ export interface AdminSDK {
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
 import type {
@@ -201,7 +201,7 @@ git commit -m "feat(admin): add admin types and SDK interface"
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAdminAPI } from './api.js';
@@ -313,7 +313,7 @@ Expected: FAIL — `createAdminAPI` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import type {
   AdminSDK,
@@ -388,7 +388,7 @@ git commit -m "feat(admin): add API wrapper over SDK interface"
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
 import { createMockAdminSDK } from './mock-sdk.js';
@@ -448,7 +448,7 @@ Expected: FAIL — `createMockAdminSDK` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import type {
   AdminSDK,
@@ -576,7 +576,7 @@ git commit -m "feat(admin): add mock SDK for development and testing"
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -644,7 +644,7 @@ Expected: FAIL — `HealthStrip` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../../colors.js';
@@ -737,7 +737,7 @@ git commit -m "feat(admin): add HealthStrip component with service dots and quic
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -804,7 +804,7 @@ Expected: FAIL — `OverviewPanel` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../../colors.js';
@@ -901,7 +901,7 @@ git commit -m "feat(admin): add OverviewPanel with site status, posts, visits, a
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -972,7 +972,7 @@ Expected: FAIL — `SitePanel` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../../colors.js';
@@ -1067,7 +1067,7 @@ git commit -m "feat(admin): add SitePanel with domain, SSL, DNS, and uptime stat
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -1125,7 +1125,7 @@ Expected: FAIL — `ContentPanel` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../../colors.js';
@@ -1205,7 +1205,7 @@ git commit -m "feat(admin): add ContentPanel with publish stats and dataset info
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -1264,7 +1264,7 @@ Expected: FAIL — `AnalyticsPanel` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../../colors.js';
@@ -1343,7 +1343,7 @@ git commit -m "feat(admin): add AnalyticsPanel with visits, trends, and uptime"
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -1405,7 +1405,7 @@ Expected: FAIL — `SettingsPanel` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../../colors.js';
@@ -1499,7 +1499,7 @@ git commit -m "feat(admin): add SettingsPanel with workspace config and billing 
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
@@ -1577,7 +1577,7 @@ Expected: FAIL — `Admin` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text, useApp, useInput } from 'ink';
 import { useCallback, useEffect, useState } from 'react';
@@ -1744,7 +1744,7 @@ ADMIN_ACCESS_DENIED: 'You don\'t have permission to access the admin dashboard.'
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 
@@ -1782,7 +1782,7 @@ Expected: FAIL — `runAdmin` does not exist
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink';
 import React from 'react';
@@ -1841,7 +1841,7 @@ git commit -m "feat(admin): add pilot admin command with mock SDK"
 
 ```typescript
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';

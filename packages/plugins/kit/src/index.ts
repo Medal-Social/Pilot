@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 export { addApp, listApps, removeApp } from './commands/apps.js';
 export { resolveEditor, runEdit } from './commands/edit.js';

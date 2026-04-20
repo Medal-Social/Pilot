@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import type { WorkspaceDetail } from '../../admin/types.js';

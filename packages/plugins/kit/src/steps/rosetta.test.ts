@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
 import { rosettaStep } from './rosetta.js';

@@ -30,7 +30,7 @@ You can also invoke commands directly via `pilot kit ...` — both forms are equ
 
 ## License
 
-MIT. Source-available — issues and security reports welcome. Code contributions outside the Medal Social team aren't actively solicited.
+Apache-2.0. Source-available — issues and security reports welcome. Code contributions outside the Medal Social team aren't actively solicited.
 
 ## What's next
 
