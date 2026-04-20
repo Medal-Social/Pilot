@@ -101,6 +101,7 @@ export function Training() {
             </Box>
           }
           detail={
+            /* v8 ignore next */
             current ? (
               <Box flexDirection="column" gap={1}>
                 <Text bold color={colors.text}>

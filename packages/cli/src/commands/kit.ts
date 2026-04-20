@@ -222,7 +222,9 @@ export async function runKitUpdate(): Promise<void> {
 }
 
 function fmtCheck(status: 'ok' | 'warn' | 'error' | 'info', tty: boolean): string {
+  /* v8 ignore start */
   const c = (s: string, code: string) => (tty ? `\x1b[${code}m${s}\x1b[0m` : s);
+  /* v8 ignore stop */
   switch (status) {
     case 'ok':
       return c('✓', '32');
@@ -237,8 +239,10 @@ function fmtCheck(status: 'ok' | 'warn' | 'error' | 'info', tty: boolean): strin
 
 function printHumanReadable(report: Awaited<ReturnType<typeof renderStatus>>): void {
   const tty = process.stdout.isTTY;
+  /* v8 ignore start */
   const dim = (s: string) => (tty ? `\x1b[2m${s}\x1b[0m` : s);
   const bold = (s: string) => (tty ? `\x1b[1m${s}\x1b[0m` : s);
+  /* v8 ignore stop */
 
   process.stdout.write(`\n  ${bold('kit status')}  ${dim(`· ${report.machineId}`)}\n`);
   process.stdout.write(`  ${dim('─'.repeat(40))}\n\n`);

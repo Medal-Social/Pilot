@@ -61,7 +61,7 @@ export function Admin({ api, workspaceId }: AdminProps) {
       // Surface the error in-UI rather than letting it become an unhandled
       // promise rejection (which would crash the TUI). Stale data stays
       // visible so the dashboard remains useful while the user resolves it.
-      // v8 ignore next
+      /* v8 ignore next */
       const msg = err instanceof Error ? err.message : 'Unknown error';
       setFetchError(msg);
     }

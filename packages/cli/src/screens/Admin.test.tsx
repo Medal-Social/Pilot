@@ -141,6 +141,23 @@ describe('Admin', () => {
     expect(() => unmount()).not.toThrow();
   });
 
+  it('renders site/content/analytics/settings panels with null workspace during data load', async () => {
+    const api = createMockAPI();
+    // Block the promise so workspace/contentStats stay null throughout
+    vi.spyOn(api, 'fetchWorkspaces').mockReturnValue(new Promise(() => {}));
+    const { lastFrame, stdin } = render(<Admin api={api} />);
+    await delay(20);
+    stdin.write('2'); // site tab — workspace ?? undefined hits null branch
+    await delay(20);
+    stdin.write('3'); // content tab — contentStats ?? undefined hits null branch
+    await delay(20);
+    stdin.write('4'); // analytics tab — workspace ?? undefined
+    await delay(20);
+    stdin.write('5'); // settings tab — workspace ?? undefined
+    await delay(20);
+    expect(lastFrame()).toBeDefined();
+  });
+
   it('shows in-UI error banner instead of crashing when fetch rejects', async () => {
     const api = createMockAPI();
     vi.spyOn(api, 'fetchDashboard').mockRejectedValue(new Error('network down'));
@@ -151,5 +168,14 @@ describe('Admin', () => {
     expect(frame).toContain('network down');
     // The TUI is still rendered — header is visible, no crash.
     expect(frame).toContain('PILOT ADMIN');
+  });
+
+  it('shows Unknown error when a non-Error value is thrown in fetch', async () => {
+    const api = createMockAPI();
+    vi.spyOn(api, 'fetchDashboard').mockRejectedValue('plain string error');
+    const { lastFrame } = render(<Admin api={api} />);
+    await delay();
+    expect(lastFrame()).toContain('Unknown error');
+    expect(lastFrame()).toContain('PILOT ADMIN');
   });
 });

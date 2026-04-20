@@ -9,7 +9,7 @@
     "preinstall": "npx only-allow pnpm",
     "dev": "pnpm --filter @medalsocial/pilot dev",
     "build": "turbo build",
-    "typecheck": "pnpm -r --if-present typecheck",
+    "typecheck": "turbo typecheck",
     "test:repo": "vitest run tests/repo-guardrails.test.ts",
     "test": "turbo test",
     "quality": "pnpm lint && pnpm typecheck && pnpm test:repo && pnpm test",

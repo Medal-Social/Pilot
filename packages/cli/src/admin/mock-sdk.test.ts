@@ -47,4 +47,24 @@ describe('createMockAdminSDK', () => {
     expect(stats.published).toBeGreaterThan(0);
     expect(stats.datasets.length).toBeGreaterThan(0);
   });
+
+  it('returns zero uptime and visits for non-live workspace', async () => {
+    const sdk = createMockAdminSDK();
+    // ws-4 (Bloom Florist) has siteStatus: 'setup' — not live
+    const detail = await sdk.getWorkspaceDetail('ws-4');
+    expect(detail.uptime).toBe(0);
+    expect(detail.monthlyVisits).toBe(0);
+  });
+
+  it('falls back to first workspace in getWorkspaceDetail when id not found', async () => {
+    const sdk = createMockAdminSDK();
+    const detail = await sdk.getWorkspaceDetail('nonexistent-id');
+    expect(detail.name).toBe('Sunrise Bakery');
+  });
+
+  it('falls back to first workspace in getUser when workspaceId not found', async () => {
+    const sdk = createMockAdminSDK({ role: 'admin', workspaceId: 'nonexistent-id' });
+    const user = await sdk.getUser();
+    expect(user.workspaceId).toBe('ws-1');
+  });
 });

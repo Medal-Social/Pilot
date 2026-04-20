@@ -271,6 +271,54 @@ describe('Uninstall', () => {
     expect(frame).toContain('skipped');
   });
 
+  it('respects kept.knowledge and kept.skills flags in step5 removal', async () => {
+    vi.resetModules();
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay(); // intro — backup runs
+    stdin.write('n');
+    await delay(); // skip step 1 → kept.knowledge = true
+    stdin.write('n');
+    await delay(); // skip step 2 → kept.skills = true
+    stdin.write('y');
+    await delay(); // step 3
+    // step 4 auto-skipped
+    stdin.write('y');
+    await delay(300); // step 5 with yes — !kept.knowledge=false, !kept.skills=false → branches covered
+
+    expect(lastFrame()).toContain('removed');
+  });
+
+  it('ignores all input once done phase is reached', async () => {
+    vi.resetModules();
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { lastFrame, stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay(); // intro
+    stdin.write('y');
+    await delay(); // step 1
+    stdin.write('y');
+    await delay(); // step 2
+    stdin.write('y');
+    await delay(); // step 3
+    // step 4 auto-skipped
+    stdin.write('n');
+    await delay(); // skip step 5 → done phase
+
+    // Press a key in done phase — no phase condition matches (covers step5 false branch)
+    stdin.write('y');
+    await delay();
+
+    expect(lastFrame()).toContain('removed');
+  });
+
   it('walks through step4 with templates installed', async () => {
     const state = await import('../device/state.js');
     vi.mocked(state.getInstalledTemplateNames).mockReturnValueOnce(['pencil']);

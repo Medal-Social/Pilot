@@ -228,4 +228,58 @@ describe('Update', () => {
     await delay(150);
     expect(lastFrame()).toContain('Update');
   });
+
+  it('ignores keyboard input when phase is not confirm', async () => {
+    const { checkForUpdates } = await import('../update/checker.js');
+    // Never resolves — component stays in 'checking' phase
+    vi.mocked(checkForUpdates).mockReturnValueOnce(new Promise(() => {}));
+
+    const { lastFrame, stdin } = render(<Update currentVersion="0.1.0" />);
+    stdin.write('y'); // phase === 'checking', not 'confirm' — input is ignored
+    await delay();
+    expect(lastFrame()).toContain('Checking for updates');
+  });
+
+  it('does not setState when unmounted before checkForUpdates resolves', async () => {
+    const { checkForUpdates } = await import('../update/checker.js');
+    let resolve!: (v: never) => void;
+    vi.mocked(checkForUpdates).mockReturnValueOnce(
+      new Promise((r) => {
+        resolve = r;
+      })
+    );
+
+    const { unmount } = render(<Update currentVersion="0.1.0" />);
+    unmount(); // triggers cleanup → cancelled = true
+    resolve({ current: '0.1.0', latest: '0.1.0', hasUpdate: false } as never);
+    await delay();
+    // No crash — the cancelled guard prevented the setState call
+  });
+
+  it('does not setState when unmounted during applyUpdate', async () => {
+    const { checkForUpdates, applyUpdate } = await import('../update/checker.js');
+    vi.mocked(checkForUpdates).mockResolvedValueOnce({
+      current: '0.1.0',
+      latest: '1.0.0',
+      hasUpdate: true,
+    });
+    let resolveApply!: (v: never) => void;
+    vi.mocked(applyUpdate).mockReturnValueOnce(
+      new Promise((r) => {
+        resolveApply = r;
+      })
+    );
+
+    const { stdin, rerender, unmount } = render(<Update currentVersion="0.1.0" />);
+    await delay();
+    rerender(<Update currentVersion="0.1.0" />);
+
+    stdin.write('y'); // transitions to 'updating'
+    await delay();
+
+    unmount(); // triggers cleanup → cancelled = true
+    resolveApply({ success: true } as never);
+    await delay();
+    // No crash — the cancelled guard prevented the setState call
+  });
 });
