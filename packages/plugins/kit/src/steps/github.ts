@@ -1,6 +1,7 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: MIT
 
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { errorCodes, KitError } from '../errors.js';
 import type { Step, StepContext } from './types.js';
@@ -11,12 +12,51 @@ function home(ctx: StepContext): string {
   return ctx.env?.HOME ?? process.env.HOME ?? '';
 }
 
+/**
+ * Pre-seed `~/.ssh/known_hosts` with github.com's host key so the SSH probe
+ * (which runs in BatchMode and therefore can't accept host keys interactively)
+ * doesn't fail before authentication is evaluated. Idempotent — skips if
+ * github.com is already trusted.
+ */
+async function ensureGitHubHostKey(ctx: StepContext): Promise<void> {
+  const sshDir = join(home(ctx), '.ssh');
+  const knownHosts = join(sshDir, 'known_hosts');
+
+  if (existsSync(knownHosts)) {
+    try {
+      const contents = readFileSync(knownHosts, 'utf8');
+      if (/^github\.com[\s,]/m.test(contents)) return;
+    } catch {
+      // Fall through to re-seed.
+    }
+  }
+
+  await ctx.exec.run('mkdir', ['-p', sshDir]);
+  const scan = await ctx.exec.run('ssh-keyscan', ['-t', 'ed25519,rsa', 'github.com']);
+  if (scan.code !== 0 || scan.stdout.trim().length === 0) {
+    // Non-fatal — fall back to accept-new on the probe; surface a clearer error if everything else fails.
+    return;
+  }
+  // Append (don't overwrite — preserve any other hosts the user has trusted).
+  const existing = existsSync(knownHosts) ? readFileSync(knownHosts, 'utf8') : '';
+  const sep = existing && !existing.endsWith('\n') ? '\n' : '';
+  await ctx.exec.run('sh', ['-c', `cat >> "${knownHosts}"`], {
+    input: `${sep}${scan.stdout}`,
+  });
+  await ctx.exec.run('chmod', ['644', knownHosts]);
+}
+
 async function trySshAuth(ctx: StepContext): Promise<boolean> {
+  await ensureGitHubHostKey(ctx);
   const r = await ctx.exec.run('ssh', [
     '-o',
     'BatchMode=yes',
     '-o',
     'ConnectTimeout=5',
+    // Belt-and-suspenders: even if known_hosts seeding failed, accept-new lets
+    // BatchMode trust an unknown host on first encounter rather than rejecting it.
+    '-o',
+    'StrictHostKeyChecking=accept-new',
     '-i',
     join(home(ctx), '.ssh', 'id_ed25519'),
     'git@github.com',

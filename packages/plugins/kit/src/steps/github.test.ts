@@ -1,8 +1,19 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: MIT
 
-import { describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { githubStep } from './github.js';
+
+let home: string;
+beforeEach(() => {
+  home = mkdtempSync(join(tmpdir(), 'gh-'));
+});
+afterEach(() => {
+  rmSync(home, { recursive: true, force: true });
+});
 
 const ctxWith = (
   impl: (
@@ -15,7 +26,7 @@ const ctxWith = (
   }>
 ) => ({
   exec: { run: vi.fn(impl), spawn: vi.fn() },
-  env: { HOME: '/tmp', KIT_MACHINE: 'ali-pro' },
+  env: { HOME: home, KIT_MACHINE: 'ali-pro' },
 });
 
 describe('githubStep', () => {
@@ -35,6 +46,26 @@ describe('githubStep', () => {
       code: 255,
     }));
     expect(await githubStep.check(ctx)).toBe(false);
+  });
+
+  it('SSH probe always uses StrictHostKeyChecking=accept-new (works on fresh machines)', async () => {
+    const ctx = ctxWith(async () => ({ stdout: '', stderr: '', code: 0 }));
+    await githubStep.check(ctx);
+    const sshCall = ctx.exec.run.mock.calls.find((c) => c[0] === 'ssh');
+    expect(sshCall).toBeDefined();
+    expect(sshCall?.[1]).toEqual(expect.arrayContaining(['StrictHostKeyChecking=accept-new']));
+  });
+
+  it('seeds known_hosts with github.com keys before SSH probe (when missing)', async () => {
+    const ctx = ctxWith(async (cmd) => {
+      if (cmd === 'ssh-keyscan')
+        return { stdout: 'github.com ssh-ed25519 AAAA...\n', stderr: '', code: 0 };
+      return { stdout: '', stderr: '', code: 0 };
+    });
+    await githubStep.check(ctx);
+    const keyscanCall = ctx.exec.run.mock.calls.find((c) => c[0] === 'ssh-keyscan');
+    expect(keyscanCall).toBeDefined();
+    expect(keyscanCall?.[1]).toEqual(expect.arrayContaining(['github.com']));
   });
 
   it('run uploads SSH key when gh auth status succeeds and key not present', async () => {
