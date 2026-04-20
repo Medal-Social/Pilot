@@ -2,11 +2,48 @@
 // SPDX-License-Identifier: MIT
 
 import { spawn } from 'node:child_process';
+import { readdirSync, statSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import { errorCodes, KitError } from '../errors.js';
 import type { FleetProvider } from '../provider/types.js';
 import type { Exec } from '../shell/exec.js';
 import { rebuildStep } from '../steps/rebuild.js';
 import { runSteps } from '../steps/types.js';
+import { migrateMachineFile } from './migrate-apps.js';
+
+function findMachineNixFiles(machinesDir: string): Array<{ path: string; machine: string }> {
+  const out: Array<{ path: string; machine: string }> = [];
+  let entries: string[];
+  try {
+    entries = readdirSync(machinesDir);
+  } catch {
+    return out;
+  }
+  for (const entry of entries) {
+    const full = join(machinesDir, entry);
+    let stat: ReturnType<typeof statSync>;
+    try {
+      stat = statSync(full);
+    } catch {
+      continue;
+    }
+    if (stat.isDirectory()) {
+      out.push(...findMachineNixFiles(full));
+    } else if (stat.isFile() && entry.endsWith('.nix')) {
+      out.push({ path: full, machine: basename(entry, '.nix') });
+    }
+  }
+  return out;
+}
+
+export async function runMigrations(kitRepoDir: string): Promise<number> {
+  let changed = 0;
+  for (const { path, machine } of findMachineNixFiles(join(kitRepoDir, 'machines'))) {
+    const result = await migrateMachineFile(path, machine);
+    if (result.changed) changed += 1;
+  }
+  return changed;
+}
 
 export interface SudoKeeper {
   start(): () => void;
@@ -35,6 +72,9 @@ export async function runUpdate(opts: RunUpdateOpts): Promise<void> {
     user: opts.user ?? process.env.USER ?? '',
     kitRepoDir: opts.kitRepoDir,
   });
+
+  // Idempotent migration: lift inline homebrew lists into apps.json files.
+  await runMigrations(opts.kitRepoDir);
 
   const stopKeeper = opts.sudoKeeper.start();
   const onExit = () => stopKeeper();

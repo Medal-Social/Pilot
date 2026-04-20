@@ -1,12 +1,12 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: MIT
 
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalProvider } from '../provider/local.js';
-import { runUpdate } from './update.js';
+import { runMigrations, runUpdate } from './update.js';
 
 let dir: string;
 
@@ -39,6 +39,28 @@ describe('runUpdate', () => {
     const rebuildPos = calls.findIndex((c) => c.startsWith('sudo') && c.includes('darwin-rebuild'));
     expect(pullPos).toBeGreaterThan(-1);
     expect(rebuildPos).toBeGreaterThan(pullPos);
+  });
+
+  it('runs migrations against machines/ subdirectories', async () => {
+    mkdirSync(join(dir, 'machines', 'personal'), { recursive: true });
+    writeFileSync(
+      join(dir, 'machines', 'personal', 'demo.nix'),
+      `{ ... }: {
+  homebrew.casks = [
+    "zed"
+  ];
+  homebrew.brews = [
+    "jq"
+  ];
+}
+`
+    );
+    const changed = await runMigrations(dir);
+    expect(changed).toBe(1);
+    const apps = JSON.parse(
+      readFileSync(join(dir, 'machines', 'personal', 'demo.apps.json'), 'utf8')
+    );
+    expect(apps.casks).toEqual(['zed']);
   });
 
   it('starts and stops the sudo keeper', async () => {
