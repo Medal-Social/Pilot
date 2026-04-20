@@ -1,4 +1,26 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: MIT
 
+export { addApp, listApps, removeApp } from './commands/apps.js';
+export { resolveEditor, runEdit } from './commands/edit.js';
+export { initSteps, runInit } from './commands/init.js';
+export { migrateMachineFile } from './commands/migrate-apps.js';
+export { scaffoldKit } from './commands/new.js';
+export { renderStatus } from './commands/status.js';
+export { realSudoKeeper, runUpdate } from './commands/update.js';
+export { loadKitConfig } from './config/load.js';
+export type { KitConfig, Machine } from './config/schema.js';
 export { detectMachine } from './detect.js';
+export { errorCodes, KitError } from './errors.js';
+export { getSystemInfo } from './machine/system.js';
+
+export { LocalProvider } from './provider/local.js';
+export { resolveProvider } from './provider/resolve.js';
+export type {
+  FleetProvider,
+  ProviderContext,
+  RequiredApps,
+  StatusReport,
+} from './provider/types.js';
+
+export { realExec } from './shell/exec.js';
