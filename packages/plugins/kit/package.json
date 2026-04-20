@@ -7,8 +7,14 @@
     "build": "tsc",
     "test": "vitest"
   },
-  "dependencies": {},
+  "dependencies": {
+    "ink": "7.0.0",
+    "react": "19.2.5",
+    "zod": "4.3.6"
+  },
   "devDependencies": {
+    "@types/react": "19.2.14",
+    "ink-testing-library": "4.0.0",
     "typescript": "^6.0.0",
     "vitest": "^4.0.0"
   }
