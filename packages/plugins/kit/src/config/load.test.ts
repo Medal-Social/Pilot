@@ -52,6 +52,24 @@ describe('loadKitConfig', () => {
     rmSync(home, { recursive: true, force: true });
   });
 
+  it('uses HOME from injected env (not process.env) when opts.home is absent', async () => {
+    const fakeHome = mkdtempSync(join(tmpdir(), 'kit-fakehome-'));
+    const dir = join(fakeHome, 'Documents', 'Code', 'kit');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, 'kit.config.json'),
+      JSON.stringify({
+        name: 'kit',
+        repo: 'x',
+        machines: { foo: { type: 'darwin', user: 'a' } },
+      })
+    );
+    // Pass HOME via env, NOT opts.home. The loader should honor env.HOME.
+    const cfg = await loadKitConfig({ env: { HOME: fakeHome } });
+    expect(cfg.configPath).toBe(join(dir, 'kit.config.json'));
+    rmSync(fakeHome, { recursive: true, force: true });
+  });
+
   it('throws KIT_CONFIG_NOT_FOUND when nothing is found', async () => {
     await expect(loadKitConfig({ env: {}, home: tmp })).rejects.toBeInstanceOf(KitError);
   });

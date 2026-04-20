@@ -29,7 +29,9 @@ export type LoadedKitConfig = KitConfig & {
 
 export function configCandidates(opts: LoadOpts = {}): string[] {
   const env = opts.env ?? process.env;
-  const home = opts.home ?? process.env.HOME ?? '';
+  // Resolve HOME from the injected env (not process.env) so opts.env is a
+  // complete override. opts.home retains highest precedence.
+  const home = opts.home ?? env.HOME ?? '';
   const out: string[] = [];
   if (env.KIT_CONFIG) out.push(env.KIT_CONFIG);
   if (home) out.push(join(home, 'Documents', 'Code', 'kit', 'kit.config.json'));
