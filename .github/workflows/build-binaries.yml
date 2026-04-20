@@ -121,7 +121,7 @@ jobs:
       - name: Download binaries and compute SHA256s
         run: |
           TAG="${GITHUB_REF_NAME}"
-          BASE="https://github.com/Medal-Social/pilot/releases/download/${TAG}"
+          BASE="https://github.com/Medal-Social/Pilot/releases/download/${TAG}"
 
           for bin in pilot-darwin-arm64 pilot-darwin-x64 pilot-linux-x64 pilot-linux-arm64; do
             curl -fsSL "${BASE}/${bin}" -o "/tmp/${bin}"

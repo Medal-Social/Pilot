@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-REPO="Medal-Social/pilot"
+REPO="Medal-Social/Pilot"
 INSTALL_DIR="$HOME/.pilot/bin"
 
 main() {
