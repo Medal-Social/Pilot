@@ -76,19 +76,18 @@ jobs:
 
       - name: Sign binary (Unix)
         if: "!contains(matrix.target, 'win')"
-        run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
+        run: cosign sign-blob --yes --bundle ${{ matrix.target }}.bundle ${{ matrix.target }}
 
       - name: Sign binary (Windows)
         if: contains(matrix.target, 'win')
-        run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
+        run: cosign sign-blob --yes --bundle ${{ matrix.target }}.bundle ${{ matrix.target }}
 
       - name: Upload binary and signatures to release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           files: |
             ${{ matrix.target }}
-            ${{ matrix.target }}.sig
-            ${{ matrix.target }}.pem
+            ${{ matrix.target }}.bundle
 
   sync-homebrew:
     needs: build
