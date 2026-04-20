@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 
-export const HOMEBREW_NAME = /^[a-z0-9][a-z0-9._@-]*$/;
+export const HOMEBREW_NAME = /^[a-z0-9][a-z0-9._@+-]*$/;
 
 const name = z.string().regex(HOMEBREW_NAME, 'invalid Homebrew package name');
 

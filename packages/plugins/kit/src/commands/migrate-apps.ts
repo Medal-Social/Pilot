@@ -15,32 +15,67 @@ function parseList(body: string): string[] {
   return Array.from(body.matchAll(/"([^"]+)"/g)).map((m) => m[1]);
 }
 
+function alreadyMigrated(source: string, machine: string): boolean {
+  // If the file already references its apps.json, treat as migrated.
+  return source.includes(`./${machine}.apps.json`);
+}
+
+function injectLetBinding(source: string, machine: string): string {
+  // Find the function-arrow → body transition: `}:` followed by whitespace and `{`.
+  // Inject `let apps = ...; in ` before the opening `{`.
+  const transitionRe = /(\}:\s*)(\{)/;
+  const match = transitionRe.exec(source);
+  if (!match || match.index === undefined) {
+    throw new Error('Could not locate function-to-body transition');
+  }
+  const before = source.slice(0, match.index + match[1].length);
+  const after = source.slice(match.index + match[1].length);
+  const letBinding = `let
+  apps = builtins.fromJSON (builtins.readFile ./${machine}.apps.json);
+in `;
+  return `${before}${letBinding}${after}`;
+}
+
+function replaceHomebrewBlocks(source: string): string {
+  return source.replace(INLINE_RE, (_full, kind: string) => {
+    return `homebrew.${kind} = apps.${kind};`;
+  });
+}
+
 export async function migrateMachineFile(nixPath: string, machine: string): Promise<MigrateResult> {
   const original = readFileSync(nixPath, 'utf8');
-  if (!INLINE_RE.test(original)) {
+
+  if (alreadyMigrated(original, machine)) {
     return { changed: false };
   }
+
+  // Reset regex state from any prior caller (INLINE_RE is /g).
   INLINE_RE.lastIndex = 0;
 
+  // Collect the cask/brew lists.
   let casks: string[] = [];
   let brews: string[] = [];
+  let foundAny = false;
   for (const match of original.matchAll(INLINE_RE)) {
+    foundAny = true;
     const kind = match[1];
     const items = parseList(match[2]);
     if (kind === 'casks') casks = items;
     if (kind === 'brews') brews = items;
   }
 
+  if (!foundAny) {
+    return { changed: false };
+  }
+
+  // Splice: replace homebrew blocks in place, then inject `let apps = ...; in` before body.
+  let next = replaceHomebrewBlocks(original);
+  next = injectLetBinding(next, machine);
+
+  // Write apps.json sibling.
   const appsJsonPath = join(dirname(nixPath), `${machine}.apps.json`);
   writeAppsJson(appsJsonPath, { casks, brews });
 
-  const replacement = `{ ... }: let
-  apps = builtins.fromJSON (builtins.readFile ./${machine}.apps.json);
-in {
-  homebrew.casks = apps.casks;
-  homebrew.brews = apps.brews;
-}
-`;
-  writeFileSync(nixPath, replacement, 'utf8');
+  writeFileSync(nixPath, next, 'utf8');
   return { changed: true };
 }

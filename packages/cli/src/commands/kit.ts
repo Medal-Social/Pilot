@@ -1,6 +1,7 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: MIT
 
+import { readdirSync, statSync } from 'node:fs';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -31,7 +32,35 @@ function fail(err: unknown): never {
   throw err;
 }
 
+function findMachineFile(machinesDir: string, machine: string): string | null {
+  const target = `${machine}.apps.json`;
+  let entries: string[];
+  try {
+    entries = readdirSync(machinesDir);
+  } catch {
+    return null;
+  }
+  for (const entry of entries) {
+    const full = join(machinesDir, entry);
+    if (entry === target) return full;
+    let stat: ReturnType<typeof statSync>;
+    try {
+      stat = statSync(full);
+    } catch {
+      continue;
+    }
+    if (stat.isDirectory()) {
+      const found = findMachineFile(full, machine);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 function machineFile(repoDir: string, machine: string): string {
+  const found = findMachineFile(join(repoDir, 'machines'), machine);
+  if (found) return found;
+  // Fall back to the conventional path so error messages are informative.
   return join(repoDir, 'machines', `${machine}.apps.json`);
 }
 

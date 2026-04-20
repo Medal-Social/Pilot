@@ -43,6 +43,33 @@ describe('migrateMachineFile', () => {
     );
   });
 
+  it('preserves surrounding config when splicing (real-world shape)', async () => {
+    const REAL = `{ hostname, ... }:\n{\n  networking.hostName = "ali-pro";\n  system.primaryUser = "ali";\n\n  users.users.ali = {\n    name = "ali";\n    home = "/Users/ali";\n  };\n\n  homebrew.casks = [\n    "zed"\n    "1password"\n  ];\n\n  homebrew.brews = [\n    "ripgrep"\n  ];\n\n  services.medal-agent.enable = true;\n  system.stateVersion = 5;\n}\n`;
+    const nixPath = join(dir, 'ali-pro.nix');
+    writeFileSync(nixPath, REAL);
+    const result = await migrateMachineFile(nixPath, 'ali-pro');
+    expect(result.changed).toBe(true);
+    const after = readFileSync(nixPath, 'utf8');
+    // Preserves surrounding config:
+    expect(after).toContain('networking.hostName = "ali-pro";');
+    expect(after).toContain('users.users.ali =');
+    expect(after).toContain('services.medal-agent.enable = true;');
+    expect(after).toContain('system.stateVersion = 5;');
+    // Injects let binding:
+    expect(after).toContain(
+      'let\n  apps = builtins.fromJSON (builtins.readFile ./ali-pro.apps.json);\nin'
+    );
+    // Replaces homebrew lists:
+    expect(after).toContain('homebrew.casks = apps.casks;');
+    expect(after).toContain('homebrew.brews = apps.brews;');
+    expect(after).not.toContain('"zed"');
+    expect(after).not.toContain('"ripgrep"');
+    // apps.json contains the data:
+    const apps = JSON.parse(readFileSync(join(dir, 'ali-pro.apps.json'), 'utf8'));
+    expect(apps.casks).toEqual(['1password', 'zed']);
+    expect(apps.brews).toEqual(['ripgrep']);
+  });
+
   it('is idempotent — re-running on a migrated file does nothing', async () => {
     const nixPath = join(dir, 'ali-pro.nix');
     writeFileSync(
