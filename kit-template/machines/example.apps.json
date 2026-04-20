@@ -1,4 +1,0 @@
-{
-  "casks": ["zed", "ghostty", "font-geist-mono"],
-  "brews": ["ripgrep", "fd", "gh", "jq", "fzf", "bat", "eza"]
-}
