@@ -8,6 +8,7 @@ import {
   addApp,
   detectMachine,
   KitError,
+  type LoadedKitConfig,
   listApps,
   loadKitConfig,
   realExec,
@@ -30,6 +31,48 @@ function fail(err: unknown): never {
     process.exit(1);
   }
   throw err;
+}
+
+/**
+ * Pick a machine name from the config:
+ *  1. explicit override (CLI arg or env)
+ *  2. auto-detected hostname IF that name is in the config
+ *  3. first machine in the config
+ *
+ * Throws if the override or detection produced a name that isn't configured —
+ * we don't want to silently operate against an unrelated machine.
+ */
+function resolveMachine(config: LoadedKitConfig, override?: string): string {
+  const known = Object.keys(config.machines);
+  if (known.length === 0) {
+    console.error('kit.config.json has no machines configured.');
+    process.exit(1);
+  }
+
+  if (override) {
+    if (!config.machines[override]) {
+      console.error(
+        `Unknown machine: "${override}". Configured machines: ${known.join(', ')}.\n` +
+          `Add it to kit.config.json → machines, or pass one of the configured names.`
+      );
+      process.exit(1);
+    }
+    return override;
+  }
+
+  const detected = detectMachine(hostname());
+  if (detected && config.machines[detected]) return detected;
+
+  // Detection produced something not in this config (or nothing at all). Fall back to first
+  // configured machine — but tell the user, since they might be on the wrong machine entirely.
+  const fallback = known[0];
+  if (detected && !config.machines[detected]) {
+    console.error(
+      `Hostname suggests "${detected}" but that's not in kit.config.json. ` +
+        `Falling back to "${fallback}". Pass an explicit machine name to override.`
+    );
+  }
+  return fallback;
 }
 
 function findMachineFile(machinesDir: string, machine: string): string | null {
@@ -57,6 +100,31 @@ function findMachineFile(machinesDir: string, machine: string): string | null {
   return null;
 }
 
+function findMachineNix(machinesDir: string, machine: string): string | null {
+  const target = `${machine}.nix`;
+  let entries: string[];
+  try {
+    entries = readdirSync(machinesDir);
+  } catch {
+    return null;
+  }
+  for (const entry of entries) {
+    const full = join(machinesDir, entry);
+    if (entry === target) return full;
+    let stat: ReturnType<typeof statSync>;
+    try {
+      stat = statSync(full);
+    } catch {
+      continue;
+    }
+    if (stat.isDirectory()) {
+      const found = findMachineNix(full, machine);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 function machineFile(repoDir: string, machine: string): string {
   const found = findMachineFile(join(repoDir, 'machines'), machine);
   if (found) return found;
@@ -64,15 +132,23 @@ function machineFile(repoDir: string, machine: string): string {
   return join(repoDir, 'machines', `${machine}.apps.json`);
 }
 
+/**
+ * Parse a `kit apps` package argument. Accepts:
+ *   - `cask:NAME`   → casks
+ *   - `brew:NAME`   → brews
+ *   - `NAME`        → casks (default, matches Homebrew CLI convention)
+ */
+export function parseAppsTarget(arg: string): { kind: 'casks' | 'brews'; name: string } {
+  if (arg.startsWith('brew:')) return { kind: 'brews', name: arg.slice(5) };
+  if (arg.startsWith('cask:')) return { kind: 'casks', name: arg.slice(5) };
+  return { kind: 'casks', name: arg };
+}
+
 export async function runKitInit(machineArg?: string): Promise<void> {
   try {
     const config = await loadKitConfig();
-    const machine = machineArg ?? detectMachine(hostname()) ?? Object.keys(config.machines)[0];
+    const machine = resolveMachine(config, machineArg);
     const m = config.machines[machine];
-    if (!m) {
-      console.error(`Unknown machine: ${machine}`);
-      process.exit(1);
-    }
     await runInit({
       machine,
       machineType: m.type,
@@ -103,7 +179,7 @@ export async function runKitNew(): Promise<void> {
 export async function runKitUpdate(): Promise<void> {
   try {
     const config = await loadKitConfig();
-    const machine = detectMachine(hostname()) ?? Object.keys(config.machines)[0];
+    const machine = resolveMachine(config);
     const m = config.machines[machine];
     const start = Date.now();
     const isTty = process.stdout.isTTY;
@@ -124,11 +200,9 @@ export async function runKitUpdate(): Promise<void> {
       sudoKeeper: realSudoKeeper,
       hooks: {
         onPhaseStart: (_phase, label) => {
-          // Print the in-progress line; finalised by onPhaseEnd which overwrites it.
           process.stdout.write(`  ${cyan('⠸')}  ${label}…`);
         },
         onPhaseEnd: (_phase, label, detail) => {
-          // Carriage return + clear-line, then re-print as completed.
           process.stdout.write(`\r\x1b[2K  ${green('✓')}  ${label}`);
           if (detail) process.stdout.write(`  ${dim(detail)}`);
           process.stdout.write('\n');
@@ -201,7 +275,7 @@ export interface RunKitStatusOpts {
 export async function runKitStatus(opts: RunKitStatusOpts = {}): Promise<void> {
   try {
     const config = await loadKitConfig();
-    const machine = detectMachine(hostname()) ?? Object.keys(config.machines)[0];
+    const machine = resolveMachine(config);
     const report = await renderStatus({
       machine,
       kitRepoDir: config.repoDir,
@@ -214,7 +288,7 @@ export async function runKitStatus(opts: RunKitStatusOpts = {}): Promise<void> {
     });
     const wantsJson = opts.json || !process.stdout.isTTY;
     if (wantsJson) {
-      console.log(JSON.stringify(report, null, 2));
+      process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     } else {
       printHumanReadable(report);
     }
@@ -228,7 +302,7 @@ export async function runKitConfigShow(): Promise<void> {
     const config = await loadKitConfig();
     const tty = process.stdout.isTTY;
     if (!tty) {
-      console.log(JSON.stringify(config, null, 2));
+      process.stdout.write(`${JSON.stringify(config, null, 2)}\n`);
       return;
     }
     const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
@@ -251,7 +325,7 @@ export async function runKitConfigShow(): Promise<void> {
 export async function runKitConfigPath(): Promise<void> {
   try {
     const config = await loadKitConfig();
-    console.log(config.configPath);
+    process.stdout.write(`${config.configPath}\n`);
   } catch (e) {
     fail(e);
   }
@@ -260,18 +334,22 @@ export async function runKitConfigPath(): Promise<void> {
 export async function runKitApps(action: string, name?: string): Promise<void> {
   try {
     const config = await loadKitConfig();
-    const machine = detectMachine(hostname()) ?? Object.keys(config.machines)[0];
+    const machine = resolveMachine(config);
     const path = machineFile(config.repoDir, machine);
     if (action === 'list') {
-      console.log(JSON.stringify(listApps(path), null, 2));
+      process.stdout.write(`${JSON.stringify(listApps(path), null, 2)}\n`);
       return;
     }
     if (!name) {
-      console.error('Usage: pilot kit apps <add|remove> <name>');
+      console.error(
+        'Usage: pilot kit apps <add|remove> <name>\n' +
+          '  Default kind is cask. Use `brew:NAME` for brews, `cask:NAME` for explicit casks.'
+      );
       process.exit(1);
     }
-    if (action === 'add') await addApp(path, name);
-    else if (action === 'remove') await removeApp(path, name);
+    const { kind, name: pkg } = parseAppsTarget(name);
+    if (action === 'add') await addApp(path, pkg, kind);
+    else if (action === 'remove') await removeApp(path, pkg, kind);
     else {
       console.error(`Unknown action: ${action}`);
       process.exit(1);
@@ -284,10 +362,22 @@ export async function runKitApps(action: string, name?: string): Promise<void> {
 export async function runKitEdit(): Promise<void> {
   try {
     const config = await loadKitConfig();
-    const machine = detectMachine(hostname()) ?? Object.keys(config.machines)[0];
-    const path = join(config.repoDir, 'machines', `${machine}.nix`);
+    const machine = resolveMachine(config);
+    const found = findMachineNix(join(config.repoDir, 'machines'), machine);
+    const path = found ?? join(config.repoDir, 'machines', `${machine}.nix`);
+    if (!found) {
+      console.error(
+        `No machine config found for "${machine}".\n` +
+          `Looked under ${join(config.repoDir, 'machines')}.\n` +
+          `Create ${path} or pick a configured machine.`
+      );
+      process.exit(1);
+    }
     await runEdit(path, { env: process.env, exec: realExec });
   } catch (e) {
     fail(e);
   }
 }
+
+// Exported for tests.
+export { resolveMachine };

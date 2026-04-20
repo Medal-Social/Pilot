@@ -21,8 +21,25 @@ function alreadyMigrated(source: string, machine: string): boolean {
 }
 
 function injectLetBinding(source: string, machine: string): string {
-  // Find the function-arrow → body transition: `}:` followed by whitespace and `{`.
-  // Inject `let apps = ...; in ` before the opening `{`.
+  const appsLine = `apps = builtins.fromJSON (builtins.readFile ./${machine}.apps.json);`;
+
+  // Case A: file is `}: let ... in {` — append the apps binding to the existing let block.
+  // Match `}:` then whitespace then `let` then anything up to `in {`.
+  const existingLetRe = /(\}:\s*let\b)([\s\S]*?)(\bin\s*\{)/;
+  const letMatch = existingLetRe.exec(source);
+  if (letMatch && letMatch.index !== undefined) {
+    if (source.includes(appsLine)) return source; // already has it
+    const head = source.slice(0, letMatch.index);
+    const tail = source.slice(letMatch.index + letMatch[0].length);
+    const letKw = letMatch[1];
+    const bindings = letMatch[2];
+    const inBrace = letMatch[3];
+    const trimmed = bindings.replace(/\s+$/, '');
+    const insertion = `${trimmed}\n  ${appsLine}\n`;
+    return `${head}${letKw}${insertion}${inBrace}${tail}`;
+  }
+
+  // Case B: file is `}: {` — inject `let apps = ...; in ` before the opening `{`.
   const transitionRe = /(\}:\s*)(\{)/;
   const match = transitionRe.exec(source);
   if (!match || match.index === undefined) {
@@ -30,9 +47,7 @@ function injectLetBinding(source: string, machine: string): string {
   }
   const before = source.slice(0, match.index + match[1].length);
   const after = source.slice(match.index + match[1].length);
-  const letBinding = `let
-  apps = builtins.fromJSON (builtins.readFile ./${machine}.apps.json);
-in `;
+  const letBinding = `let\n  ${appsLine}\nin `;
   return `${before}${letBinding}${after}`;
 }
 

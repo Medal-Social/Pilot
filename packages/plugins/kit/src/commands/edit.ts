@@ -27,5 +27,11 @@ export async function runEdit(filePath: string, opts: RunEditOpts): Promise<void
   if (!editor) {
     throw new KitError(errorCodes.KIT_NO_EDITOR, FALLBACKS.join(', '));
   }
-  await opts.exec.run(editor, [filePath]);
+  const result = await opts.exec.run(editor, [filePath]);
+  if (result.code !== 0) {
+    throw new KitError(
+      errorCodes.KIT_NO_EDITOR,
+      `${editor} exited with code ${result.code}${result.stderr ? `: ${result.stderr.trim()}` : ''}`
+    );
+  }
 }

@@ -3,9 +3,17 @@
 
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { homedir } from 'node:os';
+import { dirname, isAbsolute, join } from 'node:path';
 import { errorCodes, KitError } from '../errors.js';
 import { type KitConfig, kitConfigSchema } from './schema.js';
+
+/** Expand a leading `~` or `~/...` to the user's home directory. */
+export function expandTilde(p: string, home: string = homedir()): string {
+  if (p === '~') return home;
+  if (p.startsWith('~/')) return join(home, p.slice(2));
+  return p;
+}
 
 export interface LoadOpts {
   env?: NodeJS.ProcessEnv;
@@ -46,7 +54,14 @@ export async function loadKitConfig(opts: LoadOpts = {}): Promise<LoadedKitConfi
     }
     // Derive repoDir from the config file's location unless explicitly overridden in the file.
     // This makes the same kit.config.json work for any user without editing per-machine paths.
-    const repoDir = result.data.repoDir ?? dirname(path);
+    // If `repoDir` is set, expand `~/...` and resolve relative paths against the config dir.
+    let repoDir: string;
+    if (result.data.repoDir) {
+      const expanded = expandTilde(result.data.repoDir);
+      repoDir = isAbsolute(expanded) ? expanded : join(dirname(path), expanded);
+    } else {
+      repoDir = dirname(path);
+    }
     return { ...result.data, repoDir, configPath: path };
   }
 

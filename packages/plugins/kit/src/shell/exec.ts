@@ -30,6 +30,7 @@ function buffered(child: ChildProcess, timeoutMs?: number): Promise<ExecResult> 
   return new Promise((resolve) => {
     let stdout = '';
     let stderr = '';
+    let timedOut = false;
     child.stdout?.on('data', (b) => {
       stdout += b.toString();
     });
@@ -39,12 +40,32 @@ function buffered(child: ChildProcess, timeoutMs?: number): Promise<ExecResult> 
     const timer =
       timeoutMs !== undefined
         ? setTimeout(() => {
+            timedOut = true;
             child.kill('SIGKILL');
           }, timeoutMs)
         : null;
-    child.on('close', (code) => {
+    child.on('close', (code, signal) => {
       if (timer) clearTimeout(timer);
-      resolve({ stdout, stderr, code: code ?? 0 });
+      // Anything other than a clean exit (numeric code, no signal) is a failure.
+      // Timeouts (SIGKILL after timer fires) and signal-killed processes must surface
+      // as non-zero so callers don't mistake "killed" for "succeeded".
+      if (timedOut) {
+        resolve({
+          stdout,
+          stderr: `${stderr}${stderr.endsWith('\n') || stderr === '' ? '' : '\n'}[kit] killed: timeout after ${timeoutMs}ms`,
+          code: 124,
+        });
+        return;
+      }
+      if (signal) {
+        resolve({
+          stdout,
+          stderr: `${stderr}${stderr.endsWith('\n') || stderr === '' ? '' : '\n'}[kit] killed by signal ${signal}`,
+          code: 128,
+        });
+        return;
+      }
+      resolve({ stdout, stderr, code: code ?? 1 });
     });
     child.on('error', () => {
       if (timer) clearTimeout(timer);

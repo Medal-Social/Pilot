@@ -2,7 +2,7 @@
 
 > **Status:** Approved · April 20, 2026
 > **Author:** Ali (with brainstorming partner)
-> **Source spec it builds on:** `/Users/ali/Documents/Code/kit/docs/specs/2026-04-08-pilot-cli-design.md` § "Machine Package — v1 Scope"
+> **Source spec it builds on:** `Medal-Social/kit:docs/specs/2026-04-08-pilot-cli-design.md` § "Machine Package — v1 Scope"
 > **Sibling spec (deferred):** Medal Social Provider — Phase A (to be written separately, ships as kit v1.1)
 
 ---

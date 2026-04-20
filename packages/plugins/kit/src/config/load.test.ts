@@ -84,4 +84,35 @@ describe('loadKitConfig', () => {
     const cfg = await loadKitConfig({ env: { KIT_CONFIG: path }, home: '/nope' });
     expect(cfg.repoDir).toBe('/somewhere/else');
   });
+
+  it('expands ~/... in repoDir using the user home directory', async () => {
+    const path = join(tmp, 'kit.config.json');
+    writeFileSync(
+      path,
+      JSON.stringify({
+        name: 'kit',
+        repo: 'x',
+        repoDir: '~/some/kit',
+        machines: { foo: { type: 'darwin', user: 'a' } },
+      })
+    );
+    const cfg = await loadKitConfig({ env: { KIT_CONFIG: path } });
+    expect(cfg.repoDir.startsWith('~')).toBe(false);
+    expect(cfg.repoDir).toMatch(/some\/kit$/);
+  });
+
+  it('resolves a relative repoDir against the config file directory', async () => {
+    const path = join(tmp, 'kit.config.json');
+    writeFileSync(
+      path,
+      JSON.stringify({
+        name: 'kit',
+        repo: 'x',
+        repoDir: 'subdir/kit',
+        machines: { foo: { type: 'darwin', user: 'a' } },
+      })
+    );
+    const cfg = await loadKitConfig({ env: { KIT_CONFIG: path }, home: '/nope' });
+    expect(cfg.repoDir).toBe(join(tmp, 'subdir/kit'));
+  });
 });
