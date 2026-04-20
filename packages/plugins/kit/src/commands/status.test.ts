@@ -110,6 +110,55 @@ describe('renderStatus', () => {
     expect(machineCheck?.hint).toContain('mystery-host');
   });
 
+  it('warns (not ok) when git fetch fails', async () => {
+    const exec = {
+      run: vi.fn().mockImplementation(async (cmd: string, args: string[]) => {
+        if (cmd === 'git' && args.includes('fetch')) {
+          return { stdout: '', stderr: 'fatal: unable to access remote', code: 128 };
+        }
+        return { stdout: '', stderr: '', code: 0 };
+      }),
+      spawn: vi.fn(),
+    };
+    const report = await renderStatus({
+      machine: 'ali-pro',
+      kitRepoDir: dir,
+      machineFile: join(dir, 'ali-pro.apps.json'),
+      provider: new LocalProvider(),
+      exec,
+    });
+    const sync = report.checks.find((c) => c.id === 'sync');
+    expect(sync?.status).toBe('warn');
+    expect(sync?.detail).toMatch(/fetch|could not/i);
+  });
+
+  it('warns (not ok) when rev-list fails — no upstream tracking', async () => {
+    const exec = {
+      run: vi.fn().mockImplementation(async (cmd: string, args: string[]) => {
+        if (cmd === 'git' && args.includes('rev-list')) {
+          return {
+            stdout: '',
+            stderr: "fatal: no upstream configured for branch 'master'",
+            code: 128,
+          };
+        }
+        return { stdout: '', stderr: '', code: 0 };
+      }),
+      spawn: vi.fn(),
+    };
+    const report = await renderStatus({
+      machine: 'ali-pro',
+      kitRepoDir: dir,
+      machineFile: join(dir, 'ali-pro.apps.json'),
+      provider: new LocalProvider(),
+      exec,
+    });
+    const sync = report.checks.find((c) => c.id === 'sync');
+    expect(sync?.status).toBe('warn');
+    expect(sync?.detail).toContain('upstream');
+    expect(sync?.hint).toMatch(/set-upstream-to/);
+  });
+
   it('records tool versions when present and errors when absent', async () => {
     const exec = {
       run: vi.fn().mockImplementation(async (cmd: string) => {

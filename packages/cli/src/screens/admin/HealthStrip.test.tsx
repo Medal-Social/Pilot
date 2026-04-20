@@ -48,4 +48,18 @@ describe('HealthStrip', () => {
     expect(lastFrame()).toContain('AUTH');
     expect(lastFrame()).not.toContain('workspaces');
   });
+
+  it('renders MRR under $1k without k suffix', () => {
+    const { lastFrame } = render(
+      <HealthStrip services={mockServices} stats={{ ...mockStats, mrr: 500 }} />
+    );
+    expect(lastFrame()).toContain('$500');
+  });
+
+  it('renders plural warnings label', () => {
+    const { lastFrame } = render(
+      <HealthStrip services={mockServices} stats={{ ...mockStats, warnings: 2 }} />
+    );
+    expect(lastFrame()).toContain('warnings');
+  });
 });

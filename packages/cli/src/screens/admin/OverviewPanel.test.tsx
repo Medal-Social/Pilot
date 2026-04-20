@@ -54,4 +54,24 @@ describe('OverviewPanel', () => {
     const { lastFrame } = render(<OverviewPanel />);
     expect(lastFrame()).toContain('Loading');
   });
+
+  it('renders negative trend with down arrow', () => {
+    const { lastFrame } = render(<OverviewPanel workspace={{ ...mockDetail, visitsTrend: -5 }} />);
+    expect(lastFrame()).toContain('↓');
+    expect(lastFrame()).toContain('5%');
+  });
+
+  it('renders domain when present', () => {
+    const { lastFrame } = render(
+      <OverviewPanel workspace={{ ...mockDetail, domain: 'example.com' }} />
+    );
+    expect(lastFrame()).toContain('example.com');
+  });
+
+  it('renders without nextPostAt', () => {
+    const { lastFrame } = render(
+      <OverviewPanel workspace={{ ...mockDetail, nextPostAt: undefined }} />
+    );
+    expect(lastFrame()).not.toContain('next:');
+  });
 });

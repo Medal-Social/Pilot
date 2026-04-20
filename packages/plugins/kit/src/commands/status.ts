@@ -165,8 +165,9 @@ export async function renderStatus(opts: RenderStatusOpts): Promise<StatusReport
     });
   }
 
-  // Fetch + commits behind
-  await opts.exec.run('git', ['-C', opts.kitRepoDir, 'fetch', '--quiet']);
+  // Fetch + commits behind. Failure to determine sync state must surface as
+  // a warning — not a silent "up to date" — so users see auth/upstream issues.
+  const fetch = await opts.exec.run('git', ['-C', opts.kitRepoDir, 'fetch', '--quiet']);
   const behind = await opts.exec.run('git', [
     '-C',
     opts.kitRepoDir,
@@ -174,14 +175,52 @@ export async function renderStatus(opts: RenderStatusOpts): Promise<StatusReport
     'HEAD..@{u}',
     '--count',
   ]);
-  const commitsBehind = behind.code === 0 ? Number.parseInt(behind.stdout.trim(), 10) || 0 : 0;
-  checks.push({
-    id: 'sync',
-    label: 'sync',
-    status: commitsBehind === 0 ? 'ok' : 'warn',
-    detail: commitsBehind === 0 ? 'up to date' : `${commitsBehind} commit(s) behind`,
-    hint: commitsBehind === 0 ? undefined : 'Run `pilot kit update` to pull and apply.',
-  });
+
+  let commitsBehind = 0;
+  if (fetch.code !== 0) {
+    const detail = fetch.stderr.trim().split('\n').slice(0, 2).join(' · ') || 'fetch failed';
+    checks.push({
+      id: 'sync',
+      label: 'sync',
+      status: 'warn',
+      detail: `could not fetch (${detail})`,
+      hint: 'Check network and remote auth (`git -C <repoDir> fetch` to reproduce).',
+    });
+  } else if (behind.code !== 0) {
+    // Most common cause: no upstream tracking branch (`@{u}` undefined).
+    const stderr = behind.stderr.trim();
+    const noUpstream = /no upstream|unknown revision|HEAD/i.test(stderr);
+    checks.push({
+      id: 'sync',
+      label: 'sync',
+      status: 'warn',
+      detail: noUpstream
+        ? 'no upstream tracking branch'
+        : `could not determine sync (${stderr.split('\n')[0] || `exit ${behind.code}`})`,
+      hint: noUpstream
+        ? 'Set an upstream: `git -C <repoDir> branch --set-upstream-to=origin/<branch>`.'
+        : 'Inspect `git -C <repoDir> rev-list HEAD..@{u} --count` to debug.',
+    });
+  } else {
+    const parsed = Number.parseInt(behind.stdout.trim(), 10);
+    if (Number.isNaN(parsed)) {
+      checks.push({
+        id: 'sync',
+        label: 'sync',
+        status: 'warn',
+        detail: `unparseable rev-list output: ${behind.stdout.trim().slice(0, 60)}`,
+      });
+    } else {
+      commitsBehind = parsed;
+      checks.push({
+        id: 'sync',
+        label: 'sync',
+        status: commitsBehind === 0 ? 'ok' : 'warn',
+        detail: commitsBehind === 0 ? 'up to date' : `${commitsBehind} commit(s) behind`,
+        hint: commitsBehind === 0 ? undefined : 'Run `pilot kit update` to pull and apply.',
+      });
+    }
+  }
 
   // Hostname check
   let hostnameKnown: boolean | null = null;

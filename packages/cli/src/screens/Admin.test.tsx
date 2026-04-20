@@ -96,6 +96,43 @@ describe('Admin', () => {
     unmount();
   });
 
+  it('cycles to previous tab with Shift+Tab key', async () => {
+    const api = createMockAPI();
+    const { lastFrame, stdin } = render(<Admin api={api} />);
+    await delay();
+    // Start on overview (index 0); Shift+Tab wraps to Settings (index 4)
+    stdin.write('\x1b[Z');
+    await delay();
+    expect(lastFrame()).toContain('BILLING');
+  });
+
+  it('switches to content tab with number key', async () => {
+    const api = createMockAPI();
+    const { lastFrame, stdin } = render(<Admin api={api} />);
+    await delay();
+    stdin.write('3');
+    await delay();
+    expect(lastFrame()).not.toContain('SITE STATUS');
+  });
+
+  it('switches to analytics tab with number key', async () => {
+    const api = createMockAPI();
+    const { lastFrame, stdin } = render(<Admin api={api} />);
+    await delay();
+    stdin.write('4');
+    await delay();
+    expect(lastFrame()).not.toContain('SITE STATUS');
+  });
+
+  it('handles empty workspaces array gracefully', async () => {
+    const api = createMockAPI();
+    vi.spyOn(api, 'fetchWorkspaces').mockResolvedValue([]);
+    const { lastFrame } = render(<Admin api={api} />);
+    await delay();
+    // wsId is undefined → fetchWorkspaceDetail is never called; component stays with null workspace
+    expect(lastFrame()).toContain('PILOT ADMIN');
+  });
+
   it('cleans up polling interval on unmount', async () => {
     const api = createMockAPI();
     const { unmount } = render(<Admin api={api} />);
