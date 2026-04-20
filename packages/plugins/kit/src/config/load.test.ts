@@ -55,4 +55,33 @@ describe('loadKitConfig', () => {
   it('throws KIT_CONFIG_NOT_FOUND when nothing is found', async () => {
     await expect(loadKitConfig({ env: {}, home: tmp })).rejects.toBeInstanceOf(KitError);
   });
+
+  it('derives repoDir from the config file location when not in the file', async () => {
+    const path = join(tmp, 'kit.config.json');
+    writeFileSync(
+      path,
+      JSON.stringify({
+        name: 'kit',
+        repo: 'x',
+        machines: { foo: { type: 'darwin', user: 'a' } },
+      })
+    );
+    const cfg = await loadKitConfig({ env: { KIT_CONFIG: path }, home: '/nope' });
+    expect(cfg.repoDir).toBe(tmp);
+  });
+
+  it('respects an explicit repoDir override in the file', async () => {
+    const path = join(tmp, 'kit.config.json');
+    writeFileSync(
+      path,
+      JSON.stringify({
+        name: 'kit',
+        repo: 'x',
+        repoDir: '/somewhere/else',
+        machines: { foo: { type: 'darwin', user: 'a' } },
+      })
+    );
+    const cfg = await loadKitConfig({ env: { KIT_CONFIG: path }, home: '/nope' });
+    expect(cfg.repoDir).toBe('/somewhere/else');
+  });
 });

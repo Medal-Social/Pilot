@@ -49,6 +49,13 @@ export interface SudoKeeper {
   start(): () => void;
 }
 
+export type UpdatePhase = 'auth' | 'pull' | 'policy' | 'migrate' | 'rebuild';
+
+export interface UpdateHooks {
+  onPhaseStart?(phase: UpdatePhase, label: string): void;
+  onPhaseEnd?(phase: UpdatePhase, label: string, detail?: string): void;
+}
+
 export interface RunUpdateOpts {
   machine: string;
   machineType: 'darwin' | 'nixos';
@@ -57,43 +64,93 @@ export interface RunUpdateOpts {
   exec: Exec;
   sudoKeeper: SudoKeeper;
   user?: string;
+  hooks?: UpdateHooks;
+}
+
+async function withPhase<T>(
+  hooks: UpdateHooks | undefined,
+  phase: UpdatePhase,
+  label: string,
+  fn: () => Promise<{ value: T; detail?: string }>
+): Promise<T> {
+  hooks?.onPhaseStart?.(phase, label);
+  const { value, detail } = await fn();
+  hooks?.onPhaseEnd?.(phase, label, detail);
+  return value;
 }
 
 export async function runUpdate(opts: RunUpdateOpts): Promise<void> {
-  const sudoOk = await opts.exec.run('sudo', ['-v']);
-  if (sudoOk.code !== 0) throw new KitError(errorCodes.KIT_SUDO_DENIED);
+  const hooks = opts.hooks;
 
-  await opts.exec.run('git', ['-C', opts.kitRepoDir, 'fetch', '--quiet']);
-  const pull = await opts.exec.run('git', ['-C', opts.kitRepoDir, 'pull', '--ff-only']);
-  if (pull.code !== 0) throw new KitError(errorCodes.KIT_REPO_PULL_FAILED, pull.stderr);
-
-  await opts.provider.getRequiredApps({
-    machineId: opts.machine,
-    user: opts.user ?? process.env.USER ?? '',
-    kitRepoDir: opts.kitRepoDir,
+  await withPhase(hooks, 'auth', 'Authenticating', async () => {
+    const r = await opts.exec.run('sudo', ['-v']);
+    if (r.code !== 0) throw new KitError(errorCodes.KIT_SUDO_DENIED);
+    return { value: undefined, detail: 'sudo cached' };
   });
 
-  // Idempotent migration: lift inline homebrew lists into apps.json files.
-  await runMigrations(opts.kitRepoDir);
+  await withPhase(hooks, 'pull', 'Pulling latest config', async () => {
+    await opts.exec.run('git', ['-C', opts.kitRepoDir, 'fetch', '--quiet']);
+    const behind = await opts.exec.run('git', [
+      '-C',
+      opts.kitRepoDir,
+      'rev-list',
+      'HEAD..@{u}',
+      '--count',
+    ]);
+    const count = behind.code === 0 ? Number.parseInt(behind.stdout.trim(), 10) || 0 : 0;
+    const pull = await opts.exec.run('git', ['-C', opts.kitRepoDir, 'pull', '--ff-only']);
+    if (pull.code !== 0) throw new KitError(errorCodes.KIT_REPO_PULL_FAILED, pull.stderr);
+    return {
+      value: undefined,
+      detail: count > 0 ? `pulled ${count} commit(s)` : 'already up to date',
+    };
+  });
+
+  await withPhase(hooks, 'policy', 'Checking org policy', async () => {
+    const required = await opts.provider.getRequiredApps({
+      machineId: opts.machine,
+      user: opts.user ?? process.env.USER ?? '',
+      kitRepoDir: opts.kitRepoDir,
+    });
+    const total = required.casks.length + required.brews.length;
+    return {
+      value: undefined,
+      detail:
+        total > 0 ? `${total} required (source: ${required.source})` : `none (${required.source})`,
+    };
+  });
+
+  await withPhase(hooks, 'migrate', 'Migrating apps.json', async () => {
+    const changed = await runMigrations(opts.kitRepoDir);
+    return {
+      value: undefined,
+      detail: changed > 0 ? `${changed} machine file(s) updated` : 'no changes',
+    };
+  });
 
   const stopKeeper = opts.sudoKeeper.start();
   const onExit = () => stopKeeper();
   process.once('SIGINT', onExit);
   process.once('SIGTERM', onExit);
   try {
-    await runSteps(
-      [rebuildStep],
-      {},
-      {
-        exec: opts.exec,
-        env: {
-          ...process.env,
-          KIT_MACHINE: opts.machine,
-          KIT_MACHINE_TYPE: opts.machineType,
-          KIT_REPO_DIR: opts.kitRepoDir,
-        },
-      }
-    );
+    await withPhase(hooks, 'rebuild', 'Rebuilding system', async () => {
+      const start = Date.now();
+      await runSteps(
+        [rebuildStep],
+        {},
+        {
+          exec: opts.exec,
+          env: {
+            ...process.env,
+            KIT_MACHINE: opts.machine,
+            KIT_MACHINE_TYPE: opts.machineType,
+            KIT_REPO_DIR: opts.kitRepoDir,
+          },
+        }
+      );
+      const secs = Math.round((Date.now() - start) / 1000);
+      return { value: undefined, detail: `applied in ${secs}s` };
+    });
   } finally {
     stopKeeper();
     process.off('SIGINT', onExit);

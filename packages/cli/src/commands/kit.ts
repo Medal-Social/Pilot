@@ -105,6 +105,16 @@ export async function runKitUpdate(): Promise<void> {
     const config = await loadKitConfig();
     const machine = detectMachine(hostname()) ?? Object.keys(config.machines)[0];
     const m = config.machines[machine];
+    const start = Date.now();
+    const isTty = process.stdout.isTTY;
+    const cyan = (s: string) => (isTty ? `\x1b[36m${s}\x1b[0m` : s);
+    const green = (s: string) => (isTty ? `\x1b[32m${s}\x1b[0m` : s);
+    const dim = (s: string) => (isTty ? `\x1b[2m${s}\x1b[0m` : s);
+    const bold = (s: string) => (isTty ? `\x1b[1m${s}\x1b[0m` : s);
+
+    process.stdout.write(`\n  ${bold('kit update')}  ${dim(`· ${machine}`)}\n`);
+    process.stdout.write(`  ${dim('─'.repeat(40))}\n\n`);
+
     await runUpdate({
       machine,
       machineType: m.type,
@@ -112,7 +122,26 @@ export async function runKitUpdate(): Promise<void> {
       provider: resolveProvider(),
       exec: realExec,
       sudoKeeper: realSudoKeeper,
+      hooks: {
+        onPhaseStart: (_phase, label) => {
+          // Print the in-progress line; finalised by onPhaseEnd which overwrites it.
+          process.stdout.write(`  ${cyan('⠸')}  ${label}…`);
+        },
+        onPhaseEnd: (_phase, label, detail) => {
+          // Carriage return + clear-line, then re-print as completed.
+          process.stdout.write(`\r\x1b[2K  ${green('✓')}  ${label}`);
+          if (detail) process.stdout.write(`  ${dim(detail)}`);
+          process.stdout.write('\n');
+        },
+      },
     });
+
+    const totalSecs = Math.round((Date.now() - start) / 1000);
+    const fmt =
+      totalSecs < 60 ? `${totalSecs}s` : `${Math.floor(totalSecs / 60)}m ${totalSecs % 60}s`;
+    process.stdout.write(
+      `\n  ${green('✓')}  ${bold(`${machine} is up to date`)}  ${dim(`(${fmt})`)}\n\n`
+    );
   } catch (e) {
     fail(e);
   }

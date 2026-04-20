@@ -11,7 +11,9 @@ export const machineSchema = z.object({
 export const kitConfigSchema = z.object({
   name: z.string().min(1),
   repo: z.string().min(1),
-  repoDir: z.string().min(1),
+  // Optional in the file — derived from the config file's directory at load time.
+  // Only set if the kit repo lives somewhere other than the config's directory.
+  repoDir: z.string().min(1).optional(),
   machines: z.record(z.string(), machineSchema).refine((m) => Object.keys(m).length > 0, {
     message: 'machines map must not be empty',
   }),
