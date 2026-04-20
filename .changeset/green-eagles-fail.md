@@ -1,5 +1,7 @@
+---
 '@medalsocial/pilot': patch
 '@medalsocial/kit': patch
+---
 
 Add repository guardrails for AI-assisted changes, security scanning, and release discipline.
 

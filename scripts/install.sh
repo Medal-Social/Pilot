@@ -39,7 +39,7 @@ main() {
     NODE_MAJOR="$(node -v | sed 's/v//' | cut -d. -f1)"
     if [ "$NODE_MAJOR" -ge 24 ] 2>/dev/null; then
       echo "Installing Pilot..."
-      if npm install -g "@medalsocial/pilot@${LATEST_VERSION:-latest}" 2>/dev/null; then
+      if [ -n "$LATEST_VERSION" ] && npm install -g "@medalsocial/pilot@${LATEST_VERSION}" 2>/dev/null; then
         echo ""
         echo "Pilot installed! Run \`pilot\` to get started."
         exit 0
