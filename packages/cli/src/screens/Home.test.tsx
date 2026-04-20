@@ -8,7 +8,7 @@ import { Home } from './Home.js';
 describe('Home', () => {
   it('shows pilot logo', () => {
     const { lastFrame } = render(<Home />);
-    expect(lastFrame()).toContain('pilot');
+    expect(lastFrame()).toContain('Pilot');
   });
 
   it('shows input prompt', () => {

@@ -12,17 +12,24 @@ export interface LoadOpts {
   home?: string;
 }
 
-export type LoadedKitConfig = KitConfig & { repoDir: string };
+export type LoadedKitConfig = KitConfig & {
+  /** Resolved kit repo directory — either the explicit `repoDir` or the config file's directory. */
+  repoDir: string;
+  /** Filesystem path of the kit.config.json that was loaded. */
+  configPath: string;
+};
 
-export async function loadKitConfig(opts: LoadOpts = {}): Promise<LoadedKitConfig> {
+export function configCandidates(opts: LoadOpts = {}): string[] {
   const env = opts.env ?? process.env;
   const home = opts.home ?? process.env.HOME ?? '';
+  const out: string[] = [];
+  if (env.KIT_CONFIG) out.push(env.KIT_CONFIG);
+  if (home) out.push(join(home, 'Documents', 'Code', 'kit', 'kit.config.json'));
+  return out;
+}
 
-  const candidates: string[] = [];
-  if (env.KIT_CONFIG) candidates.push(env.KIT_CONFIG);
-  if (home) {
-    candidates.push(join(home, 'Documents', 'Code', 'kit', 'kit.config.json'));
-  }
+export async function loadKitConfig(opts: LoadOpts = {}): Promise<LoadedKitConfig> {
+  const candidates = configCandidates(opts);
 
   for (const path of candidates) {
     if (!existsSync(path)) continue;
@@ -40,7 +47,7 @@ export async function loadKitConfig(opts: LoadOpts = {}): Promise<LoadedKitConfi
     // Derive repoDir from the config file's location unless explicitly overridden in the file.
     // This makes the same kit.config.json work for any user without editing per-machine paths.
     const repoDir = result.data.repoDir ?? dirname(path);
-    return { ...result.data, repoDir };
+    return { ...result.data, repoDir, configPath: path };
   }
 
   throw new KitError(errorCodes.KIT_CONFIG_NOT_FOUND, candidates.join(', '));

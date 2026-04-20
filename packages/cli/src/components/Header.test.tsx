@@ -8,21 +8,20 @@ import { Header } from './Header.js';
 describe('Header', () => {
   it('renders medium size by default', () => {
     const { lastFrame } = render(<Header />);
-    expect(lastFrame()).toContain('pilot');
-    expect(lastFrame()).toContain('medal social');
+    expect(lastFrame()).toContain('Pilot');
+    expect(lastFrame()).toContain('Medal Social');
   });
 
   it('renders small size with shorter text', () => {
     const { lastFrame } = render(<Header size="small" />);
-    expect(lastFrame()).toContain('pilot');
-    // Small size uses '✈ pilot' not the full LOGO_SMALL
-    expect(lastFrame()).not.toContain('medal social');
+    expect(lastFrame()).toContain('Pilot');
+    expect(lastFrame()).not.toContain('Medal Social');
   });
 
   it('renders large size same as medium', () => {
     const { lastFrame } = render(<Header size="large" />);
-    expect(lastFrame()).toContain('pilot');
-    expect(lastFrame()).toContain('medal social');
+    expect(lastFrame()).toContain('Pilot');
+    expect(lastFrame()).toContain('Medal Social');
   });
 
   it('renders subtitle when provided', () => {

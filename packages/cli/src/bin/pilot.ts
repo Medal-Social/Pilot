@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import { program } from 'commander';
+import { loadSettings } from '../settings.js';
 import { VERSION } from '../version.js';
 
 program.name('pilot').description('Your AI crew, ready to fly.').version(VERSION, '-v, --version');
@@ -96,55 +97,79 @@ program
     await runAdmin();
   });
 
-const kit = program.command('kit').description('Machine configuration & Nix management');
+const settings = loadSettings();
+const kitEnabled = settings.plugins['@medalsocial/kit']?.enabled !== false;
 
-kit
-  .command('init [machine]')
-  .description('Bootstrap an existing kit repo on this machine')
-  .action(async (machine?: string) => {
-    const { runKitInit } = await import('../commands/kit.js');
-    await runKitInit(machine);
-  });
+if (kitEnabled) {
+  const kit = program.command('kit').description('Machine configuration & Nix management');
 
-kit
-  .command('new')
-  .description('Scaffold a new kit repo from scratch')
-  .action(async () => {
-    const { runKitNew } = await import('../commands/kit.js');
-    await runKitNew();
-  });
+  kit
+    .command('init [machine]')
+    .description('Bootstrap an existing kit repo on this machine')
+    .action(async (machine?: string) => {
+      const { runKitInit } = await import('../commands/kit.js');
+      await runKitInit(machine);
+    });
 
-kit
-  .command('update')
-  .description('Pull latest config and rebuild the system')
-  .action(async () => {
-    const { runKitUpdate } = await import('../commands/kit.js');
-    await runKitUpdate();
-  });
+  kit
+    .command('new')
+    .description('Scaffold a new kit repo from scratch')
+    .action(async () => {
+      const { runKitNew } = await import('../commands/kit.js');
+      await runKitNew();
+    });
 
-kit
-  .command('status')
-  .description('Machine health, apps, secrets, repo state')
-  .action(async () => {
-    const { runKitStatus } = await import('../commands/kit.js');
-    await runKitStatus({ interactive: false });
-  });
+  kit
+    .command('update')
+    .description('Pull latest config and rebuild the system')
+    .action(async () => {
+      const { runKitUpdate } = await import('../commands/kit.js');
+      await runKitUpdate();
+    });
 
-kit
-  .command('apps <action> [name]')
-  .description('Manage Homebrew casks/brews (add | remove | list)')
-  .action(async (action: string, name?: string) => {
-    const { runKitApps } = await import('../commands/kit.js');
-    await runKitApps(action, name);
-  });
+  kit
+    .command('status')
+    .description('Machine health, apps, secrets, repo state')
+    .option('--json', 'Output status as JSON')
+    .action(async (opts: { json?: boolean }) => {
+      const { runKitStatus } = await import('../commands/kit.js');
+      await runKitStatus({ json: opts.json });
+    });
 
-kit
-  .command('edit')
-  .description("Open this machine's config in $EDITOR")
-  .action(async () => {
-    const { runKitEdit } = await import('../commands/kit.js');
-    await runKitEdit();
-  });
+  kit
+    .command('apps <action> [name]')
+    .description('Manage Homebrew casks/brews (add | remove | list)')
+    .action(async (action: string, name?: string) => {
+      const { runKitApps } = await import('../commands/kit.js');
+      await runKitApps(action, name);
+    });
+
+  kit
+    .command('edit')
+    .description("Open this machine's config in $EDITOR")
+    .action(async () => {
+      const { runKitEdit } = await import('../commands/kit.js');
+      await runKitEdit();
+    });
+
+  const kitConfig = kit.command('config').description('Inspect the loaded kit.config.json');
+
+  kitConfig
+    .command('show')
+    .description('Show the loaded config and where it was loaded from')
+    .action(async () => {
+      const { runKitConfigShow } = await import('../commands/kit.js');
+      await runKitConfigShow();
+    });
+
+  kitConfig
+    .command('path')
+    .description('Print the absolute path to the loaded kit.config.json')
+    .action(async () => {
+      const { runKitConfigPath } = await import('../commands/kit.js');
+      await runKitConfigPath();
+    });
+}
 
 program.action(async () => {
   const { runRepl } = await import('../commands/repl.js');

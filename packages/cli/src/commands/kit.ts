@@ -147,7 +147,58 @@ export async function runKitUpdate(): Promise<void> {
   }
 }
 
-export async function runKitStatus(_opts: { interactive: boolean }): Promise<void> {
+function fmtCheck(status: 'ok' | 'warn' | 'error' | 'info', tty: boolean): string {
+  const c = (s: string, code: string) => (tty ? `\x1b[${code}m${s}\x1b[0m` : s);
+  switch (status) {
+    case 'ok':
+      return c('✓', '32');
+    case 'warn':
+      return c('!', '33');
+    case 'error':
+      return c('✗', '31');
+    case 'info':
+      return c('·', '36');
+  }
+}
+
+function printHumanReadable(report: Awaited<ReturnType<typeof renderStatus>>): void {
+  const tty = process.stdout.isTTY;
+  const dim = (s: string) => (tty ? `\x1b[2m${s}\x1b[0m` : s);
+  const bold = (s: string) => (tty ? `\x1b[1m${s}\x1b[0m` : s);
+
+  process.stdout.write(`\n  ${bold('kit status')}  ${dim(`· ${report.machineId}`)}\n`);
+  process.stdout.write(`  ${dim('─'.repeat(40))}\n\n`);
+
+  for (const c of report.checks) {
+    const glyph = fmtCheck(c.status, tty);
+    let line = `  ${glyph}  ${c.label.padEnd(20)} ${c.detail ?? ''}`;
+    if (c.hint && (c.status === 'warn' || c.status === 'error')) {
+      line += `\n     ${dim(c.hint)}`;
+    }
+    process.stdout.write(`${line}\n`);
+  }
+
+  if (report.orgPolicy) {
+    process.stdout.write(`\n  ${bold('Org Policy')} ${dim(`(${report.orgPolicy.apps.source})`)}\n`);
+    for (const a of report.orgPolicy.apps.casks) {
+      process.stdout.write(`    cask: ${a.name}  ${dim(`— ${a.reason}`)}\n`);
+    }
+    for (const a of report.orgPolicy.apps.brews) {
+      process.stdout.write(`    brew: ${a.name}  ${dim(`— ${a.reason}`)}\n`);
+    }
+    for (const c of report.orgPolicy.baseline) {
+      process.stdout.write(`    check: ${c.id}  ${dim(`— ${c.description}`)}\n`);
+    }
+  }
+
+  process.stdout.write('\n');
+}
+
+export interface RunKitStatusOpts {
+  json?: boolean;
+}
+
+export async function runKitStatus(opts: RunKitStatusOpts = {}): Promise<void> {
   try {
     const config = await loadKitConfig();
     const machine = detectMachine(hostname()) ?? Object.keys(config.machines)[0];
@@ -155,10 +206,52 @@ export async function runKitStatus(_opts: { interactive: boolean }): Promise<voi
       machine,
       kitRepoDir: config.repoDir,
       machineFile: machineFile(config.repoDir, machine),
+      configPath: config.configPath,
+      configRepoUrl: config.repo,
+      knownMachines: Object.keys(config.machines),
       provider: resolveProvider(),
       exec: realExec,
     });
-    console.log(JSON.stringify(report, null, 2));
+    const wantsJson = opts.json || !process.stdout.isTTY;
+    if (wantsJson) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      printHumanReadable(report);
+    }
+  } catch (e) {
+    fail(e);
+  }
+}
+
+export async function runKitConfigShow(): Promise<void> {
+  try {
+    const config = await loadKitConfig();
+    const tty = process.stdout.isTTY;
+    if (!tty) {
+      console.log(JSON.stringify(config, null, 2));
+      return;
+    }
+    const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
+    const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
+    process.stdout.write(`\n  ${bold('kit config')}\n  ${dim('─'.repeat(40))}\n\n`);
+    process.stdout.write(`  ${bold('source')}    ${config.configPath}\n`);
+    process.stdout.write(`  ${bold('name')}      ${config.name}\n`);
+    process.stdout.write(`  ${bold('repo')}      ${config.repo}\n`);
+    process.stdout.write(`  ${bold('repoDir')}   ${config.repoDir}\n`);
+    process.stdout.write(`  ${bold('machines')}\n`);
+    for (const [name, m] of Object.entries(config.machines)) {
+      process.stdout.write(`    ${name.padEnd(15)} ${dim(`type=${m.type}, user=${m.user}`)}\n`);
+    }
+    process.stdout.write('\n');
+  } catch (e) {
+    fail(e);
+  }
+}
+
+export async function runKitConfigPath(): Promise<void> {
+  try {
+    const config = await loadKitConfig();
+    console.log(config.configPath);
   } catch (e) {
     fail(e);
   }
