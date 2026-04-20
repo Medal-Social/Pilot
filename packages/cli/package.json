@@ -50,6 +50,7 @@
     "prepublishOnly": "sh scripts/inject-version.sh && tsc"
   },
   "dependencies": {
+    "@medalsocial/kit": "workspace:*",
     "commander": "14.0.3",
     "ink": "7.0.0",
     "ink-text-input": "6.0.0",

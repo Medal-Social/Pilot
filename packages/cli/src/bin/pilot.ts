@@ -96,6 +96,56 @@ program
     await runAdmin();
   });
 
+const kit = program.command('kit').description('Machine configuration & Nix management');
+
+kit
+  .command('init [machine]')
+  .description('Bootstrap an existing kit repo on this machine')
+  .action(async (machine?: string) => {
+    const { runKitInit } = await import('../commands/kit.js');
+    await runKitInit(machine);
+  });
+
+kit
+  .command('new')
+  .description('Scaffold a new kit repo from scratch')
+  .action(async () => {
+    const { runKitNew } = await import('../commands/kit.js');
+    await runKitNew();
+  });
+
+kit
+  .command('update')
+  .description('Pull latest config and rebuild the system')
+  .action(async () => {
+    const { runKitUpdate } = await import('../commands/kit.js');
+    await runKitUpdate();
+  });
+
+kit
+  .command('status')
+  .description('Machine health, apps, secrets, repo state')
+  .action(async () => {
+    const { runKitStatus } = await import('../commands/kit.js');
+    await runKitStatus({ interactive: false });
+  });
+
+kit
+  .command('apps <action> [name]')
+  .description('Manage Homebrew casks/brews (add | remove | list)')
+  .action(async (action: string, name?: string) => {
+    const { runKitApps } = await import('../commands/kit.js');
+    await runKitApps(action, name);
+  });
+
+kit
+  .command('edit')
+  .description("Open this machine's config in $EDITOR")
+  .action(async () => {
+    const { runKitEdit } = await import('../commands/kit.js');
+    await runKitEdit();
+  });
+
 program.action(async () => {
   const { runRepl } = await import('../commands/repl.js');
   await runRepl();
