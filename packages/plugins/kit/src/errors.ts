@@ -36,9 +36,9 @@ const userMessages: Record<ErrorCode, string> = {
   KIT_SECRETS_INIT_FAILED: 'Secrets setup failed. Re-run `kit update` after fixing.',
   KIT_REBUILD_FAILED: 'System rebuild failed. See log for details.',
   KIT_CONFIG_NOT_FOUND:
-    'No kit.config.ts found. Set $KIT_CONFIG or place it at ~/Documents/Code/kit/kit.config.ts.',
-  KIT_CONFIG_INVALID: 'kit.config.ts is invalid.',
-  KIT_UNKNOWN_MACHINE: 'Machine name is not in kit.config.ts → machines.',
+    'No kit.config.json found. Set $KIT_CONFIG or place it at ~/Documents/Code/kit/kit.config.json.',
+  KIT_CONFIG_INVALID: 'kit.config.json is invalid.',
+  KIT_UNKNOWN_MACHINE: 'Machine name is not in kit.config.json → machines.',
   KIT_NO_MACHINE_FILE: 'No machine config file found for this hostname.',
   KIT_APPS_CORRUPT: 'apps.json is malformed.',
   KIT_APPS_DUPLICATE: 'That app is already in your config.',
