@@ -2,10 +2,27 @@
   "name": "@medalsocial/kit",
   "version": "0.1.0",
   "type": "module",
+  "license": "MIT",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "plugin.toml",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.test.*"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "ink": "7.0.0",

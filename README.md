@@ -130,6 +130,14 @@ pilot
 | `pilot completions <shell>` | Generate shell completions (bash, zsh, fish) |
 | `pilot help` | Help reference |
 
+## Contributor Guardrails
+
+- Use `pnpm install` only; the repo blocks other package managers.
+- Commit with conventional commits; Husky runs `commitlint` on every commit message.
+- Release-worthy changes must include a changeset via `pnpm changeset` unless the PR is explicitly internal-only.
+- Do not commit generated `dist/` or `coverage/` output.
+- AI-assisted changes are welcome, but PR descriptions and commits must explain intent in human-written terms and include tests for behavior changes.
+
 ### `status --json`
 
 Outputs machine-readable JSON for scripting and CI:

@@ -2,11 +2,12 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
   id-token: write
   attestations: write
 
@@ -16,6 +17,8 @@ jobs:
     environment: npm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
@@ -26,10 +29,15 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --filter @medalsocial/pilot build
+      - run: pnpm quality
 
-      - run: pnpm --filter @medalsocial/pilot test -- --run
-
-      - name: Publish to npm with provenance
-        working-directory: packages/cli
-        run: npm publish --access public --provenance
+      - name: Create release PR or publish packages
+        uses: changesets/action@v1
+        with:
+          commit: 'chore: release packages'
+          title: 'chore: release packages'
+          version: pnpm version
+          publish: pnpm release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'

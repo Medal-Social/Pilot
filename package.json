@@ -1,20 +1,48 @@
 {
   "name": "@medalsocial/pilot-monorepo",
   "private": true,
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
   "packageManager": "pnpm@10.30.3",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "pnpm --filter @medalsocial/pilot dev",
     "build": "turbo build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test:repo": "vitest run tests/repo-guardrails.test.ts",
     "test": "turbo test",
+    "quality": "pnpm lint && pnpm typecheck && pnpm test:repo && pnpm test",
     "lint": "biome check .",
     "lint:fix": "biome check --fix .",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish",
+    "secret:scan": "node scripts/secretlint-repo.mjs",
+    "secret:scan:staged": "node scripts/secretlint-staged.mjs",
+    "knip:report": "knip --reporter json --no-exit-code",
+    "knip:check": "knip",
     "prepare": "husky"
   },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,jsonc,md,yml,yaml}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
+  },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
     "@biomejs/biome": "2.4.11",
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@vitest/coverage-v8": "^4.1.4",
     "fast-check": "^4.6.0",
     "husky": "^9.1.7",
+    "knip": "^5.63.1",
+    "lint-staged": "^16.2.6",
+    "only-allow": "^1.2.1",
+    "secretlint": "^9.3.2",
+    "@secretlint/secretlint-rule-preset-recommend": "^9.3.2",
     "turbo": "2.9.6",
     "typescript": "6.0.2",
     "vitest": "4.1.4"
