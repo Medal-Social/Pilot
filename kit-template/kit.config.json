@@ -1,0 +1,7 @@
+{
+  "name": "kit-template",
+  "repo": "github:YOU/dotfiles",
+  "machines": {
+    "example": { "type": "darwin", "user": "you" }
+  }
+}
