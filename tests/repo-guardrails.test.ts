@@ -21,7 +21,7 @@ describe('repo guardrails', () => {
 
     expect(pkg.scripts).toMatchObject({
       preinstall: 'npx only-allow pnpm',
-      typecheck: 'pnpm -r --if-present typecheck',
+      typecheck: 'turbo typecheck',
       quality: 'pnpm lint && pnpm typecheck && pnpm test:repo && pnpm test',
       changeset: 'changeset',
       version: 'changeset version',
