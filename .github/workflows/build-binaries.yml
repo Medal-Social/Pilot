@@ -34,7 +34,7 @@ jobs:
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: '24'
 
@@ -71,23 +71,22 @@ jobs:
           & ".\${{ matrix.target }}" --help
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
 
       - name: Sign binary (Unix)
         if: "!contains(matrix.target, 'win')"
-        run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
+        run: cosign sign-blob --yes --bundle ${{ matrix.target }}.bundle ${{ matrix.target }}
 
       - name: Sign binary (Windows)
         if: contains(matrix.target, 'win')
-        run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
+        run: cosign sign-blob --yes --bundle ${{ matrix.target }}.bundle ${{ matrix.target }}
 
       - name: Upload binary and signatures to release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           files: |
             ${{ matrix.target }}
-            ${{ matrix.target }}.sig
-            ${{ matrix.target }}.pem
+            ${{ matrix.target }}.bundle
 
       - name: Generate SLSA provenance attestation
         uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
