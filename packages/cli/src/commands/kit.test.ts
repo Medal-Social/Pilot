@@ -1,7 +1,31 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: MIT
 
+import { readdirSync, statSync } from 'node:fs';
+import {
+  addApp,
+  listApps,
+  loadKitConfig,
+  removeApp,
+  renderStatus,
+  runEdit,
+  runInit,
+  runUpdate,
+  scaffoldKit,
+} from '@medalsocial/kit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  parseAppsTarget,
+  resolveMachine,
+  runKitApps,
+  runKitConfigPath,
+  runKitConfigShow,
+  runKitEdit,
+  runKitInit,
+  runKitNew,
+  runKitStatus,
+  runKitUpdate,
+} from './kit.js';
 
 const { KitErrorStub } = vi.hoisted(() => {
   class KitErrorStub extends Error {
@@ -41,32 +65,6 @@ vi.mock('node:fs', () => ({
   readdirSync: vi.fn(() => []),
   statSync: vi.fn(),
 }));
-
-import { readdirSync, statSync } from 'node:fs';
-import {
-  addApp,
-  listApps,
-  loadKitConfig,
-  removeApp,
-  renderStatus,
-  runEdit,
-  runInit,
-  runUpdate,
-  scaffoldKit,
-} from '@medalsocial/kit';
-
-import {
-  parseAppsTarget,
-  resolveMachine,
-  runKitApps,
-  runKitConfigPath,
-  runKitConfigShow,
-  runKitEdit,
-  runKitInit,
-  runKitNew,
-  runKitStatus,
-  runKitUpdate,
-} from './kit.js';
 
 const baseConfig = {
   name: 'kit',
@@ -115,9 +113,6 @@ describe('resolveMachine', () => {
   });
 
   it('falls back to first configured machine when detection misses', () => {
-    // ali-pro is first in baseConfig — and on the test runner hostname won't match.
-    // We can't control hostname() here, but the function falls back deterministically
-    // to the first key when detect doesn't match.
     const result = resolveMachine(baseConfig);
     expect(Object.keys(baseConfig.machines)).toContain(result);
   });
