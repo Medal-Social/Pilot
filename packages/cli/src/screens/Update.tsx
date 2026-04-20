@@ -1,7 +1,7 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useApp, useInput } from 'ink';
 import { useEffect, useState } from 'react';
 import { colors } from '../colors.js';
 import { ProgressBar } from '../components/ProgressBar.js';
@@ -16,6 +16,7 @@ interface UpdateProps {
 }
 
 export function Update({ currentVersion }: UpdateProps) {
+  const { exit } = useApp();
   const [phase, setPhase] = useState<Phase>('checking');
   const [checkResult, setCheckResult] = useState<UpdateCheckResult | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
@@ -41,6 +42,13 @@ export function Update({ currentVersion }: UpdateProps) {
       cancelled = true;
     };
   }, [phase, currentVersion]);
+
+  useEffect(() => {
+    if (phase === 'up-to-date' || phase === 'complete' || phase === 'error') {
+      const timer = setTimeout(() => exit(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, exit]);
 
   useInput((input, key) => {
     if (phase === 'confirm') {

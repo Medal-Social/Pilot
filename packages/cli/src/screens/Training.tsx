@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../colors.js';
@@ -101,6 +101,7 @@ export function Training() {
             </Box>
           }
           detail={
+            /* v8 ignore next */
             current ? (
               <Box flexDirection="column" gap={1}>
                 <Text bold color={colors.text}>

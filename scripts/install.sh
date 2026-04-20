@@ -27,12 +27,19 @@ main() {
     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
   esac
 
+  # Fetch the latest version tag for pinned install
+  if command -v curl >/dev/null 2>&1; then
+    LATEST_VERSION="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')"
+  elif command -v wget >/dev/null 2>&1; then
+    LATEST_VERSION="$(wget -qO- "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')"
+  fi
+
   # Check for Node.js 24+
   if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
     NODE_MAJOR="$(node -v | sed 's/v//' | cut -d. -f1)"
     if [ "$NODE_MAJOR" -ge 24 ] 2>/dev/null; then
       echo "Installing Pilot..."
-      if npm install -g @medalsocial/pilot 2>/dev/null; then
+      if npm install -g "@medalsocial/pilot@${LATEST_VERSION:-latest}" 2>/dev/null; then
         echo ""
         echo "Pilot installed! Run \`pilot\` to get started."
         exit 0

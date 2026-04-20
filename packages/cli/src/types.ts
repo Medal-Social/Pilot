@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 export type StepStatus = 'done' | 'active' | 'waiting' | 'error';
 
@@ -13,7 +13,8 @@ export interface CrewMember {
   role: string;
   description: string;
   skills: string[];
-  color: string;
+  // Optional/undefinable so NO_COLOR mode (where colors.* are undefined) is type-safe.
+  color: string | undefined;
 }
 
 export interface PluginManifest {

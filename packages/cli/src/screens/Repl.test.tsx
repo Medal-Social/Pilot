@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { render } from 'ink-testing-library';
 import { describe, expect, it, vi } from 'vitest';
@@ -21,7 +21,7 @@ describe('Repl', () => {
     vi.mocked(loadSettings).mockReturnValue({ onboarded: true, plugins: {} });
 
     const { lastFrame } = render(<Repl />);
-    expect(lastFrame()).toContain('pilot');
+    expect(lastFrame()).toContain('Pilot');
   });
 
   it('transitions to Home after pressing Enter on Welcome screen', async () => {
@@ -36,6 +36,6 @@ describe('Repl', () => {
     await new Promise((r) => setTimeout(r, 50));
 
     expect(markOnboarded).toHaveBeenCalled();
-    expect(lastFrame()).toContain('pilot');
+    expect(lastFrame()).toContain('Pilot');
   });
 });
