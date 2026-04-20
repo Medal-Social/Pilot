@@ -3,7 +3,7 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "Medal-Social/pilot"
+      "repo": "Medal-Social/Pilot"
     }
   ],
   "commit": false,
