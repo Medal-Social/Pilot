@@ -87,4 +87,4 @@ Pilot supports plugins declared via `plugin.toml` with permission enforcement:
 
 ## License
 
-MIT
+Apache-2.0

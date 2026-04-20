@@ -1,9 +1,8 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Text } from 'ink';
 import { render } from 'ink-testing-library';
-import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { Modal } from './Modal.js';
 

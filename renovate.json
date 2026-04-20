@@ -21,7 +21,7 @@
       "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
       "automergeType": "pr",
-      "requiredStatusChecks": ["test", "lint"]
+      "requiredStatusChecks": ["test", "security"]
     },
     {
       "groupName": "security patches",

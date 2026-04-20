@@ -1,5 +1,6 @@
 node_modules/
 dist/
+**/dist/
 .DS_Store
 *.tsbuildinfo
 .env
@@ -10,6 +11,7 @@ dist/
 !.claude/skills/pilot-dev/
 .agents/
 coverage/
+**/coverage/
 *.log
 .turbo
 .playwright-mcp/

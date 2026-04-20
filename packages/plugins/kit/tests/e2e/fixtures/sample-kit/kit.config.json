@@ -1,0 +1,6 @@
+{
+  "name": "sample-kit",
+  "repo": "https://example.com/sample-kit.git",
+  "repoDir": "/tmp/sample-kit",
+  "machines": { "test-mac": { "type": "darwin", "user": "tester" } }
+}

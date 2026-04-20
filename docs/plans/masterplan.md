@@ -38,15 +38,15 @@ Phase 15: Sessions + Distribution (persistence, print mode, context management, 
 ## Phase Dependency Graph
 
 ```
-01-foundation ─────────────┐
+01-foundation ✅ ──────────┐
                            v
-02-screens ────────> 03-ai-crew
+02-screens ✅ ─────> 03-ai-crew ◐
                            |
                            v
-              04-pilot-up-kit ────> 05-skill-deployment
+              04-pilot-up-kit ────> 05-skill-deployment ◐
                                           |
                                           v
-                              06-production-hardening
+                              06-production-hardening ◐
                                           |
                                           v
                               07-skill-security
@@ -55,25 +55,43 @@ Phase 15: Sessions + Distribution (persistence, print mode, context management, 
                               08-skill-runtime
                                           |
                                           v
-                              09-platform-distribution
+                              09-platform-distribution ◐
                                           |
                                           v
-                              10-sessions-distribution
+                              10-sessions-distribution ◐
+
+✅ = Done   ◐ = Partial   (no icon) = Not started
 ```
 
 ## Phase Summary
 
 | # | Subplan | Phases | Tasks | Status | Link |
 |---|---------|--------|-------|--------|------|
-| 01 | Foundation | 1-2: Monorepo + Core, Plugin System | 1-9 | Not started | [01-foundation.md](01-foundation.md) |
-| 02 | Screens | 3: Welcome, Home, REPL, Plugins, Training, Update | 10-15 | Not started | [02-screens.md](02-screens.md) |
-| 03 | AI + Crew | 4: AI Layer + Crew | 16-19 | Not started | [03-ai-crew.md](03-ai-crew.md) |
+| 01 | Foundation | 1-2: Monorepo + Core, Plugin System | 1-9 | Done | [01-foundation.md](01-foundation.md) |
+| 02 | Screens | 3: Welcome, Home, REPL, Plugins, Training, Update | 10-15 | Done | [02-screens.md](02-screens.md) |
+| 03 | AI + Crew | 4: AI Layer + Crew | 16-19 | Partial | [03-ai-crew.md](03-ai-crew.md) |
 | 04 | pilot up + Kit | 5-6: pilot up, Kit Integration, Plugin Scaffolds | 20-25 | Not started | [04-pilot-up-kit.md](04-pilot-up-kit.md) |
-| 05 | Skill Deployment | 7: Skill Deployment + Smart Updates | 26-28 | Not started | [05-skill-deployment.md](05-skill-deployment.md) |
-| 06 | Production Hardening | 8-12: Toolchain, Logging, AI Robustness, Config, Binary, E2E, ErrorBoundary, Output Scanning, Audit Trail | 29-37, 59, 61 | Not started | [06-production-hardening.md](06-production-hardening.md) |
+| 05 | Skill Deployment | 7: Skill Deployment + Smart Updates | 26-28 | Partial | [05-skill-deployment.md](05-skill-deployment.md) |
+| 06 | Production Hardening | 8-12: Toolchain, Logging, AI Robustness, Config, Binary, E2E, ErrorBoundary, Output Scanning, Audit Trail | 29-37, 59, 61 | Partial | [06-production-hardening.md](06-production-hardening.md) |
 | 07 | Skill Security | Validation, Signing + Integrity, Script Safety, Sync, Versioning, Compartmentalization, URL Safety | 48-52, 60 | Not started | [09-skill-security.md](09-skill-security.md) |
 | 08 | Skill Runtime | Preamble, Learnings, Context Recovery, Self-Update, Multi-Host, Docs | 53-58 | Not started | [10-skill-runtime.md](10-skill-runtime.md) |
-| 09 | Platform + Distribution | 13-14: XDG, NO_COLOR, Completions, tsup, Changesets, CI | 38-43 | Not started | [07-platform-distribution.md](07-platform-distribution.md) |
-| 10 | Sessions + Distribution | 15: Sessions, Print Mode, Context Management, Homebrew | 44-47 | Not started | [08-sessions-distribution.md](08-sessions-distribution.md) |
+| 09 | Platform + Distribution | 13-14: XDG, NO_COLOR, Completions, tsup, Changesets, CI | 38-43 | Partial | [07-platform-distribution.md](07-platform-distribution.md) |
+| 10 | Sessions + Distribution | 15: Sessions, Print Mode, Context Management, Homebrew | 44-47 | Partial | [08-sessions-distribution.md](08-sessions-distribution.md) |
+
+### Status Key
+
+- **Done** — all tasks implemented and tested
+- **Partial** — some tasks implemented, others pending
+- **Not started** — no implementation yet
+
+### What "Partial" Means
+
+| Subplan | Done | Remaining |
+|---------|------|-----------|
+| 03 AI + Crew | Crew member definitions (5 leads with skills/colors) | AI SDK client, auto-routing, AGENTS.md generation, Chat screen |
+| 05 Skill Deployment | Removal/cleanup logic (removeRoutingFromClaudeMd, removeSkillSymlink) | SKILL.md files, skill deployer creation, install/update wiring |
+| 06 Production Hardening | PilotError + error codes, binary signing (cosign), security docs, SPDX headers | Structured logger (getLogger), ErrorBoundary, AI robustness, E2E tests |
+| 09 Platform + Distribution | NO_COLOR support, shell completions (bash/zsh/fish), GitHub Actions CI + release workflows | tsup dual build, changesets versioning, XDG compliance |
+| 10 Sessions + Distribution | Homebrew tap, settings persistence (onboarded, lastRun) | Session save/resume, non-interactive mode, context management |
 
 **Total scope: 61 tasks across 10 subplans.**

@@ -250,7 +250,7 @@
 **Action:** Add SPDX copyright header to all `.ts` and `.tsx` source files:
 ```
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 ```
 **Deliverable:** All source files updated
 

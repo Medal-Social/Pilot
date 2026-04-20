@@ -1,5 +1,5 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import * as child_process from 'node:child_process';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

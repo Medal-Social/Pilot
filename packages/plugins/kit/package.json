@@ -2,13 +2,37 @@
   "name": "@medalsocial/kit",
   "version": "0.1.0",
   "type": "module",
+  "license": "Apache-2.0",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "plugin.toml",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.test.*"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
-  "dependencies": {},
+  "dependencies": {
+    "ink": "7.0.0",
+    "react": "19.2.5",
+    "zod": "4.3.6"
+  },
   "devDependencies": {
+    "@types/node": "25.6.0",
+    "@types/react": "19.2.14",
+    "ink-testing-library": "4.0.0",
     "typescript": "^6.0.0",
     "vitest": "^4.0.0"
   }

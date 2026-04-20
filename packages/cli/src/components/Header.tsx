@@ -1,10 +1,10 @@
 // Copyright (c) Medal Social. All rights reserved.
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from 'ink';
 import { colors } from '../colors.js';
 
-const LOGO_SMALL = '✈ pilot | medal social';
+const LOGO_SMALL = '✈ Pilot | Medal Social';
 
 interface HeaderProps {
   size?: 'small' | 'medium' | 'large';
@@ -15,7 +15,7 @@ export function Header({ size = 'medium', subtitle }: HeaderProps) {
   return (
     <Box flexDirection="column" alignItems="center" gap={0}>
       <Text color={colors.primary} bold>
-        {size === 'small' ? '✈ pilot' : LOGO_SMALL}
+        {size === 'small' ? '✈ Pilot' : LOGO_SMALL}
       </Text>
       {subtitle && <Text color={colors.muted}>{subtitle}</Text>}
     </Box>

@@ -10,8 +10,8 @@ permissions: {}
 jobs:
   build:
     permissions:
-      contents: write
       id-token: write
+      attestations: write
     strategy:
       matrix:
         include:
@@ -33,7 +33,7 @@ jobs:
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: '24'
 
@@ -70,26 +70,47 @@ jobs:
           & ".\${{ matrix.target }}" --help
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
 
       - name: Sign binary (Unix)
         if: "!contains(matrix.target, 'win')"
-        run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
+        run: cosign sign-blob --yes --bundle ${{ matrix.target }}.bundle ${{ matrix.target }}
 
       - name: Sign binary (Windows)
         if: contains(matrix.target, 'win')
-        run: cosign sign-blob --yes --output-signature ${{ matrix.target }}.sig --output-certificate ${{ matrix.target }}.pem ${{ matrix.target }}
+        run: cosign sign-blob --yes --bundle ${{ matrix.target }}.bundle ${{ matrix.target }}
 
-      - name: Upload binary and signatures to release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+      - name: Upload binary and bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          files: |
+          name: ${{ matrix.target }}
+          path: |
             ${{ matrix.target }}
-            ${{ matrix.target }}.sig
-            ${{ matrix.target }}.pem
+            ${{ matrix.target }}.bundle
+
+      - name: Generate SLSA provenance attestation
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: ${{ matrix.target }}
+
+  upload-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: artifacts
+
+      - name: Upload binaries and bundles to release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          files: artifacts/*/*
 
   sync-homebrew:
-    needs: build
+    needs: upload-release
     runs-on: ubuntu-latest
     permissions:
       contents: read
