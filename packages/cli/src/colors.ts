@@ -19,22 +19,26 @@ const brandColors = {
 } as const;
 
 type ColorKey = keyof typeof brandColors;
-type Colors = { [K in ColorKey]: string };
+// Values are `string | undefined` so that NO_COLOR mode can return undefined and
+// `<Text color={colors.x}>` becomes `<Text color={undefined}>` — equivalent to omitting
+// the prop entirely. Empty strings (the previous approach) still get treated as a
+// color value by Ink and apply styling, defeating NO_COLOR.
+type Colors = { [K in ColorKey]: string | undefined };
 
-// When NO_COLOR is set, all color values become empty strings so Ink renders plain text.
-const emptyColors: Colors = {
-  bg: '',
-  card: '',
-  border: '',
-  primary: '',
-  info: '',
-  success: '',
-  warning: '',
-  error: '',
-  text: '',
-  muted: '',
+// When NO_COLOR is set, all color values are undefined so Ink omits color styling.
+const undefinedColors: Colors = {
+  bg: undefined,
+  card: undefined,
+  border: undefined,
+  primary: undefined,
+  info: undefined,
+  success: undefined,
+  warning: undefined,
+  error: undefined,
+  text: undefined,
+  muted: undefined,
 };
 
-export const colors: Colors = noColor ? emptyColors : { ...brandColors };
+export const colors: Colors = noColor ? undefinedColors : { ...brandColors };
 
 export const isColorEnabled = !noColor;

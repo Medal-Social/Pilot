@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 import { render } from 'ink-testing-library';
-import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { ProgressBar } from './ProgressBar.js';
 

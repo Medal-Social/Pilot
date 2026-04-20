@@ -140,4 +140,16 @@ describe('Admin', () => {
     // Unmounting triggers the clearInterval cleanup function
     expect(() => unmount()).not.toThrow();
   });
+
+  it('shows in-UI error banner instead of crashing when fetch rejects', async () => {
+    const api = createMockAPI();
+    vi.spyOn(api, 'fetchDashboard').mockRejectedValue(new Error('network down'));
+    const { lastFrame } = render(<Admin api={api} />);
+    await delay();
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('refresh failed');
+    expect(frame).toContain('network down');
+    // The TUI is still rendered — header is visible, no crash.
+    expect(frame).toContain('PILOT ADMIN');
+  });
 });

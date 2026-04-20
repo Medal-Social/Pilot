@@ -37,25 +37,40 @@ export function Admin({ api, workspaceId }: AdminProps) {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [contentStats, setContentStats] = useState<ContentStats | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    const [dashData, workspaces] = await Promise.all([api.fetchDashboard(), api.fetchWorkspaces()]);
-    setDashboard(dashData);
-
-    const wsId = workspaceId ?? workspaces[0]?.id;
-    if (wsId) {
-      const [detail, content] = await Promise.all([
-        api.fetchWorkspaceDetail(wsId),
-        api.fetchContentStats(wsId),
+    try {
+      const [dashData, workspaces] = await Promise.all([
+        api.fetchDashboard(),
+        api.fetchWorkspaces(),
       ]);
-      setWorkspace(detail);
-      setContentStats(content);
+      setDashboard(dashData);
+
+      const wsId = workspaceId ?? workspaces[0]?.id;
+      if (wsId) {
+        const [detail, content] = await Promise.all([
+          api.fetchWorkspaceDetail(wsId),
+          api.fetchContentStats(wsId),
+        ]);
+        setWorkspace(detail);
+        setContentStats(content);
+      }
+      setFetchError(null);
+    } catch (err) {
+      // Surface the error in-UI rather than letting it become an unhandled
+      // promise rejection (which would crash the TUI). Stale data stays
+      // visible so the dashboard remains useful while the user resolves it.
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setFetchError(msg);
     }
   }, [api, workspaceId]);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, POLL_INTERVAL);
+    void fetchData();
+    const interval = setInterval(() => {
+      void fetchData();
+    }, POLL_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchData]);
 
@@ -91,6 +106,13 @@ export function Admin({ api, workspaceId }: AdminProps) {
       </Box>
 
       <HealthStrip services={dashboard?.services ?? []} stats={dashboard?.stats} />
+
+      {fetchError && (
+        <Box paddingX={1}>
+          <Text color={colors.error}>! refresh failed: {fetchError} </Text>
+          <Text color={colors.muted}>(press r to retry)</Text>
+        </Box>
+      )}
 
       <TabBar tabs={TABS} activeTab={activeTab} />
 

@@ -2,15 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { describe, expect, it } from 'vitest';
-import type {
-  AdminSDK,
-  AdminUser,
-  ContentStats,
-  QuickStats,
-  ServiceHealth,
-  WorkspaceDetail,
-  WorkspaceSummary,
-} from './types.js';
+import type { AdminUser, ServiceHealth, WorkspaceSummary } from './types.js';
 
 describe('Admin types', () => {
   it('ServiceHealth has required fields', () => {
