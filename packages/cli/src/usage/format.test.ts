@@ -80,8 +80,12 @@ describe('formatTable', () => {
 
   it('shows "?" for unknown cost', () => {
     const report = makeReport();
-    report.providers[0]!.models[0]!.costUnknown = true;
-    report.providers[0]!.hasCostUnknown = true;
+    const provider = report.providers[0];
+    const model = provider?.models[0];
+    if (provider && model) {
+      model.costUnknown = true;
+      provider.hasCostUnknown = true;
+    }
     formatTable(report);
     expect(written).toContain('?');
   });
@@ -173,7 +177,8 @@ describe('formatJson', () => {
 
   it('outputs null costUSD for unknown-cost models', () => {
     const report = makeReport();
-    report.providers[0]!.models[0]!.costUnknown = true;
+    const model = report.providers[0]?.models[0];
+    if (model) model.costUnknown = true;
     formatJson(report);
     const parsed = JSON.parse(written);
     expect(parsed.providers.claude.models[0].costUSD).toBeNull();
