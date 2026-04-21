@@ -62,8 +62,6 @@ export function UpBrowse({ registry, installedNames, onInstall }: UpBrowseProps)
     if (input === 'q') process.exit(0);
   });
 
-  const currentTemplate = displayTemplates[selectedTemplate];
-
   return (
     <Box flexDirection="column" height="100%">
       <Box paddingX={1} paddingY={0} flexDirection="column">

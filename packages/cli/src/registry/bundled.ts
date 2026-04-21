@@ -58,7 +58,7 @@ const templates: TemplateEntry[] = [
       },
     ],
     crew: { specialist: 'video-specialist', displayName: 'Video Specialist', skills: ['remotion'] },
-    completionHint: 'Run `npx remotion studio` to open the studio',
+    completionHint: 'Run `remotion studio` to open the studio',
   },
   {
     name: 'nextmedal',
@@ -77,7 +77,7 @@ const templates: TemplateEntry[] = [
       },
       { type: 'pkg', nix: 'nodePackages.pnpm', brew: 'pnpm', winget: 'pnpm.pnpm', label: 'pnpm' },
     ],
-    completionHint: 'Run `pnpm create next-app` to scaffold your project',
+    completionHint: 'Run `create-next-app` to scaffold your project',
   },
 ];
 

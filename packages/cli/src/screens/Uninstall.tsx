@@ -12,6 +12,10 @@ import { Step } from '../components/Step.js';
 import { removeRoutingFromClaudeMd, removeSkillSymlink } from '../deploy/deployer.js';
 import { backupKnowledge } from '../device/backup.js';
 import { getInstalledTemplateNames, removeTemplateFromState } from '../device/state.js';
+import { detectPackageManagers } from '../installer/detect.js';
+import { realExec } from '../installer/exec.js';
+import { runUninstallSteps } from '../installer/runner.js';
+import { fetchRegistry } from '../registry/fetch.js';
 
 type Phase =
   | 'intro'
@@ -148,9 +152,38 @@ export function Uninstall() {
         }
         /* v8 ignore stop */
         if (yes) {
-          for (const t of templates) removeTemplateFromState(t);
-          addStep('Dev tools removed', false);
-          setPhase('step5-cli');
+          setBusy(true);
+          const home = homedir();
+          const cacheDir = join(home, '.pilot', 'registry');
+          const noop = {
+            onStepStart: () => {},
+            onStepSkip: () => {},
+            onStepDone: () => {},
+            onStepError: () => {},
+          };
+          (async () => {
+            try {
+              const { index } = await fetchRegistry({ cacheDir });
+              const managers = await detectPackageManagers(realExec);
+              for (const t of templates) {
+                const entry = index.templates.find((e) => e.name === t);
+                if (entry) {
+                  try {
+                    await runUninstallSteps(entry.steps, managers, undefined, [], t, noop);
+                  } catch {
+                    // best-effort
+                  }
+                }
+                removeTemplateFromState(t);
+              }
+            } catch {
+              // best-effort if registry unavailable
+              for (const t of templates) removeTemplateFromState(t);
+            }
+            addStep('Dev tools removed', false);
+            setBusy(false);
+            setPhase('step5-cli');
+          })();
         } else {
           addStep('Dev tools', true);
           setPhase('step5-cli');

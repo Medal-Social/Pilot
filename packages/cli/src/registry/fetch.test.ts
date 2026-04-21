@@ -71,6 +71,22 @@ describe('fetchRegistry', () => {
     expect(result.offline).toBe(true);
   });
 
+  it('re-fetches when cache is within TTL but sha256 is tampered', async () => {
+    const index = makeIndex([]);
+    const cacheFile = join(cacheDir, 'index.json');
+    writeFileSync(
+      cacheFile,
+      JSON.stringify({ ...index, sha256: 'tampered', cachedAt: Date.now() })
+    );
+    const fresh = makeIndex([]);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(fresh) })
+    );
+    const result = await fetchRegistry({ cacheDir, ttlMs: 3_600_000 });
+    expect(result.fromCache).toBe(false);
+  });
+
   it('returns bundled fallback when offline with no cache', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
     const result = await fetchRegistry({ cacheDir });

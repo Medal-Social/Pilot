@@ -56,10 +56,16 @@ export async function fetchRegistry({
   const cacheFile = join(cacheDir, 'index.json');
   const cached = readCache(cacheFile);
 
-  // Return fresh cache if within TTL
+  // Return fresh cache if within TTL (validate integrity first)
   if (cached && Date.now() - cached.cachedAt < ttlMs) {
-    const { cachedAt: _cachedAt, ...index } = cached;
-    return { index, fromCache: true, offline: false };
+    try {
+      const { cachedAt: _cachedAt, ...raw } = cached;
+      const index = RegistryIndexSchema.parse(raw);
+      verifySha256(index);
+      return { index, fromCache: true, offline: false };
+    } catch {
+      // Cache is corrupt/tampered — fall through to fetch
+    }
   }
 
   // Try fetching remote
@@ -74,10 +80,16 @@ export async function fetchRegistry({
   } catch (err) {
     if (err instanceof PilotError) throw err; // re-throw tampered error
 
-    // Network failure — fall back to stale cache
+    // Network failure — fall back to stale cache (validate integrity first)
     if (cached) {
-      const { cachedAt: _cachedAt, ...index } = cached;
-      return { index, fromCache: true, offline: true };
+      try {
+        const { cachedAt: _cachedAt, ...raw } = cached;
+        const index = RegistryIndexSchema.parse(raw);
+        verifySha256(index);
+        return { index, fromCache: true, offline: true };
+      } catch {
+        // Stale cache is also corrupt — fall through to bundled
+      }
     }
 
     // No cache — use bundled fallback

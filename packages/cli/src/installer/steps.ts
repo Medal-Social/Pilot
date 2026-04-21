@@ -109,7 +109,15 @@ async function checkSkill(step: SkillStep, ctx: StepContext): Promise<boolean> {
 async function executeSkill(step: SkillStep, ctx: StepContext): Promise<void> {
   const dir = ctx.skillsDir ?? DEFAULT_SKILLS_DIR;
   mkdirSync(dir, { recursive: true });
-  const res = await fetch(step.url);
+  let res: Response;
+  try {
+    res = await fetch(step.url);
+  } catch (err) {
+    throw new PilotError(
+      errorCodes.UP_STEP_FAILED,
+      err instanceof Error ? err.message : String(err)
+    );
+  }
   if (!res.ok)
     throw new PilotError(errorCodes.UP_STEP_FAILED, `Failed to fetch skill: ${res.status}`);
   const content = await res.text();

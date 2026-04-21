@@ -250,6 +250,13 @@ Status: **Pre-release** · Building v1
 | `pilot down <template>` step-based uninstall | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
 | Specialist crew wiring on install | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
 
+### MedalSocial SDK Integration
+| Feature | Status | Spec |
+|---------|--------|------|
+| SDK mainstreaming design | Planned | [Spec](docs/superpowers/specs/2026-04-21-medalsocial-sdk-mainstreaming-design.md) |
+| PR1: Release pipeline | Planned | [Plan](docs/superpowers/plans/2026-04-21-medalsocial-sdk-pr1-release-pipeline.md) |
+| PR2: Pilot integration | Planned | [Plan](docs/superpowers/plans/2026-04-21-medalsocial-sdk-pr2-pilot-integration.md) |
+
 ### Distribution & Quality
 | Feature | Status | Spec |
 |---------|--------|------|

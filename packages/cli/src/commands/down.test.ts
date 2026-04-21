@@ -110,6 +110,13 @@ describe('runDown', () => {
     await expect(runDown('unknown')).rejects.toMatchObject({ code: 'DOWN_UNKNOWN_TEMPLATE' });
   });
 
+  it('throws DOWN_NOT_INSTALLED when template exists in registry but is not installed', async () => {
+    const { getInstalledTemplateNames } = await import('../device/state.js');
+    (getInstalledTemplateNames as ReturnType<typeof vi.fn>).mockReturnValueOnce([]);
+    const { runDown } = await import('./down.js');
+    await expect(runDown('remotion')).rejects.toMatchObject({ code: 'DOWN_NOT_INSTALLED' });
+  });
+
   it('calls runUninstallSteps for an installed template', async () => {
     const { runUninstallSteps } = await import('../installer/runner.js');
     const { runDown } = await import('./down.js');

@@ -83,6 +83,7 @@ export async function runUninstallSteps(
   }
 
   const reversed = [...steps].reverse();
+  let firstError: Error | undefined;
   for (let i = 0; i < reversed.length; i++) {
     const step = reversed[i];
     const originalIndex = steps.length - 1 - i;
@@ -106,7 +107,10 @@ export async function runUninstallSteps(
       await unexecute(step, managers, realExec, { skillsDir });
       callbacks.onStepDone(originalIndex);
     } catch (err) {
-      callbacks.onStepError(originalIndex, err instanceof Error ? err : new Error(String(err)));
+      const error = err instanceof Error ? err : new Error(String(err));
+      callbacks.onStepError(originalIndex, error);
+      if (!firstError) firstError = error;
     }
   }
+  if (firstError) throw firstError;
 }

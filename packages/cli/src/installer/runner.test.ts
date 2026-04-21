@@ -83,6 +83,29 @@ describe('runUninstallSteps', () => {
     expect(order).toEqual(['pkg-b', 'pkg-a']);
   });
 
+  it('rejects after all steps when a step fails (continues uninstalling)', async () => {
+    const handlers = {
+      checkStep: vi.fn().mockResolvedValue(true),
+      executeStep: vi.fn().mockResolvedValue(undefined),
+      unexecuteStep: vi
+        .fn()
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('remove failed')),
+    };
+    const callbacks = {
+      onStepStart: vi.fn(),
+      onStepSkip: vi.fn(),
+      onStepDone: vi.fn(),
+      onStepError: vi.fn(),
+    };
+    await expect(
+      runUninstallSteps([npmA, npmB], managers, handlers, [], 'test-template', callbacks)
+    ).rejects.toThrow('remove failed');
+    // Both steps were attempted despite the failure
+    expect(handlers.unexecuteStep).toHaveBeenCalledTimes(2);
+    expect(callbacks.onStepError).toHaveBeenCalledWith(0, expect.any(Error));
+  });
+
   it('skips pkg steps used by other installed templates', async () => {
     const pkgStep: AnyStep = { type: 'pkg', brew: 'node', label: 'Node.js' };
     // Mock the fetchRegistry to return a registry where nextmedal also uses brew:node

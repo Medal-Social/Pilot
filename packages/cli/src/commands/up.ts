@@ -56,7 +56,7 @@ export async function runUp(template?: string): Promise<void> {
         registry: index,
         installedNames,
         onInstall: (entry: TemplateEntry) => {
-          runUp(entry.name).catch(() => {});
+          runUp(entry.name).catch((err: Error) => process.stderr.write(`${err.message}\n`));
         },
       })
     );

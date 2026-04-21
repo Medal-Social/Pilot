@@ -30,6 +30,8 @@ export async function runDown(template: string): Promise<void> {
   if (!entry) throw new PilotError(errorCodes.DOWN_UNKNOWN_TEMPLATE, template);
 
   const installedNames = getInstalledTemplateNames();
+  if (!installedNames.includes(template))
+    throw new PilotError(errorCodes.DOWN_NOT_INSTALLED, template);
   const otherInstalled = installedNames.filter((n) => n !== template);
   const managers = await detectPackageManagers(realExec);
 
