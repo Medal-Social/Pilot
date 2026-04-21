@@ -104,4 +104,28 @@ describe('runUsage', () => {
     const report = vi.mocked(formatTable).mock.calls[0]?.[0];
     expect(report?.window.label).toBe('since 20260401');
   });
+
+  it('outputs JSON error when --json and no data', async () => {
+    const { readClaudeEntries, readCodexEntries } = await import('../usage/reader.js');
+    vi.mocked(readClaudeEntries).mockResolvedValueOnce([]);
+    vi.mocked(readCodexEntries).mockResolvedValueOnce([]);
+    const { runUsage } = await import('./usage.js');
+    const { formatJson } = await import('../usage/format.js');
+    await runUsage({ json: true });
+    expect(vi.mocked(formatJson)).not.toHaveBeenCalled();
+    const output = stdoutSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(() => JSON.parse(output)).not.toThrow();
+    const parsed = JSON.parse(output);
+    expect(parsed.error).toBeDefined();
+  });
+
+  it('writes error and exits for invalid --since format', async () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
+    });
+    const { runUsage } = await import('./usage.js');
+    await expect(runUsage({ since: 'invalid' })).rejects.toThrow('exit');
+    expect(stdoutSpy).toHaveBeenCalledWith(expect.stringContaining('YYYYMMDD'));
+    exitSpy.mockRestore();
+  });
 });

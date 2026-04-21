@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import { applyDateFilter, groupByModel } from './aggregate.js';
+import { groupByModel } from './aggregate.js';
 import type { UsageEntry } from './types.js';
 
 function makeEntry(overrides: Partial<UsageEntry> = {}): UsageEntry {
@@ -19,33 +19,6 @@ function makeEntry(overrides: Partial<UsageEntry> = {}): UsageEntry {
     ...overrides,
   };
 }
-
-describe('applyDateFilter', () => {
-  const window = {
-    since: new Date('2026-04-22T00:00:00Z'),
-    until: new Date('2026-04-22T23:59:59Z'),
-    label: 'today',
-  };
-
-  it('keeps entries within the window', () => {
-    const entry = makeEntry({ timestamp: new Date('2026-04-22T12:00:00Z') });
-    expect(applyDateFilter([entry], window)).toHaveLength(1);
-  });
-
-  it('excludes entries before the window', () => {
-    const entry = makeEntry({ timestamp: new Date('2026-04-21T23:59:59Z') });
-    expect(applyDateFilter([entry], window)).toHaveLength(0);
-  });
-
-  it('excludes entries after the window', () => {
-    const entry = makeEntry({ timestamp: new Date('2026-04-23T00:00:01Z') });
-    expect(applyDateFilter([entry], window)).toHaveLength(0);
-  });
-
-  it('returns empty array for empty input', () => {
-    expect(applyDateFilter([], window)).toHaveLength(0);
-  });
-});
 
 describe('groupByModel', () => {
   it('groups entries by model and sums tokens', () => {

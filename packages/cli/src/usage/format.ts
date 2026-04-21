@@ -3,7 +3,7 @@
 
 import type { ModelBreakdown, ProviderReport, UsageReport } from './types.js';
 
-const isTty = process.stdout.isTTY ?? false;
+const isTty = (process.stdout.isTTY ?? false) && !process.env['NO_COLOR'];
 const bold = (s: string) => (isTty ? `\x1b[1m${s}\x1b[0m` : s);
 const dim = (s: string) => (isTty ? `\x1b[2m${s}\x1b[0m` : s);
 const purple = (s: string) => (isTty ? `\x1b[35m${s}\x1b[0m` : s);

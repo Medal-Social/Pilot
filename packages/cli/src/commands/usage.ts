@@ -19,6 +19,10 @@ function buildWindow(opts: UsageOptions): UsageWindow {
   const todayEnd = new Date(todayStart.getTime() + 86_400_000 - 1);
 
   if (opts.since) {
+    if (!/^\d{8}$/.test(opts.since)) {
+      process.stdout.write(`\n  Error: --since expects YYYYMMDD format (e.g. 20260401).\n\n`);
+      process.exit(1);
+    }
     const y = Number.parseInt(opts.since.slice(0, 4), 10);
     const m = Number.parseInt(opts.since.slice(4, 6), 10) - 1;
     const d = Number.parseInt(opts.since.slice(6, 8), 10);
@@ -76,13 +80,19 @@ export async function runUsage(opts: UsageOptions = {}): Promise<void> {
     grandTotalCostUSD: providers.reduce((s, p) => s + p.totalCostUSD, 0),
   };
 
-  if (opts.json) {
-    formatJson(report);
+  if (providers.length === 0) {
+    if (opts.json) {
+      process.stdout.write(
+        `${JSON.stringify({ error: 'No usage data found', project: projectName, window: window.label }, null, 2)}\n`
+      );
+    } else {
+      process.stdout.write(`\n  No usage data found for "${projectName}" in this period.\n\n`);
+    }
     return;
   }
 
-  if (providers.length === 0) {
-    process.stdout.write(`\n  No usage data found for "${projectName}" in this period.\n\n`);
+  if (opts.json) {
+    formatJson(report);
     return;
   }
 
