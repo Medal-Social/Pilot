@@ -48,7 +48,9 @@ describe('fetchRegistry', () => {
       'fetch',
       vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(index) })
     );
-    await expect(fetchRegistry({ cacheDir })).rejects.toThrow('REGISTRY_TAMPERED');
+    await expect(fetchRegistry({ cacheDir })).rejects.toMatchObject({
+      code: 'UP_REGISTRY_TAMPERED',
+    });
   });
 
   it('returns fresh cache when within TTL', async () => {

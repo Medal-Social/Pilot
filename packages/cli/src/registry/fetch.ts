@@ -29,9 +29,7 @@ interface FetchOptions {
 function verifySha256(index: RegistryIndex): void {
   const computed = createHash('sha256').update(JSON.stringify(index.templates)).digest('hex');
   if (computed !== index.sha256) {
-    const err = new PilotError(errorCodes.UP_REGISTRY_TAMPERED);
-    err.message = `${errorCodes.UP_REGISTRY_TAMPERED}: ${err.message}`;
-    throw err;
+    throw new PilotError(errorCodes.UP_REGISTRY_TAMPERED);
   }
 }
 
