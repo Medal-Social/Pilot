@@ -76,9 +76,11 @@ async function unexecutePkg(step: PkgStep, managers: PackageManagers, exec: Exec
   const resolved = resolvePkg(step, managers);
   if (!resolved) return;
   const { pm, pkg } = resolved;
-  if (pm === 'nix') await exec.run('nix', ['profile', 'remove', `nixpkgs#${pkg}`]);
-  else if (pm === 'brew') await exec.run('brew', ['uninstall', pkg]);
-  else await exec.run('winget', ['uninstall', '--id', pkg, '--silent']);
+  let result: { code: number; stderr: string; stdout: string };
+  if (pm === 'nix') result = await exec.run('nix', ['profile', 'remove', `nixpkgs#${pkg}`]);
+  else if (pm === 'brew') result = await exec.run('brew', ['uninstall', pkg]);
+  else result = await exec.run('winget', ['uninstall', '--id', pkg, '--silent']);
+  if (result.code !== 0) throw new PilotError(errorCodes.UP_STEP_FAILED, result.stderr);
 }
 
 // --- npm ---

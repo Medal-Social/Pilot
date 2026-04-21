@@ -4,11 +4,11 @@
 
 **Goal:** Bring `@medalsocial/sdk` to Pilot's release quality — changesets, JSR dual-publishing, full GitHub Actions workflow suite, Knip, and Secretlint.
 
-**Architecture:** Single-package SDK in `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/`. No monorepo restructure. Replace ad-hoc git-tag publish with changesets PR flow. Add security + quality automation matching Pilot.
+**Architecture:** Single-package SDK in `<sdk-repo-root>/`. No monorepo restructure. Replace ad-hoc git-tag publish with changesets PR flow. Add security + quality automation matching Pilot.
 
 **Tech Stack:** Changesets, JSR, Knip, Secretlint, GitHub Actions (gh-aw lock workflows), pnpm 10.30.3, Node 24
 
-**Spec:** `/Users/ali/Documents/Code/open-medal/pilot/docs/superpowers/specs/2026-04-21-medalsocial-sdk-mainstreaming-design.md`
+**Spec:** `docs/superpowers/specs/2026-04-21-medalsocial-sdk-mainstreaming-design.md`
 
 ---
 
@@ -41,14 +41,14 @@
 | Copy   | `.github/workflows/pr-triage-agent.lock.yml` (from Pilot) |
 | Copy   | `.github/workflows/test-quality-sentinel.lock.yml` (from Pilot) |
 
-All paths are relative to `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/`.
+All paths are relative to `<sdk-repo-root>/`.
 
 ---
 
 ## Task 1: Update package.json
 
 **Files:**
-- Modify: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/package.json`
+- Modify: `<sdk-repo-root>/package.json`
 
 - [ ] **Step 1: Update engines, packageManager, and add scripts**
 
@@ -139,7 +139,7 @@ Replace the relevant sections so `package.json` becomes:
 - [ ] **Step 2: Install dependencies**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm install
 ```
 
@@ -148,7 +148,7 @@ Expected: lockfile updated, no errors.
 - [ ] **Step 3: Verify quality script runs**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm quality
 ```
 
@@ -157,7 +157,7 @@ Expected: lint passes, tests pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add package.json pnpm-lock.yaml
 git commit -m "chore: update engines, packageManager, scripts, and add changeset/knip/secretlint deps"
 ```
@@ -167,8 +167,8 @@ git commit -m "chore: update engines, packageManager, scripts, and add changeset
 ## Task 2: Initialize Changesets
 
 **Files:**
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.changeset/config.json`
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.changeset/README.md`
+- Create: `<sdk-repo-root>/.changeset/config.json`
+- Create: `<sdk-repo-root>/.changeset/README.md`
 
 - [ ] **Step 1: Create `.changeset/config.json`**
 
@@ -212,7 +212,7 @@ We use [changesets](https://github.com/changesets/changesets) to manage versions
 - [ ] **Step 3: Verify changeset CLI works**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm changeset --help
 ```
 
@@ -221,7 +221,7 @@ Expected: shows changeset CLI help text.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add .changeset/
 git commit -m "chore: initialize changesets"
 ```
@@ -231,7 +231,7 @@ git commit -m "chore: initialize changesets"
 ## Task 3: Add JSR Config
 
 **Files:**
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/jsr.json`
+- Create: `<sdk-repo-root>/jsr.json`
 
 - [ ] **Step 1: Create `jsr.json`**
 
@@ -247,7 +247,7 @@ Note: Version is intentionally omitted — JSR reads from `package.json` during 
 - [ ] **Step 2: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add jsr.json
 git commit -m "chore: add JSR config for Deno/edge runtime publishing"
 ```
@@ -257,9 +257,9 @@ git commit -m "chore: add JSR config for Deno/edge runtime publishing"
 ## Task 4: Add Secretlint
 
 **Files:**
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.secretlintrc.json`
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/scripts/secretlint-staged.mjs`
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/scripts/secretlint-repo.mjs`
+- Create: `<sdk-repo-root>/.secretlintrc.json`
+- Create: `<sdk-repo-root>/scripts/secretlint-staged.mjs`
+- Create: `<sdk-repo-root>/scripts/secretlint-repo.mjs`
 
 - [ ] **Step 1: Create `.secretlintrc.json`**
 
@@ -329,13 +329,13 @@ execFileSync('pnpm', ['exec', 'secretlint', ...trackedFiles], {
 Check if `.husky/pre-commit` exists:
 
 ```bash
-ls /Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.husky/
+ls <sdk-repo-root>/.husky/
 ```
 
 If it doesn't exist, create it with:
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 mkdir -p .husky
 cat > .husky/pre-commit << 'EOF'
 pnpm exec lint-staged
@@ -349,7 +349,7 @@ If it already exists, append `node scripts/secretlint-staged.mjs` to it.
 - [ ] **Step 5: Verify secretlint runs clean on the repo**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm secret:scan
 ```
 
@@ -358,7 +358,7 @@ Expected: exits 0, no secrets found.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add .secretlintrc.json scripts/ .husky/
 git commit -m "chore: add secretlint for credential scanning"
 ```
@@ -368,7 +368,7 @@ git commit -m "chore: add secretlint for credential scanning"
 ## Task 5: Rewrite CI Workflow
 
 **Files:**
-- Modify: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows/ci.yml`
+- Modify: `<sdk-repo-root>/.github/workflows/ci.yml`
 
 - [ ] **Step 1: Replace `ci.yml` entirely**
 
@@ -442,7 +442,7 @@ jobs:
 - [ ] **Step 2: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add .github/workflows/ci.yml
 git commit -m "ci: modernize CI — Node 24, pin actions, split jobs, add security scan"
 ```
@@ -452,8 +452,8 @@ git commit -m "ci: modernize CI — Node 24, pin actions, split jobs, add securi
 ## Task 6: Add Release Workflow and Remove publish.yml
 
 **Files:**
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows/release.yml`
-- Delete: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows/publish.yml`
+- Create: `<sdk-repo-root>/.github/workflows/release.yml`
+- Delete: `<sdk-repo-root>/.github/workflows/publish.yml`
 
 - [ ] **Step 1: Create `release.yml`**
 
@@ -518,14 +518,14 @@ Note: The `release` script in `package.json` calls `changeset publish && npx jsr
 - [ ] **Step 2: Delete `publish.yml`**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git rm .github/workflows/publish.yml
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add .github/workflows/release.yml
 git commit -m "ci: replace git-tag publish with changesets release workflow"
 ```
@@ -535,8 +535,8 @@ git commit -m "ci: replace git-tag publish with changesets release workflow"
 ## Task 7: Add Security Workflows (CodeQL + Scorecard)
 
 **Files:**
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows/codeql.yml`
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows/scorecard.yml`
+- Create: `<sdk-repo-root>/.github/workflows/codeql.yml`
+- Create: `<sdk-repo-root>/.github/workflows/scorecard.yml`
 
 - [ ] **Step 1: Create `codeql.yml`**
 
@@ -626,7 +626,7 @@ jobs:
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add .github/workflows/codeql.yml .github/workflows/scorecard.yml
 git commit -m "ci: add CodeQL security scanning and OSSF Scorecard"
 ```
@@ -636,7 +636,7 @@ git commit -m "ci: add CodeQL security scanning and OSSF Scorecard"
 ## Task 8: Add Auto-Approve Workflow
 
 **Files:**
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows/auto-approve.yml`
+- Create: `<sdk-repo-root>/.github/workflows/auto-approve.yml`
 
 - [ ] **Step 1: Create `auto-approve.yml`**
 
@@ -678,7 +678,7 @@ jobs:
 - [ ] **Step 2: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add .github/workflows/auto-approve.yml
 git commit -m "ci: add auto-approve for Dependabot and release bot PRs"
 ```
@@ -689,7 +689,7 @@ git commit -m "ci: add auto-approve for Dependabot and release bot PRs"
 
 These are auto-generated by `gh aw compile` and must be copied verbatim. Do NOT edit them manually — they contain compiled agent definitions.
 
-**Files to copy from `/Users/ali/Documents/Code/open-medal/pilot/.github/workflows/` to `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows/`:**
+**Files to copy from `<pilot-repo-root>/.github/workflows/` to `<sdk-repo-root>/.github/workflows/`:**
 - `auto-triage-issues.lock.yml`
 - `breaking-change-checker.lock.yml`
 - `daily-workflow-updater.lock.yml`
@@ -699,8 +699,8 @@ These are auto-generated by `gh aw compile` and must be copied verbatim. Do NOT 
 - [ ] **Step 1: Copy all five lock workflows**
 
 ```bash
-PILOT=(/Users/ali/Documents/Code/open-medal/pilot/.github/workflows)
-SDK=(/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows)
+PILOT=(<pilot-repo-root>/.github/workflows)
+SDK=(<sdk-repo-root>/.github/workflows)
 
 cp "$PILOT/auto-triage-issues.lock.yml" "$SDK/"
 cp "$PILOT/breaking-change-checker.lock.yml" "$SDK/"
@@ -712,7 +712,7 @@ cp "$PILOT/test-quality-sentinel.lock.yml" "$SDK/"
 - [ ] **Step 2: Verify all five files exist**
 
 ```bash
-ls /Users/ali/Documents/Code/open-medal/MedalSocial-sdk/.github/workflows/*.lock.yml
+ls <sdk-repo-root>/.github/workflows/*.lock.yml
 ```
 
 Expected: 5 files listed.
@@ -720,7 +720,7 @@ Expected: 5 files listed.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add .github/workflows/*.lock.yml
 git commit -m "ci: add gh-aw agentic workflow suite (auto-triage, breaking-change, pr-triage, test-sentinel, updater)"
 ```
@@ -732,7 +732,7 @@ git commit -m "ci: add gh-aw agentic workflow suite (auto-triage, breaking-chang
 - [ ] **Step 1: Run full quality check**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm quality
 ```
 
@@ -741,7 +741,7 @@ Expected: lint passes, all tests pass.
 - [ ] **Step 2: Run secret scan**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm secret:scan
 ```
 
@@ -750,7 +750,7 @@ Expected: exits 0, no secrets found.
 - [ ] **Step 3: Run knip check**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm knip:check
 ```
 
@@ -759,7 +759,7 @@ Expected: exits 0 (or lists only expected unused items if any — address them i
 - [ ] **Step 4: Verify changeset version + release scripts are parseable**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm changeset status
 ```
 
@@ -768,7 +768,7 @@ Expected: "No changesets found" (that's correct for a fresh setup).
 - [ ] **Step 5: Push branch and open PR against Medal-Social/MedalSocial main**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git push origin HEAD
 gh pr create \
   --title "chore: mainstream release pipeline — changesets, JSR, full workflow suite" \

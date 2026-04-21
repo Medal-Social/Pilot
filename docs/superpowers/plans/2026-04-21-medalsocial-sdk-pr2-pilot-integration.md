@@ -8,7 +8,7 @@
 
 **Tech Stack:** Zod (new dep), Vercel AI SDK tool shape, Pilot plugin.toml format
 
-**Spec:** `/Users/ali/Documents/Code/open-medal/pilot/docs/superpowers/specs/2026-04-21-medalsocial-sdk-mainstreaming-design.md`
+**Spec:** `docs/superpowers/specs/2026-04-21-medalsocial-sdk-mainstreaming-design.md`
 
 **Prerequisite:** PR 1 (`2026-04-21-medalsocial-sdk-pr1-release-pipeline.md`) merged to main.
 
@@ -24,7 +24,7 @@
 | Modify | `src/index.ts` (add `createMedalClient` factory) |
 | Modify | `package.json` (add `zod` dep, `./pilot` export, `typecheck` script) |
 
-All paths relative to `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/`.
+All paths relative to `<sdk-repo-root>/`.
 
 ---
 
@@ -33,12 +33,12 @@ All paths relative to `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/`.
 The SDK's existing `MedalSocialClient` constructor accepts a full `ClientOptions` object. Pilot needs to instantiate the client from a single API key via env var. This factory is a one-liner convenience wrapper — no logic change to the client.
 
 **Files:**
-- Modify: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/src/index.ts`
-- Test: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/tests/client.test.ts`
+- Modify: `<sdk-repo-root>/src/index.ts`
+- Test: `<sdk-repo-root>/tests/client.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
-Open `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/tests/client.test.ts` and add:
+Open `<sdk-repo-root>/tests/client.test.ts` and add:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -63,7 +63,7 @@ describe('createMedalClient', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm test -- --run tests/client.test.ts
 ```
 
@@ -71,7 +71,7 @@ Expected: FAIL — `createMedalClient is not exported`.
 
 - [ ] **Step 3: Add `createMedalClient` to `src/index.ts`**
 
-Append to the end of `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/src/index.ts` (before `export default MedalSocialClient`):
+Append to the end of `<sdk-repo-root>/src/index.ts` (before `export default MedalSocialClient`):
 
 ```typescript
 /** Convenience factory for Pilot/agent integration — instantiates client from a bearer token. */
@@ -83,7 +83,7 @@ export function createMedalClient(apiKey: string, options?: Omit<ClientOptions, 
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm test -- --run tests/client.test.ts
 ```
 
@@ -92,7 +92,7 @@ Expected: PASS — 2 tests passing.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add src/index.ts tests/client.test.ts
 git commit -m "feat: add createMedalClient factory for agent/Pilot integration"
 ```
@@ -104,7 +104,7 @@ git commit -m "feat: add createMedalClient factory for agent/Pilot integration"
 The `pilot/index.ts` uses Zod to define tool parameter schemas (required by Vercel AI SDK's `tool()` shape). Add `zod` as a runtime dependency and wire up the `./pilot` export.
 
 **Files:**
-- Modify: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/package.json`
+- Modify: `<sdk-repo-root>/package.json`
 
 - [ ] **Step 1: Add `zod` to dependencies, `./pilot` to exports, and update build script**
 
@@ -139,7 +139,7 @@ Merge these changes into the existing `package.json` (don't replace — only add
 - [ ] **Step 2: Install**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm install
 ```
 
@@ -148,7 +148,7 @@ Expected: lockfile updated, zod installed.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add package.json pnpm-lock.yaml
 git commit -m "chore: add zod dep and ./pilot export entry point"
 ```
@@ -158,7 +158,7 @@ git commit -m "chore: add zod dep and ./pilot export entry point"
 ## Task 3: Add `plugin.toml`
 
 **Files:**
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/plugin.toml`
+- Create: `<sdk-repo-root>/plugin.toml`
 
 - [ ] **Step 1: Create `plugin.toml`**
 
@@ -199,7 +199,7 @@ description = "Send a transactional email by template slug"
 - [ ] **Step 2: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add plugin.toml
 git commit -m "feat: add Pilot plugin.toml manifest"
 ```
@@ -211,12 +211,12 @@ git commit -m "feat: add Pilot plugin.toml manifest"
 This file exports a factory that returns tool definitions in Vercel AI SDK's `tool()` shape: `{ description, parameters: ZodSchema, execute }`. Pilot wires these into the crew's tool registry using `tool()` from `ai`.
 
 **Files:**
-- Create: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/pilot/index.ts`
-- Test: `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/pilot/index.test.ts`
+- Create: `<sdk-repo-root>/pilot/index.ts`
+- Test: `<sdk-repo-root>/pilot/index.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
-Create `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/pilot/index.test.ts`:
+Create `<sdk-repo-root>/pilot/index.test.ts`:
 
 ```typescript
 import { describe, it, expect, vi } from 'vitest';
@@ -274,7 +274,7 @@ describe('createMedalTools', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm test -- --run pilot/index.test.ts
 ```
 
@@ -282,7 +282,7 @@ Expected: FAIL — `./index.js` not found or `createMedalTools` not exported.
 
 - [ ] **Step 3: Implement `pilot/index.ts`**
 
-Create `/Users/ali/Documents/Code/open-medal/MedalSocial-sdk/pilot/index.ts`:
+Create `<sdk-repo-root>/pilot/index.ts`:
 
 ```typescript
 import { z } from 'zod';
@@ -391,7 +391,7 @@ export function createMedalTools(client: MedalSocialClient) {
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm test -- --run pilot/index.test.ts
 ```
 
@@ -400,7 +400,7 @@ Expected: PASS — 4 tests passing.
 - [ ] **Step 5: Run full test suite to verify no regressions**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm test -- --run
 ```
 
@@ -409,7 +409,7 @@ Expected: all tests pass.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git add pilot/
 git commit -m "feat: add createMedalTools factory for Pilot crew integration"
 ```
@@ -421,7 +421,7 @@ git commit -m "feat: add createMedalTools factory for Pilot crew integration"
 - [ ] **Step 1: Run quality check**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm quality
 ```
 
@@ -430,7 +430,7 @@ Expected: lint passes, all tests pass.
 - [ ] **Step 2: Run typecheck**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 pnpm typecheck
 ```
 
@@ -439,7 +439,7 @@ Expected: exits 0, no type errors.
 - [ ] **Step 3: Push and open PR**
 
 ```bash
-cd /Users/ali/Documents/Code/open-medal/MedalSocial-sdk
+cd <sdk-repo-root>
 git push origin HEAD
 gh pr create \
   --title "feat: add Pilot integration — plugin.toml + createMedalTools factory" \

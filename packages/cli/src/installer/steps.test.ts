@@ -73,6 +73,13 @@ describe('pkg step', () => {
     await unexecuteStep(pkgStep, allManagers, exec);
     expect(exec.run).toHaveBeenCalledWith('nix', ['profile', 'remove', 'nixpkgs#nodejs_20']);
   });
+
+  it('unexecuteStep throws UP_STEP_FAILED when brew uninstall exits non-zero', async () => {
+    const exec = makeExec(1);
+    await expect(unexecuteStep(pkgStep, brewOnly, exec)).rejects.toMatchObject({
+      code: 'UP_STEP_FAILED',
+    });
+  });
 });
 
 // --- npm step ---

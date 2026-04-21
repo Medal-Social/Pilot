@@ -99,22 +99,26 @@ vi.mock('react', () => {
 });
 
 describe('runDown', () => {
-  it('throws DOWN_UNKNOWN_TEMPLATE for unknown template', async () => {
+  it('throws DOWN_NOT_INSTALLED when template is not installed', async () => {
+    const { runDown } = await import('./down.js');
+    // 'unknown' is not in the default installed list (['remotion'])
+    await expect(runDown('unknown')).rejects.toMatchObject({ code: 'DOWN_NOT_INSTALLED' });
+  });
+
+  it('cleans up state when template is installed but no longer in registry', async () => {
     const { fetchRegistry } = await import('../registry/fetch.js');
+    const { getInstalledTemplateNames, removeTemplateFromState } = await import(
+      '../device/state.js'
+    );
+    (getInstalledTemplateNames as ReturnType<typeof vi.fn>).mockReturnValueOnce(['orphan']);
     (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       index: { version: 1, publishedAt: '', sha256: 'x', templates: [] },
       fromCache: false,
       offline: false,
     });
     const { runDown } = await import('./down.js');
-    await expect(runDown('unknown')).rejects.toMatchObject({ code: 'DOWN_UNKNOWN_TEMPLATE' });
-  });
-
-  it('throws DOWN_NOT_INSTALLED when template exists in registry but is not installed', async () => {
-    const { getInstalledTemplateNames } = await import('../device/state.js');
-    (getInstalledTemplateNames as ReturnType<typeof vi.fn>).mockReturnValueOnce([]);
-    const { runDown } = await import('./down.js');
-    await expect(runDown('remotion')).rejects.toMatchObject({ code: 'DOWN_NOT_INSTALLED' });
+    await runDown('orphan'); // should not throw
+    expect(removeTemplateFromState).toHaveBeenCalledWith('orphan');
   });
 
   it('calls runUninstallSteps for an installed template', async () => {

@@ -106,6 +106,40 @@ describe('runUninstallSteps', () => {
     expect(callbacks.onStepError).toHaveBeenCalledWith(0, expect.any(Error));
   });
 
+  it('skips ALL pkg steps when a peer template is not in registry (unknown peer protection)', async () => {
+    const pkgStep: AnyStep = { type: 'pkg', brew: 'node', label: 'Node.js' };
+    // fetchRegistry returns registry that does NOT include the peer template 'missing-template'
+    vi.mock('../registry/fetch.js', () => ({
+      fetchRegistry: vi.fn().mockResolvedValue({
+        index: { version: 1, publishedAt: '', sha256: 'x', templates: [] },
+        fromCache: false,
+        offline: false,
+      }),
+    }));
+    const handlers = {
+      checkStep: vi.fn().mockResolvedValue(true),
+      executeStep: vi.fn().mockResolvedValue(undefined),
+      unexecuteStep: vi.fn().mockResolvedValue(undefined),
+    };
+    const brewManagers: PackageManagers = { nix: false, brew: true, winget: false, npm: false };
+    const callbacks = {
+      onStepStart: vi.fn(),
+      onStepSkip: vi.fn(),
+      onStepDone: vi.fn(),
+      onStepError: vi.fn(),
+    };
+    await runUninstallSteps(
+      [pkgStep],
+      brewManagers,
+      handlers,
+      ['missing-template'],
+      'remotion',
+      callbacks
+    );
+    expect(handlers.unexecuteStep).not.toHaveBeenCalled();
+    expect(callbacks.onStepSkip).toHaveBeenCalledWith(0);
+  });
+
   it('skips pkg steps used by other installed templates', async () => {
     const pkgStep: AnyStep = { type: 'pkg', brew: 'node', label: 'Node.js' };
     // Mock the fetchRegistry to return a registry where nextmedal also uses brew:node

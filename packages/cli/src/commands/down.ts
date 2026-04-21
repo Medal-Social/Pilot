@@ -23,15 +23,21 @@ async function removeCrewSpecialist(entry: TemplateEntry): Promise<void> {
 }
 
 export async function runDown(template: string): Promise<void> {
+  const installedNames = getInstalledTemplateNames();
+  if (!installedNames.includes(template))
+    throw new PilotError(errorCodes.DOWN_NOT_INSTALLED, template);
+
   const cacheDir = join(homedir(), '.pilot', 'registry');
   const { index } = await fetchRegistry({ cacheDir });
 
   const entry = index.templates.find((t) => t.name === template);
-  if (!entry) throw new PilotError(errorCodes.DOWN_UNKNOWN_TEMPLATE, template);
+  if (!entry) {
+    // Template installed but no longer in registry — clean up Pilot state only
+    // (can't run step-based uninstall without the manifest).
+    removeTemplateFromState(template);
+    return;
+  }
 
-  const installedNames = getInstalledTemplateNames();
-  if (!installedNames.includes(template))
-    throw new PilotError(errorCodes.DOWN_NOT_INSTALLED, template);
   const otherInstalled = installedNames.filter((n) => n !== template);
   const managers = await detectPackageManagers(realExec);
 

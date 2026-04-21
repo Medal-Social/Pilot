@@ -62,12 +62,17 @@ export async function runUninstallSteps(
 
   // Build a set of pkg identifiers used by other templates (shared-package protection)
   const sharedPkgs = new Set<string>();
+  // If any peer template cannot be resolved we conservatively protect ALL pkg steps.
+  let unknownPeerExists = false;
   if (otherInstalledTemplates.length > 0) {
     try {
       const { index } = await fetchRegistry({ cacheDir });
       for (const name of otherInstalledTemplates) {
         const entry = index.templates.find((t) => t.name === name);
-        if (!entry) continue;
+        if (!entry) {
+          unknownPeerExists = true;
+          continue;
+        }
         for (const s of entry.steps) {
           if (s.type === 'pkg') {
             const p = s as PkgStep;
@@ -78,7 +83,8 @@ export async function runUninstallSteps(
         }
       }
     } catch {
-      // If registry fetch fails, skip shared-pkg protection (best-effort)
+      // If registry fetch fails entirely, protect all pkg steps
+      unknownPeerExists = true;
     }
   }
 
@@ -93,6 +99,7 @@ export async function runUninstallSteps(
     if (step.type === 'pkg') {
       const p = step as PkgStep;
       const isShared =
+        unknownPeerExists ||
         (managers.nix && p.nix && sharedPkgs.has(`nix:${p.nix}`)) ||
         (managers.brew && p.brew && sharedPkgs.has(`brew:${p.brew}`)) ||
         (managers.winget && p.winget && sharedPkgs.has(`winget:${p.winget}`));
