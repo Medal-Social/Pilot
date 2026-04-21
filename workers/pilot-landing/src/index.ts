@@ -150,7 +150,6 @@ function escapeHtml(str: string): string {
 }
 
 function buildLandingPage(): Response {
-  const INSTALL_COMMAND = 'curl -fsSL https://pilot.medalsocial.com/install | sh';
   const year = new Date().getFullYear();
 
   const html = `<!DOCTYPE html>
@@ -351,53 +350,103 @@ function buildLandingPage(): Response {
       max-width: 520px;
     }
 
-    /* Install box */
-    .install-box {
+    /* ── Install row (dropdown) ── */
+    .install-row {
       width: 100%;
-      max-width: 560px;
+      max-width: 600px;
+      display: flex;
+      align-items: center;
       background: var(--card-bg);
       border: 1px solid var(--border-alt);
       border-radius: 12px;
-      overflow: hidden;
+      overflow: visible;
+      position: relative;
     }
 
-    .install-box-header {
+    .dropdown-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .dropdown-btn {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      padding: 14px 16px;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border-alt);
+      color: var(--text);
+      font-size: 14px;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      border-radius: 12px 0 0 12px;
+      transition: background 0.15s;
     }
 
-    .install-box-dots {
-      display: flex;
-      gap: 6px;
+    .dropdown-btn:hover {
+      background: rgba(255,255,255,0.04);
     }
 
-    .install-box-dots span {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--border-alt);
-    }
-
-    .install-box-label {
-      font-size: 12px;
+    .dropdown-btn svg {
       color: var(--text-muted);
-      font-family: var(--font-mono);
+      flex-shrink: 0;
+      transition: transform 0.15s;
     }
 
-    .install-box-body {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
-      gap: 12px;
+    .dropdown-btn.open svg {
+      transform: rotate(180deg);
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 220px;
+      background: #161628;
+      border: 1px solid var(--border-alt);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+
+    .dropdown-menu.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: block;
+      width: 100%;
+      padding: 13px 18px;
+      font-size: 14px;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(126,63,172,.12);
+      color: var(--text);
+    }
+
+    .dropdown-item.selected {
+      color: #c084fc;
     }
 
     .install-command {
+      flex: 1;
+      padding: 14px 16px;
       font-family: var(--font-mono);
-      font-size: 14px;
+      font-size: 13.5px;
       color: #e2e8f0;
       white-space: nowrap;
       overflow: hidden;
@@ -408,43 +457,113 @@ function buildLandingPage(): Response {
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid var(--border-alt);
-      background: rgba(255,255,255,0.04);
-      color: var(--text-secondary);
-      font-size: 13px;
+      gap: 7px;
+      margin: 8px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #7E3FAC;
+      color: #ffffff;
+      font-size: 13.5px;
       font-family: var(--font-sans);
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      transition: color 0.15s, background 0.15s, border-color 0.15s;
+      transition: background 0.15s;
       white-space: nowrap;
     }
 
     .copy-btn:hover {
-      color: var(--text);
-      background: rgba(255,255,255,0.08);
-      border-color: var(--border-alt);
+      background: #9333ea;
     }
 
     .copy-btn.copied {
-      color: #4ade80;
-      border-color: rgba(74,222,128,.3);
-      background: rgba(74,222,128,.06);
+      background: #16a34a;
     }
 
-    .npm-fallback {
-      font-size: 13px;
+    .install-hint {
+      font-size: 12px;
       color: var(--text-muted);
+      text-align: center;
     }
 
-    .npm-fallback code {
+    /* ── Terminal animation ── */
+    .terminal {
+      width: 100%;
+      max-width: 600px;
+      background: #0d0d12;
+      border: 1px solid var(--border-alt);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.015);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28ca41; }
+
+    .terminal-title {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
       font-family: var(--font-mono);
-      color: var(--text-secondary);
-      background: rgba(255,255,255,0.05);
-      padding: 2px 6px;
-      border-radius: 4px;
+      margin-right: 42px;
+    }
+
+    .terminal-body {
+      padding: 18px 22px 22px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.9;
+      min-height: 248px;
+    }
+
+    .t-line {
+      display: block;
+      opacity: 0;
+      transform: translateY(2px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      white-space: pre;
+    }
+
+    .t-line.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .t-cursor {
+      display: inline-block;
+      width: 7px;
+      height: 13px;
+      background: #9A6AC2;
+      border-radius: 1px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+      margin-left: 1px;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
     }
 
     /* ── Features ── */
@@ -578,7 +697,18 @@ function buildLandingPage(): Response {
       }
 
       .install-command {
-        font-size: 12px;
+        font-size: 11px;
+      }
+
+      .dropdown-btn {
+        padding: 14px 12px;
+        font-size: 13px;
+      }
+
+      .dropdown-btn span {
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   </style>
@@ -617,29 +747,43 @@ function buildLandingPage(): Response {
           all running locally via Claude, right in your terminal.
         </p>
 
-        <div class="install-box">
-          <div class="install-box-header">
-            <div class="install-box-dots">
-              <span></span><span></span><span></span>
-            </div>
-            <span class="install-box-label">install</span>
-            <div style="width:48px"></div>
-          </div>
-          <div class="install-box-body">
-            <span class="install-command" id="install-cmd">${escapeHtml(INSTALL_COMMAND)}</span>
-            <button class="copy-btn" id="copy-btn" onclick="copyInstall()" aria-label="Copy install command">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+        <div class="install-row">
+          <div class="dropdown-wrap">
+            <button class="dropdown-btn" id="dropdown-btn" onclick="toggleDropdown()" aria-haspopup="listbox" aria-expanded="false">
+              <span id="dropdown-label">Install with Script</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
-              <span id="copy-label">Copy</span>
             </button>
+            <div class="dropdown-menu" id="dropdown-menu" role="listbox">
+              <button class="dropdown-item selected" role="option" onclick="selectMethod('script','Install with Script','curl -fsSL https://pilot.medalsocial.com/install | sh','Works on macOS and Linux. Node.js 24+ auto-detected.')">Install with Script</button>
+              <button class="dropdown-item" role="option" onclick="selectMethod('npm','Install with npm','npm install -g @medalsocial/pilot','Requires Node.js 24 or later.')">Install with npm</button>
+              <button class="dropdown-item" role="option" onclick="selectMethod('brew','Install with Homebrew','brew install Medal-Social/pilot/pilot','Recommended for macOS. Auto-updates with brew upgrade.')">Install with Homebrew</button>
+            </div>
           </div>
+          <span class="install-command" id="install-cmd">curl -fsSL https://pilot.medalsocial.com/install | sh</span>
+          <button class="copy-btn" id="copy-btn" onclick="copyCmd()" aria-label="Copy install command">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+            </svg>
+            <span id="copy-label">Copy</span>
+          </button>
         </div>
 
-        <p class="npm-fallback">
-          or <code>npm install -g @medalsocial/pilot</code>
-        </p>
+        <p class="install-hint" id="install-hint">Works on macOS and Linux. Node.js 24+ auto-detected.</p>
+
+        <div class="terminal" aria-label="pilot up demo">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <div class="terminal-dot dot-r"></div>
+              <div class="terminal-dot dot-y"></div>
+              <div class="terminal-dot dot-g"></div>
+            </div>
+            <div class="terminal-title">zsh</div>
+          </div>
+          <div class="terminal-body" id="terminal-body"></div>
+        </div>
       </section>
 
       <section class="features">
@@ -691,37 +835,131 @@ function buildLandingPage(): Response {
   </div>
 
   <script>
-    var INSTALL_CMD = ${JSON.stringify(INSTALL_COMMAND)};
-    function copyInstall() {
-      var cmd = INSTALL_CMD;
-      const btn = document.getElementById('copy-btn');
-      const label = document.getElementById('copy-label');
-
-      navigator.clipboard.writeText(cmd).then(function() {
-        btn.classList.add('copied');
-        label.textContent = 'Copied!';
-        setTimeout(function() {
-          btn.classList.remove('copied');
-          label.textContent = 'Copy';
-        }, 2000);
-      }).catch(function() {
-        // Fallback for older browsers
-        const ta = document.createElement('textarea');
-        ta.value = cmd;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        btn.classList.add('copied');
-        label.textContent = 'Copied!';
-        setTimeout(function() {
-          btn.classList.remove('copied');
-          label.textContent = 'Copy';
-        }, 2000);
-      });
+    /* ── Install dropdown ── */
+    function toggleDropdown() {
+      var btn = document.getElementById('dropdown-btn');
+      var menu = document.getElementById('dropdown-menu');
+      var open = menu.classList.toggle('open');
+      btn.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
+
+    function selectMethod(key, label, cmd, hint) {
+      document.getElementById('dropdown-label').textContent = label;
+      document.getElementById('install-cmd').textContent = cmd;
+      document.getElementById('install-hint').textContent = hint;
+      document.getElementById('copy-label').textContent = 'Copy';
+      document.getElementById('copy-btn').classList.remove('copied');
+      document.querySelectorAll('.dropdown-item').forEach(function(el) { el.classList.remove('selected'); });
+      event.currentTarget.classList.add('selected');
+      document.getElementById('dropdown-btn').classList.remove('open');
+      document.getElementById('dropdown-menu').classList.remove('open');
+      document.getElementById('dropdown-btn').setAttribute('aria-expanded', 'false');
+    }
+
+    function copyCmd() {
+      var cmd = document.getElementById('install-cmd').textContent;
+      var btn = document.getElementById('copy-btn');
+      var label = document.getElementById('copy-label');
+      function flash() {
+        btn.classList.add('copied');
+        label.textContent = 'Copied!';
+        setTimeout(function() { btn.classList.remove('copied'); label.textContent = 'Copy'; }, 2000);
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(cmd).then(flash).catch(function() { fallbackCopy(cmd); flash(); });
+      } else {
+        fallbackCopy(cmd); flash();
+      }
+    }
+
+    function fallbackCopy(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    document.addEventListener('click', function(e) {
+      var btn = document.getElementById('dropdown-btn');
+      var menu = document.getElementById('dropdown-menu');
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        btn.classList.remove('open');
+        menu.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    /* ── Terminal animation ── */
+    (function() {
+      function s(text, color, bold) {
+        return '<span style="color:' + color + ';' + (bold ? 'font-weight:600;' : '') + '">' + text + '</span>';
+      }
+
+      var C = {
+        dim:  '#3F3F46', prompt: '#52525B', muted: '#71717A',
+        white:'#F4F4F5', check: '#2DD4BF', arrow: '#71717A',
+        hi:   '#9A6AC2',
+        brand:'#9A6AC2', mkt:'#2DD4BF', tech:'#60A5FA', cs:'#FBBF24', sales:'#FB7185'
+      };
+
+      var LINES = [
+        { delay: 0,    html: s('~/projects/acme', C.dim)+' '+s('$', C.prompt)+' '+s('pilot up', C.white) },
+        { delay: 500,  html: '' },
+        { delay: 700,  html: '  '+s('◆', C.hi)+' '+s('Pilot — by Medal Social', C.hi) },
+        { delay: 1000, html: '' },
+        { delay: 1100, html: '  '+s('→', C.arrow)+' '+s('Connecting to Claude...', C.white) },
+        { delay: 2300, html: '  '+s('✓', C.check)+' '+s('Claude connected', C.white) },
+        { delay: 2700, html: '' },
+        { delay: 2800, html: '  '+s('→', C.arrow)+' '+s('Installing skills...', C.white) },
+        { delay: 3900, html: '  '+s('✓', C.check)+' '+s('15 skills ready', C.white) },
+        { delay: 4300, html: '' },
+        { delay: 4400, html: '  '+s('→', C.arrow)+' '+s('Deploying crew...', C.white) },
+        { delay: 5100, html: '  '+s('✓', C.check)+' '+s('Brand Lead', C.brand, true)+'      '+s('voice & tone', C.muted) },
+        { delay: 5550, html: '  '+s('✓', C.check)+' '+s('Marketing Lead', C.mkt, true)+'  '+s('content & campaigns', C.muted) },
+        { delay: 6000, html: '  '+s('✓', C.check)+' '+s('Tech Lead', C.tech, true)+'      '+s('builds & deploys', C.muted) },
+        { delay: 6450, html: '  '+s('✓', C.check)+' '+s('CS Lead', C.cs, true)+'          '+s('tickets & retention', C.muted) },
+        { delay: 6900, html: '  '+s('✓', C.check)+' '+s('Sales Lead', C.sales, true)+'    '+s('outreach & pipeline', C.muted) },
+        { delay: 7400, html: '' },
+        { delay: 7500, html: '  '+s('◆', C.hi)+' '+s('Your crew is airborne. Run ', C.hi)+s('pilot', C.white)+s(' to fly.', C.hi) },
+        { delay: 8200, html: '' },
+        { delay: 8300, html: s('~/projects/acme', C.dim)+' '+s('$', C.prompt)+' <span class="t-cursor"></span>' }
+      ];
+
+      var timers = [];
+
+      function replay() {
+        timers.forEach(function(t) { clearTimeout(t); });
+        timers = [];
+        var body = document.getElementById('terminal-body');
+        if (!body) return;
+        body.innerHTML = '';
+        run();
+      }
+
+      function run() {
+        var body = document.getElementById('terminal-body');
+        LINES.forEach(function(line) {
+          var t = setTimeout(function() {
+            var div = document.createElement('div');
+            div.className = 't-line';
+            div.innerHTML = line.html;
+            body.appendChild(div);
+            requestAnimationFrame(function() {
+              requestAnimationFrame(function() { div.classList.add('visible'); });
+            });
+            body.scrollTop = body.scrollHeight;
+          }, line.delay);
+          timers.push(t);
+        });
+        timers.push(setTimeout(replay, 12000));
+      }
+
+      run();
+    })();
   </script>
 </body>
 </html>`;
