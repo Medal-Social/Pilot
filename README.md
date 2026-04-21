@@ -127,6 +127,9 @@ pilot
 | `pilot update` | Check for and apply updates |
 | `pilot status` | Machine and system health |
 | `pilot status --json` | Machine-readable JSON output (see [schema](#status---json)) |
+| `pilot usage` | AI token usage and costs for this project |
+| `pilot usage --week` / `--month` / `--since YYYYMMDD` | Usage by time window |
+| `pilot usage --json` | Machine-readable JSON output |
 | `pilot completions <shell>` | Generate shell completions (bash, zsh, fish) |
 | `pilot help` | Help reference |
 
@@ -249,6 +252,11 @@ Status: **Pre-release** · Building v1
 | `pilot up` browse UI (split-panel, categories) | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
 | `pilot down <template>` step-based uninstall | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
 | Specialist crew wiring on install | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+
+### Observability
+| Feature | Status | Spec |
+|---------|--------|------|
+| `pilot usage` — Claude Code + Codex token/cost report | Done | [Spec](docs/superpowers/specs/2026-04-22-pilot-usage-design.md) |
 
 ### MedalSocial SDK Integration
 | Feature | Status | Spec |
