@@ -1,57 +1,54 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, Text } from 'ink';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { render } from 'ink';
 import React from 'react';
-import { colors } from '../colors.js';
-import { getInstalledTemplateNames } from '../device/state.js';
-import { getTemplate } from '../device/templates.js';
-import { uninstallTemplate } from '../device/uninstaller.js';
+import { getInstalledTemplateNames, removeTemplateFromState } from '../device/state.js';
 import { errorCodes, PilotError } from '../errors.js';
+import { detectPackageManagers } from '../installer/detect.js';
+import { realExec } from '../installer/exec.js';
+import type { RunCallbacks } from '../installer/runner.js';
+import { runUninstallSteps } from '../installer/runner.js';
+import { fetchRegistry } from '../registry/fetch.js';
+import type { TemplateEntry } from '../registry/types.js';
+import { loadSettings, saveSettings } from '../settings.js';
 
-export async function runDown(template: string) {
-  const manifest = getTemplate(template);
-  if (!manifest) {
-    throw new PilotError(errorCodes.DOWN_UNKNOWN_TEMPLATE);
-  }
+async function removeCrewSpecialist(entry: TemplateEntry): Promise<void> {
+  if (!entry.crew) return;
+  const settings = loadSettings();
+  delete settings.crew.specialists[entry.crew.specialist];
+  saveSettings(settings);
+}
 
-  const installed = getInstalledTemplateNames();
-  if (!installed.includes(template)) {
-    render(
-      React.createElement(
-        Text,
-        { color: colors.muted },
-        `${manifest.displayName} is not installed. Nothing to remove.`
-      )
-    );
-    return;
-  }
+export async function runDown(template: string): Promise<void> {
+  const cacheDir = join(homedir(), '.pilot', 'registry');
+  const { index } = await fetchRegistry({ cacheDir });
 
-  render(
-    React.createElement(Text, { color: colors.warning }, `Removing ${manifest.displayName}...`)
+  const entry = index.templates.find((t) => t.name === template);
+  if (!entry) throw new PilotError(errorCodes.DOWN_UNKNOWN_TEMPLATE, template);
+
+  const installedNames = getInstalledTemplateNames();
+  const otherInstalled = installedNames.filter((n) => n !== template);
+  const managers = await detectPackageManagers(realExec);
+
+  const { UpInstall } = await import('../screens/up/UpInstall.js');
+  const { waitUntilExit } = render(
+    React.createElement(UpInstall, {
+      entry: {
+        ...entry,
+        displayName: `Removing ${entry.displayName}...`,
+        completionHint: `Run \`pilot up ${template}\` to reinstall`,
+      },
+      managers,
+      runSteps: (callbacks: RunCallbacks) =>
+        runUninstallSteps(entry.steps, managers, undefined, otherInstalled, template, callbacks),
+      onDone: async () => {
+        removeTemplateFromState(template);
+        await removeCrewSpecialist(entry);
+      },
+    })
   );
-
-  const result = await uninstallTemplate(template);
-
-  if (result.removed.length > 0) {
-    for (const label of result.removed) {
-      render(React.createElement(Text, { color: colors.success }, `  ✓ ${label} removed`));
-    }
-  }
-
-  for (const label of result.failed) {
-    render(React.createElement(Text, { color: colors.error }, `  ✗ ${label} could not be removed`));
-  }
-
-  if (result.failed.length > 0) {
-    throw new PilotError(errorCodes.DOWN_REMOVE_FAILED);
-  }
-
-  render(
-    React.createElement(
-      Text,
-      { color: colors.muted },
-      `\nDone. Run \`pilot up ${template}\` to reinstall.`
-    )
-  );
+  await waitUntilExit();
 }
