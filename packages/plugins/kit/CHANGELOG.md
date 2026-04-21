@@ -1,5 +1,11 @@
 # @medalsocial/kit
 
+## 0.1.2
+
+### Patch Changes
+
+- [#30](https://github.com/Medal-Social/Pilot/pull/30) [`e360e20`](https://github.com/Medal-Social/Pilot/commit/e360e2059ee2cbc865dd4c400f9fed44635754db) Thanks [@alioftech](https://github.com/alioftech)! - Mark @medalsocial/kit as private to prevent accidental npm publish. Removes publishConfig and updates guardrail test to assert kit is private.
+
 ## 0.1.1
 
 ### Patch Changes
