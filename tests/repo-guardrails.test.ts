@@ -56,17 +56,22 @@ describe('repo guardrails', () => {
     const cliPkg = readJson<{
       exports?: Record<string, unknown>;
       files?: string[];
+      publishConfig?: { access?: string; provenance?: boolean };
     }>('packages/cli/package.json');
     const kitPkg = readJson<{
+      private?: boolean;
       exports?: Record<string, unknown>;
       files?: string[];
-      publishConfig?: { access?: string; provenance?: boolean };
     }>('packages/plugins/kit/package.json');
 
+    // CLI is the only published package
     expect(cliPkg.exports).toBeDefined();
     expect(cliPkg.files).toEqual(
       expect.arrayContaining(['dist', 'README.md', 'LICENSE', '!dist/**/*.test.*'])
     );
+
+    // kit is an internal plugin — must not be published
+    expect(kitPkg.private).toBe(true);
     expect(kitPkg.exports).toEqual({
       '.': './dist/index.js',
       './package.json': './package.json',
@@ -74,9 +79,5 @@ describe('repo guardrails', () => {
     expect(kitPkg.files).toEqual(
       expect.arrayContaining(['dist', 'plugin.toml', 'README.md', 'LICENSE', '!dist/**/*.test.*'])
     );
-    expect(kitPkg.publishConfig).toEqual({
-      access: 'public',
-      provenance: true,
-    });
   });
 });
