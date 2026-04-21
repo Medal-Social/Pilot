@@ -243,9 +243,12 @@ Status: **Pre-release** · Building v1
 ### pilot up (One-Click Setup)
 | Feature | Status | Spec |
 |---------|--------|------|
-| Split-panel browse UI (All/Templates/Skills/Crew) | Planned | [Spec](docs/specs/2026-04-09-pilot-cli-v2-design.md) |
-| Preflight checks | Planned | [Plan](docs/plans/masterplan.md) |
-| Template install progress | Planned | [Plan](docs/plans/masterplan.md) |
+| Hosted registry (fetch, cache, SHA verify, offline fallback) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| Template manifest format (pkg/npm/mcp/skill steps, cross-platform) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot up <template>` install flow with progress UI | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot up` browse UI (split-panel, categories) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot down <template>` step-based uninstall | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| Specialist crew wiring on install | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
 
 ### Distribution & Quality
 | Feature | Status | Spec |

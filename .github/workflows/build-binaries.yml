@@ -1,14 +1,14 @@
 name: Build Binaries
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 permissions: {}
 
 jobs:
   build:
+    if: startsWith(github.event.release.tag_name, '@medalsocial/pilot@')
     permissions:
       contents: read
       id-token: write
@@ -96,6 +96,7 @@ jobs:
 
   upload-release:
     needs: build
+    if: startsWith(github.event.release.tag_name, '@medalsocial/pilot@')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -108,10 +109,12 @@ jobs:
       - name: Upload binaries and bundles to release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
+          tag_name: ${{ github.event.release.tag_name }}
           files: artifacts/*/*
 
   sync-homebrew:
     needs: upload-release
+    if: startsWith(github.event.release.tag_name, '@medalsocial/pilot@')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -119,13 +122,21 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Download binaries and compute SHA256s
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_SYNC_TOKEN }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          BASE="https://github.com/Medal-Social/Pilot/releases/download/${TAG}"
+          set -euo pipefail
+          gh release download "${TAG_NAME}" \
+            --repo Medal-Social/Pilot \
+            --pattern 'pilot-darwin-arm64' \
+            --pattern 'pilot-darwin-x64' \
+            --pattern 'pilot-linux-x64' \
+            --pattern 'pilot-linux-arm64' \
+            --dir /tmp/binaries
 
           for bin in pilot-darwin-arm64 pilot-darwin-x64 pilot-linux-x64 pilot-linux-arm64; do
-            curl -fsSL "${BASE}/${bin}" -o "/tmp/${bin}"
-            sha=$(sha256sum "/tmp/${bin}" | cut -d' ' -f1)
+            sha=$(sha256sum "/tmp/binaries/${bin}" | cut -d' ' -f1)
             key=$(echo "${bin}" | tr '-' '_')
             echo "SHA_${key}=${sha}" >> "$GITHUB_ENV"
           done
@@ -140,7 +151,9 @@ jobs:
       - name: Sync to homebrew-pilot repo
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_SYNC_TOKEN }}
+          RELEASE_LABEL: ${{ github.event.release.name || github.event.release.tag_name }}
         run: |
+          set -euo pipefail
           git clone "https://x-access-token:${GH_TOKEN}@github.com/Medal-Social/homebrew-pilot.git" /tmp/homebrew-pilot
           cp homebrew-pilot/pilot.rb /tmp/homebrew-pilot/pilot.rb
           cp homebrew-pilot/README.md /tmp/homebrew-pilot/README.md
@@ -148,5 +161,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet || git commit -m "chore: update formula for ${GITHUB_REF_NAME}"
+          git diff --cached --quiet || git commit -m "chore: update formula for ${RELEASE_LABEL}"
           git push
