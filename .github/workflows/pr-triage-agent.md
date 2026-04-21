@@ -30,6 +30,8 @@ safe-outputs:
     title-prefix: "[PR Triage Report] "
     expires: 1d
     close-older-issues: true
+  noop:
+    report-as-issue: false
   messages:
     run-started: "🔍 Starting PR triage analysis... [{workflow_name}]({run_url}) is categorizing and prioritizing agent-created PRs"
     run-success: "✅ PR triage complete! [{workflow_name}]({run_url}) has analyzed and categorized PRs. Check the issue for detailed report."
