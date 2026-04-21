@@ -1,5 +1,11 @@
 # @medalsocial/pilot
 
+## 0.1.8
+
+### Patch Changes
+
+- [#35](https://github.com/Medal-Social/Pilot/pull/35) [`b4e82e0`](https://github.com/Medal-Social/Pilot/commit/b4e82e09c1580d9d4727c9d73f2e911fd86a9c80) Thanks [@alioftech](https://github.com/alioftech)! - Fix binary build workflow to trigger on release publish, not v\* tags. Add continue-on-error for auto-merge.
+
 ## 0.1.7
 
 ### Patch Changes
