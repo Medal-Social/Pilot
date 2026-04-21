@@ -27,7 +27,6 @@ jobs:
 
       - name: Enable auto-merge for release PRs
         if: github.actor == 'medal-social-release-bot[bot]'
-        continue-on-error: true
         run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
