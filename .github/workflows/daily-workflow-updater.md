@@ -95,16 +95,9 @@ This will show you which actions were updated and to which versions.
 
 ### 4. Handle Lock Files
 
-**CRITICAL**: Do NOT include `.lock.yml` files in the PR. These files are compiled workflow files and should not be committed as part of action updates.
+Include the recompiled `.lock.yml` files in the PR alongside `actions-lock.json`. The `.lock.yml` files contain the pinned `uses:` SHAs that GitHub Actions actually executes — committing only `actions-lock.json` without the recompiled lock files means the running workflows still reference old SHAs after merge.
 
-If `.lock.yml` files were modified:
-
-```bash
-# Reset all .lock.yml files to discard changes
-git checkout -- .github/workflows/*.lock.yml
-```
-
-Verify that only `actions-lock.json` is staged:
+Verify what is staged:
 
 ```bash
 git status
@@ -143,13 +136,13 @@ This PR updates GitHub Actions versions in `.github/aw/actions-lock.json` to the
 
 - **Total actions updated**: [number]
 - **Update command**: `gh aw update`
-- **Workflow lock files**: Not included (will be regenerated on next compile)
+- **Workflow lock files**: Included (recompiled with updated action SHAs)
 
 ### Notes
 
 - All action updates respect semantic versioning and maintain compatibility
 - Actions are pinned to commit SHAs for security
-- Workflow `.lock.yml` files are excluded from this PR and will be regenerated during the next compilation
+- Workflow `.lock.yml` files are included — recompiled with the updated action SHAs so changes take effect immediately after merge
 
 ### Testing
 
@@ -170,7 +163,7 @@ The updated actions will be automatically used in workflow compilations. No manu
 
 ## Important Guidelines
 
-1. **Only commit actions-lock.json**: Never commit `.lock.yml` files in this workflow
+1. **Commit both `actions-lock.json` and recompiled `.lock.yml` files**: Both must be included so the action SHA updates take effect in running workflows
 2. **Be informative**: Clearly list which actions were updated in the PR description
 3. **Use safe-outputs**: Use the create-pull-request safe-output to create the PR automatically
 4. **Exit gracefully**: If no updates are needed, don't create a PR
@@ -189,10 +182,7 @@ git status
 # Step 3: Review changes (if actions-lock.json changed)
 git diff .github/aw/actions-lock.json
 
-# Step 4: Reset lock files (if any changed)
-git checkout -- .github/workflows/*.lock.yml
-
-# Step 5: Verify only actions-lock.json is changed
+# Step 4: Verify actions-lock.json and recompiled .lock.yml files are staged
 git status
 
 # Step 6: Create PR using safe-outputs if actions-lock.json changed
@@ -203,7 +193,7 @@ git status
 
 - Updates are checked daily
 - PR is created only when `actions-lock.json` changes
-- `.lock.yml` files are never included in the PR
+- `.lock.yml` files are included alongside `actions-lock.json` so updates take effect after merge
 - PR description clearly shows what was updated
 - Process handles edge cases gracefully
 

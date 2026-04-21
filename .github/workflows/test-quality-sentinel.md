@@ -38,7 +38,7 @@ steps:
 
       # List of changed test files
       gh pr diff "$PR_NUMBER" \
-        --name-only | grep -E '(_test\.go|\.test\.cjs|\.test\.js)$' \
+        --name-only | grep -E '(_test\.go|\.test\.(cjs|js|ts|tsx))$' \
         > /tmp/gh-aw/agent/test-files.txt || true
 
       # Diff for test files only (empty file is fine if no test files changed)
