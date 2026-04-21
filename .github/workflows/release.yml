@@ -8,14 +8,12 @@ on:
 permissions: {}
 
 jobs:
-  publish:
+  app-token:
     runs-on: ubuntu-latest
-    environment: npm
     permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
-      attestations: write
+      contents: read
+    outputs:
+      token: ${{ steps.app-token.outputs.token }}
     steps:
       - name: Generate app token
         id: app-token
@@ -24,10 +22,20 @@ jobs:
           app-id: ${{ secrets.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
+  publish:
+    needs: app-token
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+      attestations: write
+    steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ needs.app-token.outputs.token }}
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
@@ -48,5 +56,5 @@ jobs:
           version: pnpm run version
           publish: pnpm release
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ needs.app-token.outputs.token }}
           NPM_CONFIG_PROVENANCE: 'true'
