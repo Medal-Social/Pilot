@@ -7,7 +7,6 @@ import { readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
-import { computeCodexCost } from './pricing.js';
 import type { UsageEntry, UsageWindow } from './types.js';
 
 function claudeBasePaths(): string[] {
@@ -105,6 +104,7 @@ export async function readClaudeEntries(
       const model = typeof msg.model === 'string' ? msg.model : 'unknown';
       const costUSDRaw = raw.costUSD;
       const costKnown = typeof costUSDRaw === 'number';
+      const costUSD = costKnown ? costUSDRaw : 0;
 
       entries.push({
         timestamp,
@@ -113,7 +113,7 @@ export async function readClaudeEntries(
         outputTokens: asNum(usage.output_tokens),
         cacheCreationTokens: asNum(usage.cache_creation_input_tokens),
         cacheReadTokens: asNum(usage.cache_read_input_tokens),
-        costUSD: costKnown ? (costUSDRaw as number) : 0,
+        costUSD,
         costKnown,
         provider: 'claude',
       });
@@ -125,6 +125,5 @@ export async function readClaudeEntries(
 
 export async function readCodexEntries(_window: UsageWindow): Promise<UsageEntry[]> {
   // Implemented in Task 5
-  void computeCodexCost; // preserve import for Task 5
   return [];
 }

@@ -45,6 +45,17 @@ describe('findClaudeProjectDir', () => {
     vi.stubEnv('CLAUDE_CONFIG_DIR', tmpDir);
     expect(findClaudeProjectDir('/Users/ali/code/pilot')).toBe(projectDir);
   });
+
+  it('falls through to second path in comma-separated CLAUDE_CONFIG_DIR', async () => {
+    const firstDir = join(tmpDir, 'first');
+    const secondDir = join(tmpDir, 'second');
+    const encoded = '/some/project'.replace(/\//g, '-');
+    const projectDir = join(secondDir, 'projects', encoded);
+    await mkdir(projectDir, { recursive: true });
+    // firstDir has no projects — secondDir does
+    vi.stubEnv('CLAUDE_CONFIG_DIR', `${firstDir},${secondDir}`);
+    expect(findClaudeProjectDir('/some/project')).toBe(projectDir);
+  });
 });
 
 describe('readClaudeEntries', () => {
