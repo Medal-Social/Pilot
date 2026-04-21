@@ -28,34 +28,57 @@ The icon never uses color. Color only appears inside the popover.
 
 ### Popover
 
-Opens on click. Divided into provider sections, each with color-coded progress bars, reset timers, and a cost summary footer.
+Opens on click. A tab bar at the top switches between two views within the same fixed-size popover.
+
+#### Tab 1 — Summary (default)
 
 ```
 ┌─────────────────────────────────────┐
-│  ○ Gauge               Updated 2m ago │
-│                                       │
-│  CLAUDE                               │
-│  This week            ████████░ $14.20 │
-│  Today                █░░░░░░░░  $1.83 │
-│  ─────────────────────────────────── │
-│  CODEX                                │
-│  This week            ███░░░░░░  $4.12 │
-│  Today                ░░░░░░░░░  $0.00 │
-│  ─────────────────────────────────── │
-│  Total today  $1.83   This week $18.32 │
-│  ─────────────────────────────────── │
-│  ✈ Preferences                ↺       │
+│  Summary          │  Scorecard      │
+│══════════════════════════════════════│
+│  ○ $18.32 this week      2m ago  ↺  │
+│                                      │
+│  CLAUDE                              │
+│  This week            ████████░ $14.20│
+│  Today                █░░░░░░░░  $1.83│
+│  ──────────────────────────────────  │
+│  CODEX                               │
+│  This week            ███░░░░░░  $4.12│
+│  Today                ░░░░░░░░░  $0.00│
+│  ──────────────────────────────────  │
+│  ✈ Preferences              Cache 94%│
 └─────────────────────────────────────┘
 ```
 
-Progress bars fill relative to a user-configurable weekly budget per provider (set in Gauge Preferences). If no budget is set, bars fill relative to the highest-spend day/week in recent history so there is always a visual signal.
+Progress bars fill relative to a user-configurable weekly budget per provider (set in Gauge Preferences). If no budget is set, bars fill relative to the highest-spend week in recent history so there is always a visual signal.
 
 Progress bar colors (% of configured budget, or relative to recent peak):
 - 0–70%: blue (`#3b82f6`)
 - 71–89%: yellow (`#facc15`)
 - 90–100%: red (`#ef4444`)
 
-The ↺ button in the footer triggers a manual refresh. It is disabled for 5 seconds after any refresh completes.
+The ↺ button triggers a manual refresh and is disabled for 5 seconds after completing.
+
+#### Tab 2 — Scorecard
+
+```
+┌─────────────────────────────────────┐
+│  Summary          │  Scorecard      │
+│══════════════════════════════════════│
+│  Today · Week · Month · All time    │
+│  ──────────────────────────────────  │
+│  Date     Model        Tokens  Cost │
+│  Apr 22   opus-4       12.7M  $28.46│
+│  Apr 21   opus-4      118.1M $248.98│
+│  Apr 20   sonnet-4.6   29.1M  $63.90│
+│  Apr 19   opus-4        6.6M  $16.55│
+│  Apr 18   opus-4       39.6M  $86.42│
+│  ──────────────────────────────────  │
+│  Total                207M  $444.31 │
+└─────────────────────────────────────┘
+```
+
+The table is scrollable within a fixed-height area. Columns: Date, Model (color-coded badge per model family), Total Tokens, Cost (USD). High-cost rows are tinted yellow. A time period picker (Today / Week / Month / All time) at the top filters rows client-side without re-running a refresh. The popover height stays constant when switching tabs — no layout jump.
 
 ### Commands
 
