@@ -1,9 +1,8 @@
 name: Build Binaries
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 permissions: {}
 
@@ -108,6 +107,7 @@ jobs:
       - name: Upload binaries and bundles to release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
+          tag_name: ${{ github.event.release.tag_name }}
           files: artifacts/*/*
 
   sync-homebrew:
@@ -120,8 +120,7 @@ jobs:
 
       - name: Download binaries and compute SHA256s
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          BASE="https://github.com/Medal-Social/Pilot/releases/download/${TAG}"
+          BASE="https://github.com/Medal-Social/Pilot/releases/latest/download"
 
           for bin in pilot-darwin-arm64 pilot-darwin-x64 pilot-linux-x64 pilot-linux-arm64; do
             curl -fsSL "${BASE}/${bin}" -o "/tmp/${bin}"
@@ -148,5 +147,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet || git commit -m "chore: update formula for ${GITHUB_REF_NAME}"
+          git diff --cached --quiet || git commit -m "chore: update formula for ${{ github.event.release.name || github.event.release.tag_name }}"
           git push
