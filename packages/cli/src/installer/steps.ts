@@ -124,17 +124,11 @@ async function unexecuteSkill(step: SkillStep, ctx: StepContext): Promise<void> 
 
 // --- mcp ---
 
-type SettingsWithMcp = {
-  mcpServers?: Record<string, { command: string }>;
-  onboarded: boolean;
-  plugins: Record<string, { enabled: boolean }>;
-};
-
 async function checkMcp(step: McpStep): Promise<boolean> {
   try {
     const { loadSettings } = await import('../settings.js');
-    const settings = loadSettings() as unknown as SettingsWithMcp;
-    return step.server in (settings.mcpServers ?? {});
+    const settings = loadSettings();
+    return step.server in settings.mcpServers;
   } catch {
     return false;
   }
@@ -142,21 +136,19 @@ async function checkMcp(step: McpStep): Promise<boolean> {
 
 async function executeMcp(step: McpStep): Promise<void> {
   const { loadSettings, saveSettings } = await import('../settings.js');
-  const settings = loadSettings() as unknown as SettingsWithMcp;
+  const settings = loadSettings();
   settings.mcpServers = {
-    ...(settings.mcpServers ?? {}),
+    ...settings.mcpServers,
     [step.server]: { command: step.command },
   };
-  saveSettings(settings as never);
+  saveSettings(settings);
 }
 
 async function unexecuteMcp(step: McpStep): Promise<void> {
   const { loadSettings, saveSettings } = await import('../settings.js');
-  const settings = loadSettings() as unknown as SettingsWithMcp;
-  if (settings.mcpServers) {
-    delete settings.mcpServers[step.server];
-    saveSettings(settings as never);
-  }
+  const settings = loadSettings();
+  delete settings.mcpServers[step.server];
+  saveSettings(settings);
 }
 
 // --- zed-extension ---

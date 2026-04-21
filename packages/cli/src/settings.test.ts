@@ -82,4 +82,29 @@ describe('settings', () => {
       vi.useRealTimers();
     });
   });
+
+  describe('new UP fields', () => {
+    it('loadSettings returns empty mcpServers and crew when missing from file', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(false);
+      const settings = loadSettings();
+      expect(settings.mcpServers).toEqual({});
+      expect(settings.crew.specialists).toEqual({});
+    });
+
+    it('saveSettings + loadSettings round-trips mcpServers', () => {
+      let savedData = '';
+      vi.mocked(fs.mkdirSync).mockReturnValue(undefined);
+      vi.mocked(fs.writeFileSync).mockImplementation((_path, data) => {
+        savedData = String(data);
+      });
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readFileSync).mockImplementation(() => savedData);
+
+      const settings = loadSettings();
+      settings.mcpServers['pencil'] = { command: 'pencil mcp' };
+      saveSettings(settings);
+      const reloaded = loadSettings();
+      expect(reloaded.mcpServers['pencil']).toEqual({ command: 'pencil mcp' });
+    });
+  });
 });
