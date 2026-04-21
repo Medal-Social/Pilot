@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { findClaudeProjectDir, readClaudeEntries } from './reader.js';
+import { findClaudeProjectDir, readClaudeEntries, readCodexEntries } from './reader.js';
 import type { UsageWindow } from './types.js';
 
 const WINDOW: UsageWindow = {
@@ -155,6 +155,185 @@ describe('readClaudeEntries', () => {
 
   it('returns empty array for nonexistent directory', async () => {
     const entries = await readClaudeEntries(join(tmpDir, 'nonexistent'), WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+});
+
+describe('readCodexEntries', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'pilot-usage-codex-'));
+    vi.stubEnv('CODEX_HOME', tmpDir);
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+    vi.unstubAllEnvs();
+  });
+
+  async function writeSession(name: string, lines: object[]): Promise<void> {
+    const sessionsDir = join(tmpDir, 'sessions');
+    await mkdir(sessionsDir, { recursive: true });
+    await writeFile(join(sessionsDir, name), lines.map((l) => JSON.stringify(l)).join('\n'));
+  }
+
+  it('returns empty array when sessions directory does not exist', async () => {
+    vi.stubEnv('CODEX_HOME', join(tmpDir, 'nonexistent'));
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('reads token usage from a Codex session file', async () => {
+    await writeSession('proj.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 1200,
+              cached_input_tokens: 200,
+              output_tokens: 400,
+              reasoning_output_tokens: 0,
+              total_tokens: 1600,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.model).toBe('gpt-5');
+    expect(entries[0]?.inputTokens).toBe(1200);
+    expect(entries[0]?.outputTokens).toBe(400);
+    expect(entries[0]?.cacheReadTokens).toBe(200);
+    expect(entries[0]?.provider).toBe('codex');
+  });
+
+  it('applies delta math for cumulative counters', async () => {
+    await writeSession('delta.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 1200,
+              cached_input_tokens: 200,
+              output_tokens: 400,
+              reasoning_output_tokens: 0,
+              total_tokens: 1600,
+            },
+          },
+        },
+      },
+      {
+        timestamp: '2026-04-22T10:02:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 2000,
+              cached_input_tokens: 300,
+              output_tokens: 800,
+              reasoning_output_tokens: 0,
+              total_tokens: 2800,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(2);
+    expect(entries[0]?.inputTokens).toBe(1200);
+    expect(entries[1]?.inputTokens).toBe(800); // delta: 2000 - 1200
+    expect(entries[1]?.cacheReadTokens).toBe(100); // delta: 300 - 200
+  });
+
+  it('computes cost for known model', async () => {
+    await writeSession('cost.jsonl', [
+      {
+        timestamp: '2026-04-22T10:00:00Z',
+        type: 'turn_context',
+        payload: { model: 'gpt-4o-mini' },
+      },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 10_000,
+              cached_input_tokens: 0,
+              output_tokens: 5_000,
+              reasoning_output_tokens: 0,
+              total_tokens: 15_000,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries[0]?.costKnown).toBe(true);
+    expect(entries[0]?.costUSD).toBeGreaterThan(0);
+  });
+
+  it('marks costKnown=false for unknown model', async () => {
+    await writeSession('unknown.jsonl', [
+      {
+        timestamp: '2026-04-22T10:00:00Z',
+        type: 'turn_context',
+        payload: { model: 'gpt-unknown-xyz' },
+      },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 1000,
+              cached_input_tokens: 0,
+              output_tokens: 500,
+              reasoning_output_tokens: 0,
+              total_tokens: 1500,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries[0]?.costKnown).toBe(false);
+  });
+
+  it('skips entries outside the time window', async () => {
+    await writeSession('old.jsonl', [
+      { timestamp: '2026-04-21T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: '2026-04-21T10:01:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 1000,
+              cached_input_tokens: 0,
+              output_tokens: 500,
+              reasoning_output_tokens: 0,
+              total_tokens: 1500,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
     expect(entries).toHaveLength(0);
   });
 });

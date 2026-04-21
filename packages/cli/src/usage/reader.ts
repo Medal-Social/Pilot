@@ -7,6 +7,7 @@ import { readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
+import { computeCodexCost } from './pricing.js';
 import type { UsageEntry, UsageWindow } from './types.js';
 
 function claudeBasePaths(): string[] {
@@ -123,7 +124,83 @@ export async function readClaudeEntries(
   return entries;
 }
 
-export async function readCodexEntries(_window: UsageWindow): Promise<UsageEntry[]> {
-  // Implemented in Task 5
-  return [];
+export async function readCodexEntries(window: UsageWindow): Promise<UsageEntry[]> {
+  const codexHome = process.env['CODEX_HOME'];
+  const sessionsDir = codexHome
+    ? join(codexHome, 'sessions')
+    : join(homedir(), '.codex', 'sessions');
+
+  const files = await globJsonl(sessionsDir);
+  const entries: UsageEntry[] = [];
+
+  for (const file of files) {
+    const lines = await readJsonlLines(file);
+    let currentModel = 'gpt-5';
+    let prevInput = 0;
+    let prevCachedInput = 0;
+    let prevOutput = 0;
+
+    for (const line of lines) {
+      let raw: unknown;
+      try {
+        raw = JSON.parse(line);
+      } catch {
+        continue;
+      }
+      if (!isObj(raw)) continue;
+
+      const tsRaw = raw['timestamp'];
+      const timestamp = typeof tsRaw === 'string' ? new Date(tsRaw) : new Date(0);
+      if (Number.isNaN(timestamp.getTime())) continue;
+
+      const type = raw['type'];
+
+      if (type === 'turn_context') {
+        const payload = raw['payload'];
+        if (isObj(payload) && typeof payload['model'] === 'string') {
+          currentModel = payload['model'];
+        }
+        continue;
+      }
+
+      if (type === 'event_msg') {
+        const payload = raw['payload'];
+        if (!isObj(payload) || payload['type'] !== 'token_count') continue;
+        const info = payload['info'];
+        if (!isObj(info)) continue;
+        const usage = info['total_token_usage'];
+        if (!isObj(usage)) continue;
+
+        const currInput = asNum(usage['input_tokens']);
+        const currCached = asNum(usage['cached_input_tokens']);
+        const currOutput = asNum(usage['output_tokens']);
+
+        const deltaInput = Math.max(currInput - prevInput, 0);
+        const deltaCached = Math.max(currCached - prevCachedInput, 0);
+        const deltaOutput = Math.max(currOutput - prevOutput, 0);
+
+        prevInput = currInput;
+        prevCachedInput = currCached;
+        prevOutput = currOutput;
+
+        if (deltaInput + deltaOutput === 0) continue;
+        if (timestamp < window.since || timestamp > window.until) continue;
+
+        const costResult = computeCodexCost(currentModel, deltaInput, deltaCached, deltaOutput);
+        entries.push({
+          timestamp,
+          model: currentModel,
+          inputTokens: deltaInput,
+          outputTokens: deltaOutput,
+          cacheCreationTokens: 0,
+          cacheReadTokens: deltaCached,
+          costUSD: costResult ?? 0,
+          costKnown: costResult !== null,
+          provider: 'codex',
+        });
+      }
+    }
+  }
+
+  return entries;
 }
