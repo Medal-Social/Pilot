@@ -7,7 +7,8 @@
       "!**/.turbo",
       "!**/node_modules",
       "!**/coverage",
-      "!.superpowers"
+      "!.superpowers",
+      "!**/.wrangler"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
