@@ -1,6 +1,7 @@
 {
   "name": "@medalsocial/kit",
   "version": "0.1.1",
+  "private": true,
   "type": "module",
   "license": "Apache-2.0",
   "main": "dist/index.js",
@@ -15,10 +16,6 @@
     "LICENSE",
     "!dist/**/*.test.*"
   ],
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
   "scripts": {
     "build": "tsc",
     "test": "vitest",
