@@ -40,6 +40,7 @@ async function markInstalled(entry: TemplateEntry): Promise<void> {
     installedAt: new Date().toISOString(),
     lastChecked: new Date().toISOString(),
     dependencies: deps,
+    crewSpecialist: entry.crew?.specialist,
   };
   saveTemplateState(state);
 }
@@ -49,6 +50,7 @@ export async function runUp(template?: string): Promise<void> {
   const { index, offline } = await fetchRegistry({ cacheDir });
 
   if (!template) {
+    let installing = false;
     const installedNames = getInstalledTemplateNames();
     const { UpBrowse } = await import('../screens/Up.js');
     const { waitUntilExit } = render(
@@ -56,7 +58,13 @@ export async function runUp(template?: string): Promise<void> {
         registry: index,
         installedNames,
         onInstall: (entry: TemplateEntry) => {
-          runUp(entry.name).catch((err: Error) => process.stderr.write(`${err.message}\n`));
+          if (installing) return;
+          installing = true;
+          runUp(entry.name)
+            .catch((err: Error) => process.stderr.write(`${err.message}\n`))
+            .finally(() => {
+              installing = false;
+            });
         },
       })
     );

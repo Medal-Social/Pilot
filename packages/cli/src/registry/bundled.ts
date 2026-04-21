@@ -8,7 +8,7 @@ const templates: TemplateEntry[] = [
   {
     name: 'pencil',
     displayName: 'Pencil Design Studio',
-    description: "Medal Social's local-first design engine",
+    description: 'Local-first design engine by Medal Social',
     version: '1.0.0',
     category: 'design',
     platforms: ['darwin', 'linux', 'win32'],

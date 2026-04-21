@@ -18,6 +18,7 @@ export interface InstalledTemplate {
   installedAt: string;
   lastChecked: string;
   dependencies: Record<string, boolean>;
+  crewSpecialist?: string;
 }
 
 export interface TemplateState {

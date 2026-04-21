@@ -5,7 +5,11 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { render } from 'ink';
 import React from 'react';
-import { getInstalledTemplateNames, removeTemplateFromState } from '../device/state.js';
+import {
+  getInstalledTemplateNames,
+  loadTemplateState,
+  removeTemplateFromState,
+} from '../device/state.js';
 import { errorCodes, PilotError } from '../errors.js';
 import { detectPackageManagers } from '../installer/detect.js';
 import { realExec } from '../installer/exec.js';
@@ -32,8 +36,12 @@ export async function runDown(template: string): Promise<void> {
 
   const entry = index.templates.find((t) => t.name === template);
   if (!entry) {
-    // Template installed but no longer in registry — clean up Pilot state only
-    // (can't run step-based uninstall without the manifest).
+    const crewSpecialist = loadTemplateState().templates[template]?.crewSpecialist;
+    if (crewSpecialist) {
+      const settings = loadSettings();
+      delete settings.crew.specialists[crewSpecialist];
+      saveSettings(settings);
+    }
     removeTemplateFromState(template);
     return;
   }

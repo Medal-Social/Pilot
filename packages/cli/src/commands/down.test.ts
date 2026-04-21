@@ -105,20 +105,44 @@ describe('runDown', () => {
     await expect(runDown('unknown')).rejects.toMatchObject({ code: 'DOWN_NOT_INSTALLED' });
   });
 
-  it('cleans up state when template is installed but no longer in registry', async () => {
+  it('cleans up state and crew specialist when template is installed but no longer in registry', async () => {
     const { fetchRegistry } = await import('../registry/fetch.js');
-    const { getInstalledTemplateNames, removeTemplateFromState } = await import(
+    const { getInstalledTemplateNames, removeTemplateFromState, loadTemplateState } = await import(
       '../device/state.js'
     );
+    const { loadSettings: ls, saveSettings: ss } = await import('../settings.js');
+
     (getInstalledTemplateNames as ReturnType<typeof vi.fn>).mockReturnValueOnce(['orphan']);
     (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       index: { version: 1, publishedAt: '', sha256: 'x', templates: [] },
       fromCache: false,
       offline: false,
     });
+    (loadTemplateState as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      templates: {
+        orphan: {
+          name: 'orphan',
+          installedAt: '',
+          lastChecked: '',
+          dependencies: {},
+          crewSpecialist: 'orphan-specialist',
+        },
+      },
+    });
+    (ls as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      onboarded: true,
+      plugins: {},
+      mcpServers: {},
+      crew: {
+        specialists: { 'orphan-specialist': { displayName: 'Orphan Specialist', skills: [] } },
+      },
+    });
+
     const { runDown } = await import('./down.js');
-    await runDown('orphan'); // should not throw
+    await runDown('orphan');
+
     expect(removeTemplateFromState).toHaveBeenCalledWith('orphan');
+    expect(ss).toHaveBeenCalledWith(expect.objectContaining({ crew: { specialists: {} } }));
   });
 
   it('calls runUninstallSteps for an installed template', async () => {
@@ -126,5 +150,60 @@ describe('runDown', () => {
     const { runDown } = await import('./down.js');
     await runDown('remotion');
     expect(runUninstallSteps).toHaveBeenCalled();
+  });
+
+  it('calls removeTemplateFromState and removeCrewSpecialist in onDone', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'remotion',
+            displayName: 'Remotion Video Studio',
+            description: 'Video',
+            version: '1.0.0',
+            category: 'video',
+            platforms: ['darwin'],
+            steps: [{ type: 'npm', pkg: '@remotion/cli', global: true, label: 'Remotion CLI' }],
+            crew: {
+              specialist: 'video-specialist',
+              displayName: 'Video Specialist',
+              skills: ['remotion'],
+            },
+          },
+        ],
+      },
+      fromCache: false,
+      offline: false,
+    });
+
+    const { removeTemplateFromState } = await import('../device/state.js');
+    const { saveSettings } = await import('../settings.js');
+    const React = await import('react');
+    (React.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props && typeof props.runSteps === 'function') {
+          (props.runSteps as (cbs: Record<string, unknown>) => void)({
+            onStepStart: vi.fn(),
+            onStepSkip: vi.fn(),
+            onStepDone: vi.fn(),
+            onStepError: vi.fn(),
+          });
+        }
+        if (props?.onDone) void (props.onDone as () => Promise<void>)();
+        return null;
+      }
+    );
+
+    const { runDown } = await import('./down.js');
+    await runDown('remotion');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(removeTemplateFromState).toHaveBeenCalledWith('remotion');
+    expect(saveSettings).toHaveBeenCalled();
   });
 });

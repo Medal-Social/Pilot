@@ -70,6 +70,8 @@ vi.mock('react', () => ({
   useEffect: vi.fn(),
 }));
 
+vi.mock('../screens/Up.js', () => ({ UpBrowse: vi.fn() }));
+
 describe('runUp', () => {
   it('throws UP_TEMPLATE_NOT_FOUND for unknown template', async () => {
     const { runUp } = await import('./up.js');
@@ -83,5 +85,142 @@ describe('runUp', () => {
     const { runUp } = await import('./up.js');
     await runUp('remotion');
     expect(render).toHaveBeenCalled();
+  });
+
+  it('renders UpBrowse when called with no template', async () => {
+    const { render } = await import('ink');
+    const { runUp } = await import('./up.js');
+    await runUp();
+    expect(render).toHaveBeenCalled();
+  });
+
+  it('writes offline warning to stderr when registry is offline', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'remotion',
+            displayName: 'Remotion Video Studio',
+            description: 'Video',
+            version: '1.0.0',
+            category: 'video',
+            platforms: ['darwin'],
+            steps: [],
+            completionHint: 'Run remotion',
+          },
+        ],
+      },
+      fromCache: true,
+      offline: true,
+    });
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const { runUp } = await import('./up.js');
+    await runUp('remotion');
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('offline'));
+    stderrSpy.mockRestore();
+  });
+
+  it('stores crewSpecialist key in template state and wires crew settings on install', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'remotion',
+            displayName: 'Remotion Video Studio',
+            description: 'Video',
+            version: '1.0.0',
+            category: 'video',
+            platforms: ['darwin'],
+            steps: [],
+            completionHint: 'Run remotion',
+            crew: {
+              specialist: 'video-specialist',
+              displayName: 'Video Specialist',
+              skills: ['remotion'],
+            },
+          },
+        ],
+      },
+      fromCache: false,
+      offline: false,
+    });
+
+    const { saveTemplateState } = await import('../device/state.js');
+    const { saveSettings } = await import('../settings.js');
+    const React = await import('react');
+    (React.default.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props?.onDone) void (props.onDone as () => Promise<void>)();
+        return null;
+      }
+    );
+
+    const { runUp } = await import('./up.js');
+    await runUp('remotion');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(saveTemplateState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        templates: expect.objectContaining({
+          remotion: expect.objectContaining({ crewSpecialist: 'video-specialist' }),
+        }),
+      })
+    );
+    expect(saveSettings).toHaveBeenCalledWith(
+      expect.objectContaining({
+        crew: expect.objectContaining({
+          specialists: expect.objectContaining({
+            'video-specialist': expect.objectContaining({ displayName: 'Video Specialist' }),
+          }),
+        }),
+      })
+    );
+  });
+
+  it('ignores concurrent onInstall calls while install is in progress', async () => {
+    const react = await import('react');
+    const { render } = await import('ink');
+    (render as ReturnType<typeof vi.fn>).mockClear();
+
+    type OnInstall = (entry: { name: string }) => void;
+    let capturedOnInstall: OnInstall | undefined;
+    (react.default.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props?.onInstall) capturedOnInstall = props.onInstall as OnInstall;
+        return null;
+      }
+    );
+
+    const { runUp } = await import('./up.js');
+    void runUp(); // browse mode
+    // flush: fetchRegistry await + dynamic import('../screens/Up.js') await
+    await new Promise((r) => setTimeout(r, 0));
+
+    const fakeEntry = {
+      name: 'remotion',
+      displayName: 'Remotion',
+      description: 'Video',
+      version: '1.0.0',
+      category: 'video',
+      platforms: ['darwin'],
+      steps: [],
+    };
+
+    capturedOnInstall?.(fakeEntry);
+    capturedOnInstall?.(fakeEntry); // second call — should be blocked
+    // flush: runUp('remotion') fetchRegistry + dynamic import('../screens/up/UpInstall.js')
+    await new Promise((r) => setTimeout(r, 0));
+
+    // 1 for UpBrowse + 1 for UpInstall = 2, not 3
+    expect(render).toHaveBeenCalledTimes(2);
   });
 });
