@@ -101,10 +101,10 @@ describe('settings', () => {
       vi.mocked(fs.readFileSync).mockImplementation(() => savedData);
 
       const settings = loadSettings();
-      settings.mcpServers['pencil'] = { command: 'pencil mcp' };
+      settings.mcpServers.pencil = { command: 'pencil mcp' };
       saveSettings(settings);
       const reloaded = loadSettings();
-      expect(reloaded.mcpServers['pencil']).toEqual({ command: 'pencil mcp' });
+      expect(reloaded.mcpServers.pencil).toEqual({ command: 'pencil mcp' });
     });
   });
 });

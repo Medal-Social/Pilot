@@ -4,6 +4,7 @@
 import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import type { RunCallbacks } from '../../installer/runner.js';
 import type { TemplateEntry } from '../../registry/types.js';
 import { UpInstall } from './UpInstall.js';
 
@@ -32,5 +33,45 @@ describe('UpInstall', () => {
     const { lastFrame } = render(React.createElement(UpInstall, { entry, managers, runSteps }));
     expect(lastFrame()).toContain('Remotion CLI');
     expect(lastFrame()).toContain('○'); // waiting icon from Step component
+  });
+
+  it('invokes all step callbacks during runSteps execution', () => {
+    const runSteps = vi.fn().mockImplementation((cbs: RunCallbacks) => {
+      cbs.onStepStart(0);
+      cbs.onStepSkip(0);
+      cbs.onStepDone(0);
+      cbs.onStepError(0, new Error('boom'));
+      return new Promise(() => {});
+    });
+    render(React.createElement(UpInstall, { entry, managers, runSteps }));
+    expect(runSteps).toHaveBeenCalled();
+  });
+
+  it('calls onDone after runSteps resolves', async () => {
+    vi.useFakeTimers();
+    const onDone = vi.fn();
+    const runSteps = vi.fn().mockResolvedValue(undefined);
+
+    render(React.createElement(UpInstall, { entry, managers, runSteps, onDone }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onDone).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('does not call onDone when runSteps rejects', async () => {
+    vi.useFakeTimers();
+    const onDone = vi.fn();
+    const runSteps = vi.fn().mockRejectedValue(new Error('install failed'));
+
+    render(React.createElement(UpInstall, { entry, managers, runSteps, onDone }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onDone).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });
