@@ -243,12 +243,12 @@ Status: **Pre-release** · Building v1
 ### pilot up (One-Click Setup)
 | Feature | Status | Spec |
 |---------|--------|------|
-| Hosted registry (fetch, cache, SHA verify, offline fallback) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| Template manifest format (pkg/npm/mcp/skill steps, cross-platform) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| `pilot up <template>` install flow with progress UI | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| `pilot up` browse UI (split-panel, categories) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| `pilot down <template>` step-based uninstall | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| Specialist crew wiring on install | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| Hosted registry (fetch, cache, SHA verify, offline fallback) | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| Template manifest format (pkg/npm/mcp/skill steps, cross-platform) | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot up <template>` install flow with progress UI | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot up` browse UI (split-panel, categories) | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot down <template>` step-based uninstall | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| Specialist crew wiring on install | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
 
 ### Distribution & Quality
 | Feature | Status | Spec |

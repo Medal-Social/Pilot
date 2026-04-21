@@ -11,8 +11,7 @@ import { colors } from '../colors.js';
 import { Step } from '../components/Step.js';
 import { removeRoutingFromClaudeMd, removeSkillSymlink } from '../deploy/deployer.js';
 import { backupKnowledge } from '../device/backup.js';
-import { getInstalledTemplateNames } from '../device/state.js';
-import { uninstallTemplate } from '../device/uninstaller.js';
+import { getInstalledTemplateNames, removeTemplateFromState } from '../device/state.js';
 
 type Phase =
   | 'intro'
@@ -149,12 +148,9 @@ export function Uninstall() {
         }
         /* v8 ignore stop */
         if (yes) {
-          setBusy(true);
-          Promise.all(templates.map((t) => uninstallTemplate(t))).then(() => {
-            addStep('Dev tools removed', false);
-            setBusy(false);
-            setPhase('step5-cli');
-          });
+          for (const t of templates) removeTemplateFromState(t);
+          addStep('Dev tools removed', false);
+          setPhase('step5-cli');
         } else {
           addStep('Dev tools', true);
           setPhase('step5-cli');

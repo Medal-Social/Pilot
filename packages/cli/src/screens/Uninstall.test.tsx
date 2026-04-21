@@ -22,15 +22,7 @@ vi.mock('../device/backup.js', () => ({
 
 vi.mock('../device/state.js', () => ({
   getInstalledTemplateNames: vi.fn(() => []),
-}));
-
-vi.mock('../device/uninstaller.js', () => ({
-  uninstallTemplate: vi.fn(async (name: string) => ({
-    template: name,
-    removed: [],
-    failed: [],
-    skipped: [],
-  })),
+  removeTemplateFromState: vi.fn(),
 }));
 
 vi.mock('../deploy/deployer.js', () => ({
