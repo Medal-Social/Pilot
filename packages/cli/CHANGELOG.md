@@ -1,5 +1,12 @@
 # @medalsocial/pilot
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`e360e20`](https://github.com/Medal-Social/Pilot/commit/e360e2059ee2cbc865dd4c400f9fed44635754db)]:
+  - @medalsocial/kit@0.1.2
+
 ## 0.1.6
 
 ### Patch Changes
