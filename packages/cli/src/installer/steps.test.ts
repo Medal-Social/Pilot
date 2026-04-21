@@ -33,12 +33,20 @@ describe('pkg step', () => {
 
   it('checkStep returns true when brew list exits 0', async () => {
     const exec = makeExec(0);
-    expect(await checkStep(pkgStep, allManagers, exec)).toBe(true);
+    expect(await checkStep(pkgStep, brewOnly, exec)).toBe(true);
   });
 
   it('checkStep returns false when brew list exits non-zero', async () => {
     const exec = makeExec(1);
-    expect(await checkStep(pkgStep, allManagers, exec)).toBe(false);
+    expect(await checkStep(pkgStep, brewOnly, exec)).toBe(false);
+  });
+
+  it('checkStep returns true when nix profile list includes the package', async () => {
+    const nixOnly: PackageManagers = { nix: true, brew: false, winget: false, npm: false };
+    const exec: Exec = {
+      run: vi.fn().mockResolvedValue({ stdout: 'nodejs_20 abc123', stderr: '', code: 0 }),
+    };
+    expect(await checkStep(pkgStep, nixOnly, exec)).toBe(true);
   });
 
   it('executeStep runs nix profile install when nix is available', async () => {

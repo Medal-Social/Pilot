@@ -37,7 +37,7 @@ async function checkPkg(step: PkgStep, managers: PackageManagers, exec: Exec): P
   const { pm, pkg } = resolved;
   if (pm === 'nix') {
     const r = await exec.run('nix', ['profile', 'list']);
-    return r.code === 0;
+    return r.stdout.includes(pkg);
   }
   if (pm === 'brew') {
     const r = await exec.run('brew', ['list', pkg]);
