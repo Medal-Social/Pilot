@@ -86,7 +86,10 @@ async function unexecutePkg(step: PkgStep, managers: PackageManagers, exec: Exec
 // --- npm ---
 
 async function checkNpm(step: NpmStep, exec: Exec): Promise<boolean> {
-  const r = await exec.run('npm', ['list', '-g', '--depth=0', step.pkg]);
+  const args = step.global
+    ? ['list', '-g', '--depth=0', step.pkg]
+    : ['list', '--depth=0', step.pkg];
+  const r = await exec.run('npm', args);
   return r.code === 0;
 }
 
@@ -98,7 +101,8 @@ async function executeNpm(step: NpmStep, exec: Exec): Promise<void> {
 
 async function unexecuteNpm(step: NpmStep, exec: Exec): Promise<void> {
   const args = step.global ? ['uninstall', '-g', step.pkg] : ['uninstall', step.pkg];
-  await exec.run('npm', args);
+  const result = await exec.run('npm', args);
+  if (result.code !== 0) throw new PilotError(errorCodes.UP_STEP_FAILED, result.stderr);
 }
 
 // --- skill ---

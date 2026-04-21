@@ -96,6 +96,24 @@ describe('npm step', () => {
     expect(await checkStep(npmStep, npmOnly, exec)).toBe(true);
   });
 
+  it('checkStep uses -g flag for global npm steps', async () => {
+    const exec = makeExec(0);
+    await checkStep(npmStep, npmOnly, exec);
+    expect(exec.run).toHaveBeenCalledWith('npm', ['list', '-g', '--depth=0', '@remotion/cli']);
+  });
+
+  it('checkStep omits -g flag for local npm steps', async () => {
+    const localStep: NpmStep = {
+      type: 'npm',
+      pkg: '@remotion/cli',
+      global: false,
+      label: 'Remotion CLI',
+    };
+    const exec = makeExec(0);
+    await checkStep(localStep, npmOnly, exec);
+    expect(exec.run).toHaveBeenCalledWith('npm', ['list', '--depth=0', '@remotion/cli']);
+  });
+
   it('executeStep runs npm install -g', async () => {
     const exec = makeExec(0);
     await executeStep(npmStep, npmOnly, exec);
@@ -106,6 +124,11 @@ describe('npm step', () => {
     const exec = makeExec(0);
     await unexecuteStep(npmStep, npmOnly, exec);
     expect(exec.run).toHaveBeenCalledWith('npm', ['uninstall', '-g', '@remotion/cli']);
+  });
+
+  it('unexecuteStep throws when npm uninstall exits non-zero', async () => {
+    const exec = makeExec(1);
+    await expect(unexecuteStep(npmStep, npmOnly, exec)).rejects.toThrow();
   });
 });
 
