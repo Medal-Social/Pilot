@@ -16,3 +16,4 @@ coverage/
 .turbo
 .playwright-mcp/
 .claude/scheduled_tasks*
+.worktrees/
