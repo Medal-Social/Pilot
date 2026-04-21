@@ -25,4 +25,34 @@ describe('PilotError', () => {
   it('is instanceof Error', () => {
     expect(new PilotError(errorCodes.PLUGIN_INVALID_MANIFEST)).toBeInstanceOf(Error);
   });
+
+  it('UP_REGISTRY_FETCH_FAILED has a user message', () => {
+    const err = new PilotError(errorCodes.UP_REGISTRY_FETCH_FAILED);
+    expect(err.code).toBe('UP_REGISTRY_FETCH_FAILED');
+    expect(err.message).toMatch(/registry|online/i);
+  });
+
+  it('UP_REGISTRY_TAMPERED has a user message', () => {
+    const err = new PilotError(errorCodes.UP_REGISTRY_TAMPERED);
+    expect(err.code).toBe('UP_REGISTRY_TAMPERED');
+    expect(err.message).toMatch(/tampered|integrity/i);
+  });
+
+  it('UP_TEMPLATE_NOT_FOUND has a user message', () => {
+    const err = new PilotError(errorCodes.UP_TEMPLATE_NOT_FOUND);
+    expect(err.code).toBe('UP_TEMPLATE_NOT_FOUND');
+    expect(err.message).toMatch(/template/i);
+  });
+
+  it('UP_STEP_FAILED has a user message', () => {
+    const err = new PilotError(errorCodes.UP_STEP_FAILED);
+    expect(err.code).toBe('UP_STEP_FAILED');
+    expect(err.message).toMatch(/step|install/i);
+  });
+
+  it('UP_NO_PACKAGE_MANAGER has a user message', () => {
+    const err = new PilotError(errorCodes.UP_NO_PACKAGE_MANAGER);
+    expect(err.code).toBe('UP_NO_PACKAGE_MANAGER');
+    expect(err.message).toMatch(/package manager/i);
+  });
 });
