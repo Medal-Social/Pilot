@@ -43,7 +43,7 @@ const userMessages: Record<ErrorCode, string> = {
   UP_STEP_FAILED:
     'An install step failed. Fix the error above and run `pilot up <template>` again.',
   UP_NO_PACKAGE_MANAGER:
-    'No supported package manager found (Nix, Homebrew, or winget). Install one and retry.',
+    'No compatible package manager found. Install Homebrew (macOS/Linux) or winget (Windows) and retry.',
   PLUGIN_INVALID_MANIFEST: 'Plugin has an invalid manifest — missing name or namespace.',
   COMPLETIONS_UNKNOWN_SHELL: 'Unknown shell. Supported shells: bash, zsh, fish.',
   ADMIN_NOT_AUTHENTICATED: 'You must be signed in to access the admin dashboard. Run: pilot login',
