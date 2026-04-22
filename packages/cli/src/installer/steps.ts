@@ -185,9 +185,14 @@ async function unexecuteMcp(step: McpStep): Promise<void> {
 // --- zed-extension ---
 
 function getZedSettingsPath(): string {
-  return process.platform === 'darwin'
-    ? join(homedir(), 'Library', 'Application Support', 'Zed', 'settings.json')
-    : join(homedir(), '.config', 'zed', 'settings.json');
+  if (process.platform === 'darwin') {
+    return join(homedir(), 'Library', 'Application Support', 'Zed', 'settings.json');
+  }
+  if (process.platform === 'win32') {
+    const appData = process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming');
+    return join(appData, 'Zed', 'settings.json');
+  }
+  return join(homedir(), '.config', 'zed', 'settings.json');
 }
 
 // Zed has no CLI for listing installed extensions; check always returns false (write is idempotent)

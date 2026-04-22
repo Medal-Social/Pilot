@@ -43,10 +43,57 @@ export async function runDown(template: string): Promise<void> {
 
   const entry = index.templates.find((t) => t.name === template);
   if (!entry) {
-    const crewSpecialist = loadTemplateState().templates[template]?.crewSpecialist;
-    if (crewSpecialist) {
+    // Registry no longer lists this template (removed remotely, or offline
+    // fallback served a smaller bundle). Fall back to install-time persisted
+    // steps so the machine is actually cleaned up instead of just forgetting
+    // the template in state.
+    const stored = loadTemplateState().templates[template];
+    const storedSteps = stored?.steps;
+    if (storedSteps && storedSteps.length > 0) {
+      const otherInstalled = installedNames.filter((n) => n !== template);
+      const managers = await detectPackageManagers(realExec);
+      const { UpInstall } = await import('../screens/up/UpInstall.js');
+      const { waitUntilExit } = render(
+        React.createElement(UpInstall, {
+          entry: {
+            name: template,
+            displayName: `Removing ${template}...`,
+            description: '',
+            version: stored?.installedAt ?? 'unknown',
+            category: 'dev',
+            platforms: ['darwin', 'linux', 'win32'],
+            steps: storedSteps,
+            completionHint: `Run \`pilot up ${template}\` to reinstall`,
+          },
+          managers,
+          runSteps: (callbacks: RunCallbacks) =>
+            runUninstallSteps(
+              storedSteps,
+              managers,
+              undefined,
+              otherInstalled,
+              template,
+              callbacks
+            ),
+          onDone: async () => {
+            if (stored?.crewSpecialist) {
+              const settings = loadSettings();
+              if (settings.crew.specialists[stored.crewSpecialist]) {
+                delete settings.crew.specialists[stored.crewSpecialist];
+                saveSettings(settings);
+              }
+            }
+            removeTemplateFromState(template);
+          },
+        })
+      );
+      await waitUntilExit();
+      return;
+    }
+    // No persisted steps — best effort: clear crew + state only.
+    if (stored?.crewSpecialist) {
       const settings = loadSettings();
-      delete settings.crew.specialists[crewSpecialist];
+      delete settings.crew.specialists[stored.crewSpecialist];
       saveSettings(settings);
     }
     removeTemplateFromState(template);

@@ -384,6 +384,46 @@ describe('runUninstallSteps', () => {
     expect(cbs.onStepSkip).toHaveBeenCalledWith(0);
   });
 
+  it('prefers local state peer steps over registry entry (drift protection)', async () => {
+    // Peer "drifted": registry no longer lists the shared `node` brew step but
+    // the peer was installed with it. Install-time state is the source of truth.
+    const pkgStep: AnyStep = { type: 'pkg', brew: 'node', label: 'Node.js' };
+    const fetchMock = await getFetchMock();
+    fetchMock.mockResolvedValueOnce(
+      registryWith([
+        {
+          name: 'drifted-peer',
+          displayName: 'Drifted Peer',
+          description: '',
+          version: '1.0.0',
+          category: 'dev',
+          platforms: ['darwin'],
+          // Registry entry has no shared step anymore.
+          steps: [{ type: 'npm', pkg: 'unrelated', global: true, label: 'Unrelated' }],
+        },
+      ])
+    );
+    const loadStateMock = await getLoadStateMock();
+    loadStateMock.mockReturnValueOnce({
+      templates: {
+        'drifted-peer': {
+          steps: [{ type: 'pkg', brew: 'node', label: 'Node.js' }],
+        },
+      },
+    });
+
+    const handlers = {
+      checkStep: vi.fn().mockResolvedValue(true),
+      executeStep: vi.fn().mockResolvedValue(undefined),
+      unexecuteStep: vi.fn().mockResolvedValue(undefined),
+    };
+    const brewManagers: PackageManagers = { nix: false, brew: true, winget: false, npm: false };
+    const cbs = callbacks();
+    await runUninstallSteps([pkgStep], brewManagers, handlers, ['drifted-peer'], 'remotion', cbs);
+    expect(handlers.unexecuteStep).not.toHaveBeenCalled();
+    expect(cbs.onStepSkip).toHaveBeenCalledWith(0);
+  });
+
   it('ignores local state entries without a steps array', async () => {
     const pkgStep: AnyStep = { type: 'pkg', brew: 'node', label: 'Node.js' };
     const fetchMock = await getFetchMock();

@@ -29,6 +29,15 @@ vi.mock('node:os', async (importOriginal) => {
   };
 });
 
+function zedSettingsDir(root: string): string {
+  if (process.platform === 'darwin') return join(root, 'Library', 'Application Support', 'Zed');
+  if (process.platform === 'win32') {
+    const appData = process.env.APPDATA ?? join(root, 'AppData', 'Roaming');
+    return join(appData, 'Zed');
+  }
+  return join(root, '.config', 'zed');
+}
+
 const allManagers: PackageManagers = { nix: true, brew: true, winget: false, npm: true };
 const brewOnly: PackageManagers = { nix: false, brew: true, winget: false, npm: false };
 const npmOnly: PackageManagers = { nix: false, brew: false, winget: false, npm: true };
@@ -382,10 +391,7 @@ describe('zed-extension step', () => {
   });
 
   it('executeStep writes extension into Zed settings when file exists', async () => {
-    const zedDir =
-      process.platform === 'darwin'
-        ? join(tmpDir, 'Library', 'Application Support', 'Zed')
-        : join(tmpDir, '.config', 'zed');
+    const zedDir = zedSettingsDir(tmpDir);
     mkdirSync(zedDir, { recursive: true });
     writeFileSync(join(zedDir, 'settings.json'), JSON.stringify({ auto_install_extensions: {} }));
 
@@ -399,10 +405,7 @@ describe('zed-extension step', () => {
   });
 
   it('unexecuteStep removes extension from Zed settings when file exists', async () => {
-    const zedDir =
-      process.platform === 'darwin'
-        ? join(tmpDir, 'Library', 'Application Support', 'Zed')
-        : join(tmpDir, '.config', 'zed');
+    const zedDir = zedSettingsDir(tmpDir);
     mkdirSync(zedDir, { recursive: true });
     writeFileSync(
       join(zedDir, 'settings.json'),

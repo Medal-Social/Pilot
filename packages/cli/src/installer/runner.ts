@@ -106,14 +106,19 @@ export async function runUninstallSteps(
     }
 
     for (const name of otherInstalledTemplates) {
-      const entry = registryTemplates.find((t) => t.name === name);
-      if (entry) {
-        absorbPeerSteps(entry.steps);
-        continue;
-      }
+      // Prefer install-time persisted steps — that is the set the peer actually
+      // relies on. Registry metadata may have drifted since install (steps added,
+      // removed, or renamed) and using it as the source of truth would miss
+      // shared dependencies the peer still needs. Registry is used only when
+      // local state has no stored steps (older installs pre-step-persistence).
       const stored = localState?.templates[name]?.steps;
       if (stored && Array.isArray(stored)) {
         absorbPeerSteps(stored);
+        continue;
+      }
+      const entry = registryTemplates.find((t) => t.name === name);
+      if (entry) {
+        absorbPeerSteps(entry.steps);
         continue;
       }
       // No way to resolve this peer — conservatively protect everything.
