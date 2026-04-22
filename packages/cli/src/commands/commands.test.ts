@@ -4,9 +4,23 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('ink', () => ({
-  render: vi.fn(),
+  render: vi.fn().mockReturnValue({ waitUntilExit: vi.fn().mockResolvedValue(undefined) }),
   Text: 'Text',
   Box: 'Box',
+}));
+
+vi.mock('../registry/fetch.js', () => ({
+  fetchRegistry: vi.fn().mockResolvedValue({
+    index: { version: 1, publishedAt: '', sha256: '', templates: [] },
+    fromCache: false,
+    offline: false,
+  }),
+}));
+
+vi.mock('../device/state.js', () => ({
+  getInstalledTemplateNames: vi.fn(() => []),
+  loadTemplateState: vi.fn(() => ({ templates: {} })),
+  saveTemplateState: vi.fn(),
 }));
 
 vi.mock('react', () => ({

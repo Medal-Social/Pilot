@@ -8,26 +8,40 @@ import { join } from 'node:path';
 const PILOT_DIR = join(homedir(), '.pilot');
 const SETTINGS_FILE = join(PILOT_DIR, 'settings.json');
 
+export interface SpecialistEntry {
+  displayName: string;
+  skills: string[];
+}
+
 export interface PilotSettings {
   onboarded: boolean;
   lastRun?: string;
   plugins: Record<string, { enabled: boolean }>;
+  mcpServers: Record<string, { command: string }>;
+  crew: { specialists: Record<string, SpecialistEntry> };
 }
 
 const DEFAULT_SETTINGS: PilotSettings = {
   onboarded: false,
   plugins: {},
+  mcpServers: {},
+  crew: { specialists: {} },
 };
 
 export function loadSettings(): PilotSettings {
   if (!existsSync(SETTINGS_FILE)) {
-    return { ...DEFAULT_SETTINGS };
+    return structuredClone(DEFAULT_SETTINGS);
   }
   try {
     const raw = JSON.parse(readFileSync(SETTINGS_FILE, 'utf-8'));
-    return { ...DEFAULT_SETTINGS, ...raw };
+    return {
+      ...DEFAULT_SETTINGS,
+      ...raw,
+      mcpServers: raw.mcpServers ?? {},
+      crew: { specialists: raw.crew?.specialists ?? {} },
+    };
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    return structuredClone(DEFAULT_SETTINGS);
   }
 }
 

@@ -58,6 +58,18 @@ program
   });
 
 program
+  .command('usage')
+  .description('AI token usage and costs for this project')
+  .option('--week', 'Last 7 days')
+  .option('--month', 'Current calendar month')
+  .option('--since <YYYYMMDD>', 'From date to now')
+  .option('--json', 'Output as JSON')
+  .action(async (opts: { week?: boolean; month?: boolean; since?: string; json?: boolean }) => {
+    const { runUsage } = await import('../commands/usage.js');
+    await runUsage(opts);
+  });
+
+program
   .command('help')
   .description('Help reference')
   .action(async () => {
@@ -150,6 +162,14 @@ if (kitEnabled) {
     .action(async () => {
       const { runKitEdit } = await import('../commands/kit.js');
       await runKitEdit();
+    });
+
+  kit
+    .command('clean')
+    .description('Remove junk and free disk space')
+    .action(async () => {
+      const { runKitClean } = await import('../commands/kit.js');
+      await runKitClean();
     });
 
   const kitConfig = kit.command('config').description('Inspect the loaded kit.config.json');

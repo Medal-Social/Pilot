@@ -11,6 +11,12 @@ export const errorCodes = {
   DOWN_UNKNOWN_TEMPLATE: 'DOWN_UNKNOWN_TEMPLATE',
   DOWN_NOT_INSTALLED: 'DOWN_NOT_INSTALLED',
   DOWN_REMOVE_FAILED: 'DOWN_REMOVE_FAILED',
+  UP_REGISTRY_FETCH_FAILED: 'UP_REGISTRY_FETCH_FAILED',
+  UP_REGISTRY_TAMPERED: 'UP_REGISTRY_TAMPERED',
+  UP_TEMPLATE_NOT_FOUND: 'UP_TEMPLATE_NOT_FOUND',
+  UP_STEP_FAILED: 'UP_STEP_FAILED',
+  UP_NO_PACKAGE_MANAGER: 'UP_NO_PACKAGE_MANAGER',
+  USAGE_INVALID_SINCE: 'USAGE_INVALID_SINCE',
   PLUGIN_INVALID_MANIFEST: 'PLUGIN_INVALID_MANIFEST',
   COMPLETIONS_UNKNOWN_SHELL: 'COMPLETIONS_UNKNOWN_SHELL',
   ADMIN_NOT_AUTHENTICATED: 'ADMIN_NOT_AUTHENTICATED',
@@ -31,6 +37,15 @@ const userMessages: Record<ErrorCode, string> = {
   DOWN_UNKNOWN_TEMPLATE: 'Unknown template. Run pilot up to see available templates.',
   DOWN_NOT_INSTALLED: 'That template is not installed. Nothing to remove.',
   DOWN_REMOVE_FAILED: 'Could not remove template dependencies. Some files may remain.',
+  UP_REGISTRY_FETCH_FAILED: 'Could not fetch the template registry — are you online?',
+  UP_REGISTRY_TAMPERED:
+    'Registry integrity check failed. The registry may have been tampered with.',
+  UP_TEMPLATE_NOT_FOUND: 'Template not found. Run `pilot up` to see available templates.',
+  UP_STEP_FAILED:
+    'An install step failed. Fix the error above and run `pilot up <template>` again.',
+  UP_NO_PACKAGE_MANAGER:
+    'No compatible package manager found for your platform. Visit medalsocial.com/pilot/setup for install instructions.',
+  USAGE_INVALID_SINCE: '--since expects a date in YYYYMMDD format (e.g. 20260401).',
   PLUGIN_INVALID_MANIFEST: 'Plugin has an invalid manifest — missing name or namespace.',
   COMPLETIONS_UNKNOWN_SHELL: 'Unknown shell. Supported shells: bash, zsh, fish.',
   ADMIN_NOT_AUTHENTICATED: 'You must be signed in to access the admin dashboard. Run: pilot login',

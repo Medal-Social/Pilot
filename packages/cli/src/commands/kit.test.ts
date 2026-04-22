@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { readdirSync, statSync } from 'node:fs';
+import { createInterface } from 'node:readline';
 import {
   addApp,
+  deleteTargets,
   detectMachine,
   listApps,
   loadKitConfig,
@@ -13,12 +15,15 @@ import {
   runInit,
   runUpdate,
   scaffoldKit,
+  scanTargets,
 } from '@medalsocial/kit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   parseAppsTarget,
+  promptConfirm,
   resolveMachine,
   runKitApps,
+  runKitClean,
   runKitConfigPath,
   runKitConfigShow,
   runKitEdit,
@@ -55,6 +60,13 @@ vi.mock('@medalsocial/kit', () => ({
   addApp: vi.fn(),
   removeApp: vi.fn(),
   runEdit: vi.fn(),
+  scanTargets: vi.fn(),
+  deleteTargets: vi.fn(),
+  formatBytes: vi.fn((n: number) => `${n}B`),
+}));
+
+vi.mock('node:readline', () => ({
+  createInterface: vi.fn(),
 }));
 
 vi.mock('ink', () => ({
@@ -611,5 +623,167 @@ describe('runKitEdit', () => {
     exit.mockRestore();
     err.mockRestore();
     vi.mocked(readdirSync).mockReturnValue([]);
+  });
+});
+
+describe('promptConfirm', () => {
+  interface FakeInterface {
+    question(q: string, cb: (answer: string) => void): void;
+    close(): void;
+  }
+
+  function stubInterface(answer: string): FakeInterface {
+    return {
+      question: (_q: string, cb: (a: string) => void) => cb(answer),
+      close: vi.fn(),
+    };
+  }
+
+  it('resolves true for "y"', async () => {
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('y') as never);
+    await expect(promptConfirm('?')).resolves.toBe(true);
+  });
+
+  it('resolves true for uppercase "Y"', async () => {
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('Y') as never);
+    await expect(promptConfirm('?')).resolves.toBe(true);
+  });
+
+  it('resolves true for "yes"', async () => {
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('yes') as never);
+    await expect(promptConfirm('?')).resolves.toBe(true);
+  });
+
+  it('resolves true for "YES" (case-insensitive)', async () => {
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('YES') as never);
+    await expect(promptConfirm('?')).resolves.toBe(true);
+  });
+
+  it('trims surrounding whitespace before matching', async () => {
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('  y  ') as never);
+    await expect(promptConfirm('?')).resolves.toBe(true);
+  });
+
+  it('resolves false for "n"', async () => {
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('n') as never);
+    await expect(promptConfirm('?')).resolves.toBe(false);
+  });
+
+  it('resolves false for "no"', async () => {
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('no') as never);
+    await expect(promptConfirm('?')).resolves.toBe(false);
+  });
+
+  it('resolves false for empty response', async () => {
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('') as never);
+    await expect(promptConfirm('?')).resolves.toBe(false);
+  });
+});
+
+describe('runKitClean', () => {
+  function stubInterface(answer: string) {
+    return {
+      question: (_q: string, cb: (a: string) => void) => cb(answer),
+      close: vi.fn(),
+    };
+  }
+
+  const fileTarget = {
+    target: { id: 'cache', label: 'Caches', kind: 'files' as const },
+    bytes: 1024,
+  };
+  const dockerTarget = {
+    target: { id: 'docker', label: 'Docker', kind: 'docker' as const },
+    bytes: 0,
+  };
+
+  it('writes "Nothing to clean" and exits early on empty scan', async () => {
+    vi.mocked(scanTargets).mockResolvedValueOnce([]);
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    await runKitClean();
+    const output = write.mock.calls.map((c) => c[0]).join('');
+    expect(output).toContain('Nothing to clean');
+    expect(deleteTargets).not.toHaveBeenCalled();
+    write.mockRestore();
+  });
+
+  it('cancels when user declines (empty input resolves false)', async () => {
+    vi.mocked(scanTargets).mockResolvedValueOnce([fileTarget] as never);
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('n') as never);
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    await runKitClean();
+    const output = write.mock.calls.map((c) => c[0]).join('');
+    expect(output).toContain('Cancelled');
+    expect(deleteTargets).not.toHaveBeenCalled();
+    write.mockRestore();
+  });
+
+  it('runs deleteTargets and shows progress when user confirms', async () => {
+    vi.mocked(scanTargets).mockResolvedValueOnce([fileTarget, dockerTarget] as never);
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('y') as never);
+    vi.mocked(deleteTargets).mockImplementationOnce(async (_targets, _exec, onResult) => {
+      onResult?.({ id: 'cache', freed: 1024 } as never);
+      onResult?.({ id: 'docker', freed: 0 } as never);
+      return 1024;
+    });
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    await runKitClean();
+    const output = write.mock.calls.map((c) => c[0]).join('');
+    expect(deleteTargets).toHaveBeenCalled();
+    expect(output).toContain('freed');
+    expect(output).toContain('All clear');
+    write.mockRestore();
+  });
+
+  it('renders warnings for failed deletions', async () => {
+    vi.mocked(scanTargets).mockResolvedValueOnce([fileTarget] as never);
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('y') as never);
+    vi.mocked(deleteTargets).mockImplementationOnce(async (_targets, _exec, onResult) => {
+      onResult?.({ id: 'cache', freed: 0, warning: 'EACCES' } as never);
+      return 0;
+    });
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    await runKitClean();
+    const output = write.mock.calls.map((c) => c[0]).join('');
+    expect(output).toContain('EACCES');
+    write.mockRestore();
+  });
+
+  it('skips progress line for unknown target id (defensive guard)', async () => {
+    vi.mocked(scanTargets).mockResolvedValueOnce([fileTarget] as never);
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('y') as never);
+    vi.mocked(deleteTargets).mockImplementationOnce(async (_targets, _exec, onResult) => {
+      onResult?.({ id: 'not-present', freed: 10 } as never);
+      return 0;
+    });
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    await expect(runKitClean()).resolves.toBeUndefined();
+    write.mockRestore();
+  });
+
+  it('uses TTY escape codes when stdout is a TTY', async () => {
+    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
+    vi.mocked(scanTargets).mockResolvedValueOnce([fileTarget] as never);
+    vi.mocked(createInterface).mockReturnValueOnce(stubInterface('y') as never);
+    vi.mocked(deleteTargets).mockResolvedValueOnce(1024);
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    await runKitClean();
+    const output = write.mock.calls.map((c) => c[0]).join('');
+    expect(output).toContain('\x1b[');
+    Object.defineProperty(process.stdout, 'isTTY', { value: false, configurable: true });
+    write.mockRestore();
+  });
+
+  it('propagates KitError via fail when scanTargets rejects', async () => {
+    vi.mocked(scanTargets).mockRejectedValueOnce(new KitErrorStub('scan failed'));
+    const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('exit');
+    }) as never);
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    await expect(runKitClean()).rejects.toThrow('exit');
+    exit.mockRestore();
+    err.mockRestore();
+    write.mockRestore();
   });
 });

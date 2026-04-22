@@ -106,6 +106,9 @@ pilot
 | `pilot update` | Check for and apply updates |
 | `pilot status` | Show machine and system health |
 | `pilot status --json` | Emit machine-readable health data |
+| `pilot usage` | AI token usage and costs for this project |
+| `pilot usage --week` / `--month` / `--since YYYYMMDD` | Usage by time window |
+| `pilot usage --json` | Machine-readable JSON output |
 | `pilot completions <shell>` | Generate shell completions |
 | `pilot help` | Show command help |
 
