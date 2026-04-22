@@ -4,9 +4,12 @@
 import { readdirSync, statSync } from 'node:fs';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
+import { createInterface } from 'node:readline';
 import {
   addApp,
+  deleteTargets,
   detectMachine,
+  formatBytes,
   KitError,
   type LoadedKitConfig,
   listApps,
@@ -20,6 +23,7 @@ import {
   runInit,
   runUpdate,
   scaffoldKit,
+  scanTargets,
 } from '@medalsocial/kit';
 import { render, Text } from 'ink';
 import React from 'react';
@@ -385,3 +389,76 @@ export async function runKitEdit(): Promise<void> {
 
 // Exported for tests.
 export { resolveMachine };
+
+async function promptConfirm(question: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === 'y');
+    });
+  });
+}
+
+export async function runKitClean(): Promise<void> {
+  const isTty = process.stdout.isTTY;
+  const cyan = (s: string) => (isTty ? `\x1b[36m${s}\x1b[0m` : s);
+  const green = (s: string) => (isTty ? `\x1b[32m${s}\x1b[0m` : s);
+  const red = (s: string) => (isTty ? `\x1b[31m${s}\x1b[0m` : s);
+  const dim = (s: string) => (isTty ? `\x1b[2m${s}\x1b[0m` : s);
+  const bold = (s: string) => (isTty ? `\x1b[1m${s}\x1b[0m` : s);
+
+  process.stdout.write(`\n  ${bold('kit clean')}\n  ${dim('─'.repeat(40))}\n\n`);
+  process.stdout.write(`  ${cyan('⠸')} Scanning your machine…\n`);
+
+  const targets = await scanTargets(realExec).catch((e) => {
+    fail(e);
+  });
+
+  if (targets.length === 0) {
+    process.stdout.write(`  ${green('✓')} Nothing to clean.\n\n`);
+    return;
+  }
+
+  process.stdout.write('\n');
+  const labelWidth = Math.max(...targets.map((t) => t.target.label.length));
+
+  for (const t of targets) {
+    const size = t.target.kind === 'docker' ? dim('—') : formatBytes(t.bytes);
+    process.stdout.write(`  ${t.target.label.padEnd(labelWidth + 2)} ${size}\n`);
+  }
+
+  const fileTotal = targets
+    .filter((t) => t.target.kind !== 'docker')
+    .reduce((sum, t) => sum + t.bytes, 0);
+  const hasDocker = targets.some((t) => t.target.kind === 'docker');
+  const totalLabel = formatBytes(fileTotal) + (hasDocker ? ' + Docker' : '');
+
+  process.stdout.write(`\n  ${'─'.repeat(labelWidth + 14)}\n`);
+  process.stdout.write(`  ${'Total'.padEnd(labelWidth + 2)} ${bold(totalLabel)}\n\n`);
+
+  const yes = await promptConfirm(`  Ready to clean. Proceed? [y/N] `);
+  if (!yes) {
+    process.stdout.write(`\n  ${dim('Cancelled.')}\n\n`);
+    return;
+  }
+  process.stdout.write('\n');
+
+  const totalFreed = await deleteTargets(targets, realExec, (result) => {
+    const t = targets.find((r) => r.target.id === result.id)!;
+    if (result.warning) {
+      process.stdout.write(
+        `  ${red('✗')} ${t.target.label.padEnd(labelWidth + 2)} ${dim(result.warning)}\n`
+      );
+    } else {
+      const freed = result.freed > 0 ? formatBytes(result.freed) : '—';
+      process.stdout.write(
+        `  ${green('✓')} ${t.target.label.padEnd(labelWidth + 2)} ${dim(`${freed} freed`)}\n`
+      );
+    }
+  });
+
+  process.stdout.write(
+    `\n  ${green('✓')} ${bold(`${formatBytes(totalFreed)} freed.`)} All clear.\n\n`
+  );
+}
