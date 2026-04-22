@@ -25,7 +25,6 @@
  *   node scripts/changeset-auto.mjs --check    # read-only merge gate
  */
 
-import { execFileSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
@@ -45,6 +44,7 @@ import {
   SKIP_LABEL,
   TYPE_LABELS,
 } from './changeset-auto.config.mjs';
+import { exec as runExec } from './exec.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -415,12 +415,7 @@ export function generate(c, pr, rootDir = repoRoot) {
 // ---------------------------------------------------------------------------
 
 function run(cmd, args, opts = {}) {
-  try {
-    return execFileSync(cmd, args, { encoding: 'utf8', ...opts }).trim();
-  } catch (error) {
-    if (opts.tolerant) return '';
-    throw error;
-  }
+  return runExec(cmd, args, opts);
 }
 
 function readEventPayload() {
@@ -440,12 +435,66 @@ function fetchPrDetails(pr) {
       'view',
       String(pr),
       '--json',
-      'title,author,labels,headRefOid,headRefName',
+      'title,author,labels,headRefOid,headRefName,baseRefName,baseRefOid',
     ]);
     return JSON.parse(raw);
   } catch {
     return null;
   }
+}
+
+/**
+ * Resolves the merge base against which diffs/logs should be computed.
+ * Prefers the PR base SHA from the event payload / API, falls back to the
+ * named base ref, and finally to `origin/main`. Ensures the ref is available
+ * locally (shallow clones may not have it) by issuing `git fetch`.
+ * @param {object | null} event
+ * @param {number} pr
+ * @returns {string}
+ */
+function resolveBaseRef(event, pr) {
+  let baseRef = '';
+  let baseSha = '';
+
+  if (event?.pull_request?.base) {
+    baseRef = event.pull_request.base.ref ?? '';
+    baseSha = event.pull_request.base.sha ?? '';
+  } else if (pr > 0) {
+    const details = fetchPrDetails(pr);
+    if (details) {
+      baseRef = details.baseRefName ?? '';
+      baseSha = details.baseRefOid ?? '';
+    }
+  }
+
+  if (!baseRef && !baseSha) {
+    baseRef = 'main';
+  }
+
+  // Best-effort fetch so the ref is available. Workflows already use
+  // fetch-depth: 0, but be resilient to shallow clones too. Errors are
+  // swallowed here because the subsequent resolve step will fail loudly if the
+  // ref still cannot be found.
+  if (baseRef) {
+    run('git', ['fetch', '--no-tags', 'origin', baseRef], { tolerant: true });
+  }
+  if (baseSha) {
+    run('git', ['fetch', '--no-tags', 'origin', baseSha], { tolerant: true });
+  }
+
+  // Prefer the explicit SHA when present — it's immune to force-pushes on the
+  // base branch mid-PR. Otherwise use `origin/<ref>`.
+  if (baseSha && run('git', ['cat-file', '-e', baseSha], { tolerant: true }) !== null) {
+    return baseSha;
+  }
+  const remoteRef = `origin/${baseRef || 'main'}`;
+  if (run('git', ['rev-parse', '--verify', remoteRef], { tolerant: true }) === null) {
+    throw new Error(
+      `changeset-auto: cannot resolve base ref '${remoteRef}'. ` +
+        'Ensure the workflow checkout has fetch-depth: 0 and the base branch fetched.'
+    );
+  }
+  return remoteRef;
 }
 
 /**
@@ -494,13 +543,13 @@ export function gatherInputs() {
     }
   }
 
-  const base = 'origin/main';
-  const changedFiles = run('git', ['diff', '--name-only', `${base}...HEAD`], { tolerant: true })
+  const base = resolveBaseRef(event, pr);
+  const changedFiles = run('git', ['diff', '--name-only', `${base}...HEAD`])
     .split('\n')
     .map((f) => f.trim())
     .filter(Boolean);
 
-  const commitSubjects = run('git', ['log', '--format=%s', `${base}..HEAD`], { tolerant: true })
+  const commitSubjects = run('git', ['log', '--format=%s', `${base}..HEAD`])
     .split('\n')
     .map((s) => s.trim())
     .filter(Boolean);
@@ -532,9 +581,9 @@ function writeGithubOutput(result) {
   }
 }
 
-function hasAnyChangesetInDiff() {
-  const base = 'origin/main';
-  const diff = run('git', ['diff', '--name-only', `${base}...HEAD`], { tolerant: true });
+function hasAnyChangesetInDiff(event, pr) {
+  const base = resolveBaseRef(event, pr);
+  const diff = run('git', ['diff', '--name-only', `${base}...HEAD`]);
   return diff
     .split('\n')
     .map((f) => f.trim())
@@ -577,7 +626,7 @@ async function main() {
 
   if (checkMode) {
     if (classification.action === 'created') {
-      if (hasAnyChangesetInDiff()) {
+      if (hasAnyChangesetInDiff(readEventPayload(), inputs.pr)) {
         process.exit(0);
       }
       process.stderr.write(
