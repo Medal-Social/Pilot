@@ -10,9 +10,9 @@ jobs:
   auto-approve:
     runs-on: ubuntu-latest
     if: |
-      github.actor == 'dependabot[bot]' ||
-      github.actor == 'renovate[bot]' ||
-      github.actor == 'medal-social-release-bot[bot]'
+      github.event.pull_request.user.login == 'dependabot[bot]' ||
+      github.event.pull_request.user.login == 'renovate[bot]' ||
+      github.event.pull_request.user.login == 'medal-social-release-bot[bot]'
     steps:
       - name: Generate token from Medal Bot app
         id: app-token
@@ -25,8 +25,7 @@ jobs:
         with:
           github-token: ${{ steps.app-token.outputs.token }}
 
-      - name: Enable auto-merge for release PRs
-        if: github.actor == 'medal-social-release-bot[bot]'
+      - name: Enable auto-merge
         run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}

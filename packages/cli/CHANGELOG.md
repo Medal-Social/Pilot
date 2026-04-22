@@ -1,5 +1,11 @@
 # @medalsocial/pilot
 
+## 0.2.0
+
+### Minor Changes
+
+- [#41](https://github.com/Medal-Social/Pilot/pull/41) [`4d2c815`](https://github.com/Medal-Social/Pilot/commit/4d2c81557dd900d292ddc185238284e243ff086f) Thanks [@alioftech](https://github.com/alioftech)! - Add `pilot usage` command to display per-model token usage and costs for Claude Code and Codex CLI sessions. Supports filtering by week, month, or custom date, and outputs in table or JSON format. No API calls required; reads from local session files.
+
 ## 0.1.8
 
 ### Patch Changes
