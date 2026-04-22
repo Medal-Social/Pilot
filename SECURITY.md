@@ -63,14 +63,16 @@ npm audit signatures
 
 ### Binary releases
 
-Binary releases are signed with [Sigstore cosign](https://docs.sigstore.dev/) using keyless signing tied to the GitHub Actions build identity. Verify with:
+Binary releases are signed with [Sigstore cosign](https://docs.sigstore.dev/) using keyless signing tied to the GitHub Actions build identity. The binaries and `.bundle` files are attached by the `Build Binaries` workflow after a GitHub Release is published.
+
+Because package publication and binary attachment are separate workflows, a GitHub Release may exist before binary assets appear. If the binary workflow is still running or has failed, the release can temporarily or permanently have no attached binaries. Verify only after the expected binary and matching `.bundle` file are present on the release page.
+
+Verify with:
 
 ```bash
 cosign verify-blob \
   --bundle pilot-darwin-arm64.bundle \
-  --certificate-identity-regexp "https://github.com/Medal-Social/Pilot/.github/workflows/build-binaries.yml@refs/tags/v.*" \
+  --certificate-identity-regexp "https://github.com/Medal-Social/Pilot/.github/workflows/build-binaries.yml@refs/tags/@medalsocial/pilot@.*" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   pilot-darwin-arm64
 ```
-
-Bundle files (`.bundle`) are attached to each GitHub Release alongside the binaries.
