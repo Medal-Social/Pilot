@@ -56,6 +56,40 @@ admin imports on pre-existing files) are tolerated; errors block. Don't use
 - E2E tests in `tests/e2e/` with isolated `PILOT_HOME`
 - Coverage target: 100% (hard minimums: 95% statements, 90% branches, 100% functions)
 
+## Changeset Automation
+
+Every PR is classified by `scripts/changeset-auto.mjs` (run from the `Changeset
+Automation` workflow on pull_request and issue_comment events). It decides
+whether a `.changeset/*.md` is needed, infers the semver bump from the
+conventional commits, and writes a stable `auto-<pr>-<sha7>-<slug>.md` file.
+
+**How classification works:**
+
+- Path-only PRs (`docs/**`, `tests/**`, `.github/**`, `scripts/**`, root
+  `*.md`, lockfiles, etc.) → no changeset.
+- `packages/plugins/kit/**` alone → no changeset (kit is `private: true`).
+- Conventional commits drive the bump: `feat:` → minor, `fix:`/`perf:`/`revert:`
+  → patch, `feat!:` or `BREAKING CHANGE:` → major. Ambiguous PRs (no
+  conventional commit and no override) exit 2 and route to the AI fallback
+  (`changeset-ai-fallback.yml`).
+- Dependabot PRs: runtime dep → semver-derived patch/minor/major, dev-dep → skip.
+
+**Comment commands (post on the PR):**
+
+- `/changeset` — re-run the classifier immediately.
+- `/changeset <type>: <desc>` — override both the type (`patch`/`minor`/`major`)
+  and the description, e.g. `/changeset patch: fix keyboard nav`.
+- `/skip-changeset` — declare the PR intentionally needs no changeset.
+
+**Labels:**
+
+- `no-changeset` — skip (same as `/skip-changeset`).
+- `patch` / `minor` / `major` — force the bump type, overriding inference.
+
+**Merge gate:** `ci / changeset-required` runs `pnpm changeset:check` on every
+PR and fails merge if the classifier says a changeset is needed but none is
+present on the branch. To bypass, use one of the commands or labels above.
+
 ## Architecture
 
 ```
