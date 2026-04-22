@@ -65,7 +65,7 @@ When a pull request is marked as ready for review, analyze the changes and creat
 ## Current Context
 
 - **Repository**: ${{ github.repository }}
-- **Pull Request Number**: ${{ github.event.pull_request.number }}
+- **Pull Request Number**: ${{ inputs.pr || github.event.pull_request.number }}
 - **Pull Request Content**: "${{ steps.sanitized.outputs.text }}"
 
 **IMPORTANT - Token Optimization**: The pull request content above is already sanitized and available. DO NOT use `pull_request_read` or similar GitHub API tools to fetch PR details - you already have everything you need in the context above. Using API tools wastes 40k+ tokens per call.
