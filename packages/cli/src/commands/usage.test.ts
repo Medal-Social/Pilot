@@ -119,14 +119,11 @@ describe('runUsage', () => {
     expect(parsed.error).toBeDefined();
   });
 
-  it('writes error and exits for invalid --since format', async () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('exit');
-    });
+  it('throws PilotError for invalid --since format', async () => {
     const { runUsage } = await import('./usage.js');
-    await expect(runUsage({ since: 'invalid' })).rejects.toThrow('exit');
-    expect(stdoutSpy).toHaveBeenCalledWith(expect.stringContaining('YYYYMMDD'));
-    exitSpy.mockRestore();
+    const { PilotError } = await import('../errors.js');
+    await expect(runUsage({ since: 'invalid' })).rejects.toBeInstanceOf(PilotError);
+    await expect(runUsage({ since: '2026041' })).rejects.toBeInstanceOf(PilotError);
   });
 
   it('includes Codex section when readCodexEntries returns data', async () => {

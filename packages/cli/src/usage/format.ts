@@ -67,9 +67,8 @@ export function formatTable(report: UsageReport): void {
   const windowLabel = report.window.label;
   const projectLabel = report.project;
 
-  w(
-    `\n  ${bold(purple('pilot usage'))}  ${dim('·')}  ${bold(projectLabel)}  ${dim(padR(windowLabel, 46 - projectLabel.length))}\n\n`
-  );
+  const spacer = dim(padR(windowLabel, 46 - projectLabel.length));
+  w(`\n  ${bold(purple('pilot usage'))}  ${dim('·')}  ${bold(projectLabel)}  ${spacer}\n\n`);
 
   for (const provider of report.providers) {
     const label = provider.provider === 'claude' ? bold('Claude Code') : bold('Codex');

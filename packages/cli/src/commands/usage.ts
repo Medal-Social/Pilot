@@ -1,6 +1,8 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { basename } from 'node:path';
+import { errorCodes, PilotError } from '../errors.js';
 import { groupByModel } from '../usage/aggregate.js';
 import { formatJson, formatTable } from '../usage/format.js';
 import { findClaudeProjectDir, readClaudeEntries, readCodexEntries } from '../usage/reader.js';
@@ -20,8 +22,7 @@ function buildWindow(opts: UsageOptions): UsageWindow {
 
   if (opts.since) {
     if (!/^\d{8}$/.test(opts.since)) {
-      process.stdout.write(`\n  Error: --since expects YYYYMMDD format (e.g. 20260401).\n\n`);
-      process.exit(1);
+      throw new PilotError(errorCodes.USAGE_INVALID_SINCE, opts.since);
     }
     const y = Number.parseInt(opts.since.slice(0, 4), 10);
     const m = Number.parseInt(opts.since.slice(4, 6), 10) - 1;
@@ -43,7 +44,7 @@ export async function runUsage(opts: UsageOptions = {}): Promise<void> {
   const window = buildWindow(opts);
   const cwd = process.cwd();
   const projectDir = findClaudeProjectDir(cwd);
-  const projectName = cwd.split('/').pop() ?? 'unknown';
+  const projectName = basename(cwd) || 'unknown';
 
   const providers: ProviderReport[] = [];
 

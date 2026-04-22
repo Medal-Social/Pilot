@@ -566,7 +566,7 @@ describe('readCodexEntries', () => {
     expect(entries).toHaveLength(0);
   });
 
-  it('skips event_msg when delta input + output is zero', async () => {
+  it('skips event_msg when delta input + cached + output is all zero', async () => {
     await writeSession('zero-delta.jsonl', [
       { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
       {
@@ -588,6 +588,33 @@ describe('readCodexEntries', () => {
     ]);
     const entries = await readCodexEntries(WINDOW);
     expect(entries).toHaveLength(0);
+  });
+
+  it('includes cached-only events (non-zero deltaCached, zero deltaInput/deltaOutput)', async () => {
+    await writeSession('cached-only.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 0,
+              cached_input_tokens: 500,
+              output_tokens: 0,
+              reasoning_output_tokens: 0,
+              total_tokens: 500,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.cacheReadTokens).toBe(500);
+    expect(entries[0]?.inputTokens).toBe(0);
+    expect(entries[0]?.outputTokens).toBe(0);
   });
 
   it('skips event_msg with invalid timestamp', async () => {

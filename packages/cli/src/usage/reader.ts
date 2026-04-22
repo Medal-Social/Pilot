@@ -20,7 +20,7 @@ function claudeBasePaths(): string[] {
 }
 
 export function findClaudeProjectDir(cwd: string): string | null {
-  const encoded = cwd.replace(/\//g, '-');
+  const encoded = cwd.replace(/[\\/]/g, '-');
   for (const base of claudeBasePaths()) {
     const candidate = join(base, encoded);
     if (existsSync(candidate)) return candidate;
@@ -183,7 +183,7 @@ export async function readCodexEntries(window: UsageWindow): Promise<UsageEntry[
         prevCachedInput = currCached;
         prevOutput = currOutput;
 
-        if (deltaInput + deltaOutput === 0) continue;
+        if (deltaInput + deltaCached + deltaOutput === 0) continue;
         if (timestamp < window.since || timestamp > window.until) continue;
 
         const costResult = computeCodexCost(currentModel, deltaInput, deltaCached, deltaOutput);
