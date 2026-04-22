@@ -5,25 +5,33 @@ import { describe, expect, it } from 'vitest';
 import { realExec } from './exec.js';
 
 describe('realExec', () => {
-  it('captures stdout from a command', async () => {
-    const result = await realExec.run('echo', ['hello world']);
-    expect(result.stdout.trim()).toBe('hello world');
+  it('captures stdout from a successful command', async () => {
+    const result = await realExec.run('node', ['-e', 'process.stdout.write("hi")']);
     expect(result.code).toBe(0);
+    expect(result.stdout).toContain('hi');
+    expect(result.stderr).toBe('');
   });
 
-  it('captures stderr from a command', async () => {
-    const result = await realExec.run('node', ['-e', 'process.stderr.write("err-output\\n")']);
-    expect(result.stderr).toContain('err-output');
-    expect(result.code).toBe(0);
-  });
-
-  it('returns non-zero exit code on failure', async () => {
-    const result = await realExec.run('node', ['-e', 'process.exit(2)']);
+  it('captures stderr and non-zero exit code from a failing command', async () => {
+    const result = await realExec.run('node', [
+      '-e',
+      'process.stderr.write("oops"); process.exit(2)',
+    ]);
     expect(result.code).toBe(2);
+    expect(result.stderr).toContain('oops');
   });
 
-  it('returns code=1 when command does not exist', async () => {
-    const result = await realExec.run('definitely-not-a-real-command-xyz', []);
+  it('resolves with code 1 when the command cannot be spawned', async () => {
+    const result = await realExec.run('definitely-not-a-real-binary-xyz', ['--help']);
     expect(result.code).toBe(1);
+  });
+
+  it('passes custom env and cwd to the child process', async () => {
+    const result = await realExec.run(
+      'node',
+      ['-e', 'process.stdout.write(process.env.CUSTOM_VAR ?? "missing")'],
+      { env: { ...process.env, CUSTOM_VAR: 'set' }, cwd: process.cwd() }
+    );
+    expect(result.stdout).toContain('set');
   });
 });

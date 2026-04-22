@@ -14,7 +14,7 @@ export interface UpInstallProps {
   entry: TemplateEntry;
   managers: PackageManagers;
   runSteps: (callbacks: RunCallbacks) => Promise<void>;
-  onDone?: () => void;
+  onDone?: () => void | Promise<void>;
 }
 
 export function UpInstall({ entry, managers: _managers, runSteps, onDone }: UpInstallProps) {
@@ -44,15 +44,23 @@ export function UpInstall({ entry, managers: _managers, runSteps, onDone }: UpIn
         setError(err.message);
       },
     })
-      .then(() => {
+      .then(async () => {
         setElapsed(Math.round((Date.now() - start) / 1000));
+        try {
+          await onDone?.();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+          process.exitCode = 1;
+        }
         setDone(true);
-        onDone?.();
         setTimeout(() => exit(), 800);
       })
       .catch(() => {
         setElapsed(Math.round((Date.now() - start) / 1000));
         setDone(true);
+        // Signal failure to CLI callers / CI even though the UI already
+        // reported the error via onStepError.
+        process.exitCode = 1;
         setTimeout(() => exit(), 2000);
       });
   }, []);

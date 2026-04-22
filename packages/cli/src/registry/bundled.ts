@@ -58,7 +58,7 @@ const templates: TemplateEntry[] = [
       },
     ],
     crew: { specialist: 'video-specialist', displayName: 'Video Specialist', skills: ['remotion'] },
-    completionHint: 'Open Remotion Studio from your project to start editing video',
+    completionHint: 'Run `remotion studio` to open the studio',
   },
   {
     name: 'nextmedal',
@@ -75,15 +75,9 @@ const templates: TemplateEntry[] = [
         winget: 'OpenJS.NodeJS.LTS',
         label: 'Node.js runtime',
       },
-      {
-        type: 'pkg',
-        nix: 'nodePackages.pnpm',
-        brew: 'pnpm',
-        winget: 'pnpm.pnpm',
-        label: 'Package manager',
-      },
+      { type: 'pkg', nix: 'nodePackages.pnpm', brew: 'pnpm', winget: 'pnpm.pnpm', label: 'pnpm' },
     ],
-    completionHint: 'Your project scaffold is ready — open the folder to get started',
+    completionHint: 'Run `create-next-app` to scaffold your project',
   },
 ];
 

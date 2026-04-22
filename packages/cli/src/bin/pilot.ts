@@ -164,6 +164,14 @@ if (kitEnabled) {
       await runKitEdit();
     });
 
+  kit
+    .command('clean')
+    .description('Remove junk and free disk space')
+    .action(async () => {
+      const { runKitClean } = await import('../commands/kit.js');
+      await runKitClean();
+    });
+
   const kitConfig = kit.command('config').description('Inspect the loaded kit.config.json');
 
   kitConfig

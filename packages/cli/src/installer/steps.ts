@@ -25,6 +25,12 @@ export interface StepContext {
 // --- pkg ---
 
 function resolvePkg(step: PkgStep, managers: PackageManagers): { pm: string; pkg: string } | null {
+  // Known limitation: manager priority (nix > brew > winget) is computed fresh
+  // on both install and uninstall. If the environment changes between install
+  // and uninstall (e.g. Nix is installed later), the uninstall call may target
+  // a different package manager than the one that performed the install. A
+  // future change could persist the chosen manager in template state and
+  // prefer it during uninstall; this requires expanding the state schema.
   if (managers.nix && step.nix) return { pm: 'nix', pkg: step.nix };
   if (managers.brew && step.brew) return { pm: 'brew', pkg: step.brew };
   if (managers.winget && step.winget) return { pm: 'winget', pkg: step.winget };
@@ -107,14 +113,24 @@ async function unexecuteNpm(step: NpmStep, exec: Exec): Promise<void> {
 
 // --- skill ---
 
+const SAFE_SKILL_ID = /^[a-zA-Z0-9_-]+$/;
+
+function resolveSkillPath(dir: string, id: string): string {
+  if (!SAFE_SKILL_ID.test(id)) {
+    throw new PilotError(errorCodes.UP_STEP_FAILED, `Invalid skill id: ${id}`);
+  }
+  return join(dir, `${id}.md`);
+}
+
 async function checkSkill(step: SkillStep, ctx: StepContext): Promise<boolean> {
   const dir = ctx.skillsDir ?? DEFAULT_SKILLS_DIR;
-  return existsSync(join(dir, `${step.id}.md`));
+  return existsSync(resolveSkillPath(dir, step.id));
 }
 
 async function executeSkill(step: SkillStep, ctx: StepContext): Promise<void> {
   const dir = ctx.skillsDir ?? DEFAULT_SKILLS_DIR;
   mkdirSync(dir, { recursive: true });
+  const filePath = resolveSkillPath(dir, step.id);
   let res: Response;
   try {
     res = await fetch(step.url);
@@ -127,12 +143,12 @@ async function executeSkill(step: SkillStep, ctx: StepContext): Promise<void> {
   if (!res.ok)
     throw new PilotError(errorCodes.UP_STEP_FAILED, `Failed to fetch skill: ${res.status}`);
   const content = await res.text();
-  writeFileSync(join(dir, `${step.id}.md`), content);
+  writeFileSync(filePath, content);
 }
 
 async function unexecuteSkill(step: SkillStep, ctx: StepContext): Promise<void> {
   const dir = ctx.skillsDir ?? DEFAULT_SKILLS_DIR;
-  const file = join(dir, `${step.id}.md`);
+  const file = resolveSkillPath(dir, step.id);
   if (existsSync(file)) rmSync(file);
 }
 
@@ -142,7 +158,8 @@ async function checkMcp(step: McpStep): Promise<boolean> {
   try {
     const { loadSettings } = await import('../settings.js');
     const settings = loadSettings();
-    return step.server in settings.mcpServers;
+    const existing = settings.mcpServers[step.server];
+    return existing !== undefined && existing.command === step.command;
   } catch {
     return false;
   }
@@ -168,9 +185,14 @@ async function unexecuteMcp(step: McpStep): Promise<void> {
 // --- zed-extension ---
 
 function getZedSettingsPath(): string {
-  return process.platform === 'darwin'
-    ? join(homedir(), 'Library', 'Application Support', 'Zed', 'settings.json')
-    : join(homedir(), '.config', 'zed', 'settings.json');
+  if (process.platform === 'darwin') {
+    return join(homedir(), 'Library', 'Application Support', 'Zed', 'settings.json');
+  }
+  if (process.platform === 'win32') {
+    const appData = process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming');
+    return join(appData, 'Zed', 'settings.json');
+  }
+  return join(homedir(), '.config', 'zed', 'settings.json');
 }
 
 // Zed has no CLI for listing installed extensions; check always returns false (write is idempotent)

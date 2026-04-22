@@ -243,6 +243,14 @@ Status: **Pre-release** · Building v1
 |---------|--------|------|-------------|
 | Admin Dashboard | In Progress | [Spec](docs/superpowers/specs/2026-04-19-admin-dashboard-design.md) | CLI command center with health strip, tabbed panels, SDK-powered data |
 
+### Machine Management (Kit)
+| Feature | Status | Spec |
+|---------|--------|------|
+| `pilot kit init` — bootstrap a fresh machine | Done | [Spec](docs/superpowers/specs/2026-04-20-kit-machine-package-v1-design.md) |
+| `pilot kit status` — health checks (TTY + JSON) | Done | [Spec](docs/superpowers/specs/2026-04-20-kit-machine-package-v1-design.md) |
+| `pilot kit update` — pull + rebuild with progress UI | Done | [Spec](docs/superpowers/specs/2026-04-20-kit-machine-package-v1-design.md) |
+| `pilot kit clean` — scan and remove junk/dev caches | Done | [Spec](docs/superpowers/specs/2026-04-22-kit-clean-design.md) |
+
 ### pilot up (One-Click Setup)
 | Feature | Status | Spec |
 |---------|--------|------|

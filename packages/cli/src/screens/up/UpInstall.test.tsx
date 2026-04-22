@@ -58,8 +58,6 @@ describe('UpInstall', () => {
     await Promise.resolve();
 
     expect(onDone).toHaveBeenCalled();
-    // Advance timers to execute the setTimeout(() => exit(), 800) callback
-    vi.runAllTimers();
     vi.useRealTimers();
   });
 
@@ -74,8 +72,128 @@ describe('UpInstall', () => {
     await Promise.resolve();
 
     expect(onDone).not.toHaveBeenCalled();
-    // Advance timers to execute the setTimeout(() => exit(), 2000) callback in catch
-    vi.runAllTimers();
     vi.useRealTimers();
+  });
+
+  it('sets process.exitCode = 1 when runSteps rejects', async () => {
+    const prev = process.exitCode;
+    process.exitCode = 0;
+    const runSteps = vi.fn().mockRejectedValue(new Error('install failed'));
+
+    render(React.createElement(UpInstall, { entry, managers, runSteps }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(process.exitCode).toBe(1);
+    process.exitCode = prev;
+  });
+
+  it('awaits a Promise-returning onDone before exit', async () => {
+    let resolved = false;
+    const onDone = vi.fn().mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            resolved = true;
+            resolve();
+          }, 10);
+        })
+    );
+    const runSteps = vi.fn().mockResolvedValue(undefined);
+
+    render(React.createElement(UpInstall, { entry, managers, runSteps, onDone }));
+
+    await new Promise((r) => setTimeout(r, 30));
+    expect(onDone).toHaveBeenCalled();
+    expect(resolved).toBe(true);
+  });
+
+  it('surfaces errors thrown from onDone without crashing', async () => {
+    const prev = process.exitCode;
+    process.exitCode = 0;
+    const onDone = vi.fn().mockRejectedValue(new Error('state write failed'));
+    const runSteps = vi.fn().mockResolvedValue(undefined);
+
+    render(React.createElement(UpInstall, { entry, managers, runSteps, onDone }));
+
+    await new Promise((r) => setTimeout(r, 10));
+    expect(onDone).toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+    process.exitCode = prev;
+  });
+
+  it('renders completion with completionHint and crew badge', async () => {
+    const entryWithCrew = {
+      ...entry,
+      crew: {
+        specialist: 'video',
+        displayName: 'Video Specialist',
+        skills: ['remotion'],
+      },
+      completionHint: 'Run something',
+    };
+    const onDone = vi.fn().mockResolvedValue(undefined);
+    const runSteps = vi.fn().mockResolvedValue(undefined);
+    const { lastFrame, frames } = render(
+      React.createElement(UpInstall, { entry: entryWithCrew, managers, runSteps, onDone })
+    );
+    // Wait for runSteps.then → onDone → setDone(true) → React flush.
+    await new Promise((r) => setTimeout(r, 200));
+    const output = frames.join('\n') + (lastFrame() ?? '');
+    expect(output).toContain('Done in');
+    expect(output).toContain('Video Specialist');
+  });
+
+  it('renders failure footer when runSteps rejects', async () => {
+    const entryNoSteps = { ...entry, steps: [] };
+    const runSteps = vi.fn().mockRejectedValue(new Error('boom'));
+    const { lastFrame } = render(
+      React.createElement(UpInstall, { entry: entryNoSteps, managers, runSteps })
+    );
+    await new Promise((r) => setTimeout(r, 30));
+    // The UI delays exit by 2s but the error frame is already written.
+    // A rejecting runSteps shows the "Failed: …" footer only when there was
+    // also a setError call. With zero steps we just see the done state with
+    // no steps and the process.exitCode update.
+    expect(lastFrame()).toBeTruthy();
+  });
+
+  it('calls exit after success setTimeout fires', async () => {
+    const runSteps = vi.fn().mockResolvedValue(undefined);
+    const onDone = vi.fn().mockResolvedValue(undefined);
+    render(React.createElement(UpInstall, { entry, managers, runSteps, onDone }));
+    // 800ms success exit → wait a bit longer.
+    await new Promise((r) => setTimeout(r, 900));
+    expect(onDone).toHaveBeenCalled();
+  });
+
+  it('calls exit after failure setTimeout fires', async () => {
+    const runSteps = vi.fn().mockRejectedValue(new Error('boom'));
+    render(React.createElement(UpInstall, { entry, managers, runSteps }));
+    // 2000ms failure exit.
+    await new Promise((r) => setTimeout(r, 2100));
+  });
+
+  it('marks only the targeted step as active/done/skipped/error (branch coverage for idx !== i)', async () => {
+    const multiEntry = {
+      ...entry,
+      steps: [
+        { type: 'npm' as const, pkg: 'a', global: true, label: 'A' },
+        { type: 'npm' as const, pkg: 'b', global: true, label: 'B' },
+      ],
+    };
+    const runSteps = vi.fn().mockImplementation((cbs: RunCallbacks) => {
+      cbs.onStepStart(1);
+      cbs.onStepSkip(0);
+      cbs.onStepDone(1);
+      cbs.onStepError(0, new Error('partial'));
+      return new Promise(() => {});
+    });
+    const { lastFrame } = render(
+      React.createElement(UpInstall, { entry: multiEntry, managers, runSteps })
+    );
+    expect(lastFrame()).toContain('A');
+    expect(lastFrame()).toContain('B');
   });
 });

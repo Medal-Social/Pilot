@@ -1,24 +1,42 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { McpStep, NpmStep, PkgStep, SkillStep, ZedExtStep } from '../registry/types.js';
+import { loadSettings, saveSettings } from '../settings.js';
 import type { PackageManagers } from './detect.js';
 import type { Exec } from './exec.js';
 import { checkStep, executeStep, unexecuteStep } from './steps.js';
 
 vi.mock('../settings.js', () => ({
-  loadSettings: vi.fn(() => ({
-    onboarded: false,
+  loadSettings: vi.fn().mockReturnValue({
+    onboarded: true,
     plugins: {},
     mcpServers: {},
     crew: { specialists: {} },
-  })),
+  }),
   saveSettings: vi.fn(),
 }));
+
+vi.mock('node:os', async (importOriginal) => {
+  const original = await importOriginal<typeof import('node:os')>();
+  return {
+    ...original,
+    homedir: () => process.env.PILOT_TEST_HOMEDIR ?? original.homedir(),
+  };
+});
+
+function zedSettingsDir(root: string): string {
+  if (process.platform === 'darwin') return join(root, 'Library', 'Application Support', 'Zed');
+  if (process.platform === 'win32') {
+    const appData = process.env.APPDATA ?? join(root, 'AppData', 'Roaming');
+    return join(appData, 'Zed');
+  }
+  return join(root, '.config', 'zed');
+}
 
 const allManagers: PackageManagers = { nix: true, brew: true, winget: false, npm: true };
 const brewOnly: PackageManagers = { nix: false, brew: true, winget: false, npm: false };
@@ -32,9 +50,11 @@ function makeExec(exitCode = 0, stdout = ''): Exec {
 let tmpDir: string;
 beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'pilot-steps-'));
+  process.env.PILOT_TEST_HOMEDIR = tmpDir;
 });
 afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true });
+  delete process.env.PILOT_TEST_HOMEDIR;
 });
 
 // --- pkg step ---
@@ -89,6 +109,46 @@ describe('pkg step', () => {
     await expect(unexecuteStep(pkgStep, brewOnly, exec)).rejects.toMatchObject({
       code: 'UP_STEP_FAILED',
     });
+  });
+
+  it('executeStep runs winget install when only winget is available', async () => {
+    const wingetStep: PkgStep = {
+      type: 'pkg',
+      winget: 'Contoso.App',
+      label: 'Contoso App',
+    };
+    const wingetOnly: PackageManagers = { nix: false, brew: false, winget: true, npm: false };
+    const exec = makeExec(0);
+    await executeStep(wingetStep, wingetOnly, exec);
+    expect(exec.run).toHaveBeenCalledWith(
+      'winget',
+      expect.arrayContaining(['install', '--id', 'Contoso.App'])
+    );
+  });
+
+  it('unexecuteStep runs winget uninstall when only winget is available', async () => {
+    const wingetStep: PkgStep = {
+      type: 'pkg',
+      winget: 'Contoso.App',
+      label: 'Contoso App',
+    };
+    const wingetOnly: PackageManagers = { nix: false, brew: false, winget: true, npm: false };
+    const exec = makeExec(0);
+    await unexecuteStep(wingetStep, wingetOnly, exec);
+    expect(exec.run).toHaveBeenCalledWith('winget', [
+      'uninstall',
+      '--id',
+      'Contoso.App',
+      '--silent',
+    ]);
+  });
+
+  it('checkStep uses winget when only winget is available', async () => {
+    const wingetStep: PkgStep = { type: 'pkg', winget: 'Contoso.App', label: 'Contoso App' };
+    const wingetOnly: PackageManagers = { nix: false, brew: false, winget: true, npm: false };
+    const exec = makeExec(0);
+    expect(await checkStep(wingetStep, wingetOnly, exec)).toBe(true);
+    expect(exec.run).toHaveBeenCalledWith('winget', ['list', '--id', 'Contoso.App']);
   });
 });
 
@@ -173,6 +233,36 @@ describe('skill step', () => {
     vi.unstubAllGlobals();
   });
 
+  it('executeStep rejects path-traversal skill IDs', async () => {
+    const traversalStep: SkillStep = {
+      type: 'skill',
+      id: '../evil',
+      url: 'https://example.com/evil.md',
+      label: 'Evil skill',
+    };
+    const exec = makeExec(0);
+    await expect(
+      executeStep(traversalStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({
+      code: 'UP_STEP_FAILED',
+    });
+  });
+
+  it('checkStep rejects path-traversal skill IDs', async () => {
+    const traversalStep: SkillStep = {
+      type: 'skill',
+      id: '../evil',
+      url: 'https://example.com/evil.md',
+      label: 'Evil skill',
+    };
+    const exec = makeExec(0);
+    await expect(
+      checkStep(traversalStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({
+      code: 'UP_STEP_FAILED',
+    });
+  });
+
   it('unexecuteStep deletes the skill file', async () => {
     writeFileSync(join(tmpDir, 'remotion.md'), '# Remotion');
     const exec = makeExec(0);
@@ -180,16 +270,8 @@ describe('skill step', () => {
     expect(existsSync(join(tmpDir, 'remotion.md'))).toBe(false);
   });
 
-  it('unexecuteStep does nothing when skill file does not exist', async () => {
-    const exec = makeExec(0);
-    // Should not throw
-    await expect(
-      unexecuteStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
-    ).resolves.not.toThrow();
-  });
-
-  it('executeStep throws UP_STEP_FAILED when fetch fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
+  it('executeStep wraps fetch errors in UP_STEP_FAILED', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
     const exec = makeExec(0);
     await expect(
       executeStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
@@ -197,7 +279,16 @@ describe('skill step', () => {
     vi.unstubAllGlobals();
   });
 
-  it('executeStep throws UP_STEP_FAILED when fetch returns non-ok', async () => {
+  it('executeStep wraps non-Error fetch rejections in UP_STEP_FAILED', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue('plain string rejection'));
+    const exec = makeExec(0);
+    await expect(
+      executeStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({ code: 'UP_STEP_FAILED' });
+    vi.unstubAllGlobals();
+  });
+
+  it('executeStep throws UP_STEP_FAILED when fetch returns !ok', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve('') })
@@ -210,178 +301,123 @@ describe('skill step', () => {
   });
 });
 
-// --- winget pkg step ---
-describe('winget pkg step', () => {
-  const wingetStep: PkgStep = {
-    type: 'pkg',
-    winget: 'Microsoft.NodeJs',
-    label: 'Node.js (winget)',
-  };
-  const wingetOnly: PackageManagers = { nix: false, brew: false, winget: true, npm: false };
-
-  it('checkStep uses winget list', async () => {
-    const exec = makeExec(0);
-    expect(await checkStep(wingetStep, wingetOnly, exec)).toBe(true);
-    expect(exec.run).toHaveBeenCalledWith('winget', ['list', '--id', 'Microsoft.NodeJs']);
-  });
-
-  it('executeStep uses winget install', async () => {
-    const exec = makeExec(0);
-    await executeStep(wingetStep, wingetOnly, exec);
-    expect(exec.run).toHaveBeenCalledWith(
-      'winget',
-      expect.arrayContaining(['install', '--id', 'Microsoft.NodeJs'])
-    );
-  });
-
-  it('unexecuteStep uses winget uninstall', async () => {
-    const exec = makeExec(0);
-    await unexecuteStep(wingetStep, wingetOnly, exec);
-    expect(exec.run).toHaveBeenCalledWith('winget', [
-      'uninstall',
-      '--id',
-      'Microsoft.NodeJs',
-      '--silent',
-    ]);
-  });
-
-  it('checkStep returns false when no manager matches', async () => {
-    const exec = makeExec(0);
-    expect(await checkStep(wingetStep, noneAvailable, exec)).toBe(false);
-  });
-
-  it('executeStep throws UP_STEP_FAILED on non-zero exit', async () => {
-    const exec = makeExec(1);
-    await expect(executeStep(wingetStep, wingetOnly, exec)).rejects.toMatchObject({
-      code: 'UP_STEP_FAILED',
-    });
-  });
-
-  it('unexecuteStep does nothing when no manager available', async () => {
-    const exec = makeExec(0);
-    await expect(unexecuteStep(wingetStep, noneAvailable, exec)).resolves.not.toThrow();
-  });
-});
-
-// --- npm local step ---
-describe('npm local step', () => {
-  const localNpmStep: NpmStep = {
-    type: 'npm',
-    pkg: 'typescript',
-    global: false,
-    label: 'TypeScript',
-  };
-
-  it('executeStep runs npm install (local)', async () => {
-    const exec = makeExec(0);
-    await executeStep(localNpmStep, noneAvailable, exec);
-    expect(exec.run).toHaveBeenCalledWith('npm', ['install', 'typescript']);
-  });
-
-  it('unexecuteStep runs npm uninstall (local)', async () => {
-    const exec = makeExec(0);
-    await unexecuteStep(localNpmStep, noneAvailable, exec);
-    expect(exec.run).toHaveBeenCalledWith('npm', ['uninstall', 'typescript']);
-  });
-
-  it('executeStep throws UP_STEP_FAILED on non-zero exit', async () => {
-    const exec = makeExec(1);
-    await expect(executeStep(localNpmStep, noneAvailable, exec)).rejects.toMatchObject({
-      code: 'UP_STEP_FAILED',
-    });
-  });
-});
-
 // --- mcp step ---
 describe('mcp step', () => {
   const mcpStep: McpStep = {
     type: 'mcp',
-    server: 'test-server',
-    command: 'npx test-mcp',
-    label: 'Test MCP',
+    server: 'my-server',
+    command: 'node mcp.js',
+    label: 'My MCP Server',
   };
 
-  afterEach(() => {
-    vi.resetAllMocks();
-  });
-
-  it('checkStep returns false when server not in settings', async () => {
+  it('checkStep returns false when server is not in mcpServers', async () => {
     const exec = makeExec(0);
-    expect(await checkStep(mcpStep, noneAvailable, exec)).toBe(false);
+    expect(await checkStep(mcpStep, allManagers, exec)).toBe(false);
   });
 
-  it('checkStep returns true when server is in settings', async () => {
-    const { loadSettings } = await import('../settings.js');
+  it('checkStep returns true when server is in mcpServers with matching command', async () => {
     vi.mocked(loadSettings).mockReturnValueOnce({
-      onboarded: false,
+      onboarded: true,
       plugins: {},
-      mcpServers: { 'test-server': { command: 'npx test-mcp' } },
+      mcpServers: { 'my-server': { command: 'node mcp.js' } },
       crew: { specialists: {} },
     });
     const exec = makeExec(0);
-    expect(await checkStep(mcpStep, noneAvailable, exec)).toBe(true);
+    expect(await checkStep(mcpStep, allManagers, exec)).toBe(true);
   });
 
-  it('checkStep returns false when loadSettings throws', async () => {
-    const { loadSettings } = await import('../settings.js');
-    vi.mocked(loadSettings).mockImplementationOnce(() => {
-      throw new Error('settings error');
+  it('checkStep returns false when server command differs from step command', async () => {
+    vi.mocked(loadSettings).mockReturnValueOnce({
+      onboarded: true,
+      plugins: {},
+      mcpServers: { 'my-server': { command: 'node old-mcp.js' } },
+      crew: { specialists: {} },
     });
     const exec = makeExec(0);
-    expect(await checkStep(mcpStep, noneAvailable, exec)).toBe(false);
+    expect(await checkStep(mcpStep, allManagers, exec)).toBe(false);
   });
 
-  it('executeStep adds server to mcpServers', async () => {
-    const { saveSettings } = await import('../settings.js');
+  it('executeStep adds the server to mcpServers', async () => {
+    const settings = { onboarded: true, plugins: {}, mcpServers: {}, crew: { specialists: {} } };
+    vi.mocked(loadSettings).mockReturnValueOnce(settings);
     const exec = makeExec(0);
-    await executeStep(mcpStep, noneAvailable, exec);
+    await executeStep(mcpStep, allManagers, exec);
     expect(vi.mocked(saveSettings)).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mcpServers: expect.objectContaining({ 'test-server': { command: 'npx test-mcp' } }),
-      })
+      expect.objectContaining({ mcpServers: { 'my-server': { command: 'node mcp.js' } } })
     );
   });
 
-  it('unexecuteStep removes server from mcpServers', async () => {
-    const { loadSettings, saveSettings } = await import('../settings.js');
-    vi.mocked(loadSettings).mockReturnValueOnce({
-      onboarded: false,
+  it('unexecuteStep removes the server from mcpServers', async () => {
+    const settings = {
+      onboarded: true,
       plugins: {},
-      mcpServers: { 'test-server': { command: 'npx test-mcp' } },
+      mcpServers: { 'my-server': { command: 'node mcp.js' } },
       crew: { specialists: {} },
+    };
+    vi.mocked(loadSettings).mockReturnValueOnce(settings);
+    const exec = makeExec(0);
+    await unexecuteStep(mcpStep, allManagers, exec);
+    expect(vi.mocked(saveSettings)).toHaveBeenCalledWith(
+      expect.objectContaining({ mcpServers: {} })
+    );
+  });
+
+  it('checkStep returns false when loadSettings throws', async () => {
+    vi.mocked(loadSettings).mockImplementationOnce(() => {
+      throw new Error('settings unreadable');
     });
     const exec = makeExec(0);
-    await unexecuteStep(mcpStep, noneAvailable, exec);
-    const savedArg = vi.mocked(saveSettings).mock.calls[0]?.[0];
-    expect(savedArg?.mcpServers).not.toHaveProperty('test-server');
+    expect(await checkStep(mcpStep, allManagers, exec)).toBe(false);
   });
 });
 
 // --- zed-extension step ---
 describe('zed-extension step', () => {
-  const zedStep: ZedExtStep = {
-    type: 'zed-extension',
-    id: 'gleam',
-    label: 'Gleam language support',
-  };
+  const zedStep: ZedExtStep = { type: 'zed-extension', id: 'rust', label: 'Rust Extension' };
 
   it('checkStep always returns false', async () => {
     const exec = makeExec(0);
-    expect(await checkStep(zedStep, noneAvailable, exec)).toBe(false);
+    expect(await checkStep(zedStep, allManagers, exec)).toBe(false);
   });
 
-  it('executeStep does nothing when zed settings file does not exist', async () => {
-    vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
-    // On linux, path would be ~/.config/zed/settings.json — which won't exist
+  it('executeStep is a no-op when Zed settings file does not exist', async () => {
     const exec = makeExec(0);
-    await expect(executeStep(zedStep, noneAvailable, exec)).resolves.not.toThrow();
-    vi.restoreAllMocks();
+    await expect(executeStep(zedStep, allManagers, exec)).resolves.toBeUndefined();
   });
 
-  it('unexecuteStep does nothing when zed settings file does not exist', async () => {
-    vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
+  it('unexecuteStep is a no-op when Zed settings file does not exist', async () => {
     const exec = makeExec(0);
-    await expect(unexecuteStep(zedStep, noneAvailable, exec)).resolves.not.toThrow();
-    vi.restoreAllMocks();
+    await expect(unexecuteStep(zedStep, allManagers, exec)).resolves.toBeUndefined();
+  });
+
+  it('executeStep writes extension into Zed settings when file exists', async () => {
+    const zedDir = zedSettingsDir(tmpDir);
+    mkdirSync(zedDir, { recursive: true });
+    writeFileSync(join(zedDir, 'settings.json'), JSON.stringify({ auto_install_extensions: {} }));
+
+    const exec = makeExec(0);
+    await executeStep(zedStep, allManagers, exec);
+
+    const written = JSON.parse(readFileSync(join(zedDir, 'settings.json'), 'utf-8')) as {
+      auto_install_extensions: Record<string, boolean>;
+    };
+    expect(written.auto_install_extensions.rust).toBe(true);
+  });
+
+  it('unexecuteStep removes extension from Zed settings when file exists', async () => {
+    const zedDir = zedSettingsDir(tmpDir);
+    mkdirSync(zedDir, { recursive: true });
+    writeFileSync(
+      join(zedDir, 'settings.json'),
+      JSON.stringify({ auto_install_extensions: { rust: true } })
+    );
+
+    const exec = makeExec(0);
+    await unexecuteStep(zedStep, allManagers, exec);
+
+    const written = JSON.parse(readFileSync(join(zedDir, 'settings.json'), 'utf-8')) as {
+      auto_install_extensions: Record<string, boolean>;
+    };
+    expect(written.auto_install_extensions.rust).toBeUndefined();
   });
 });

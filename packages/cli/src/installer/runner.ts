@@ -3,8 +3,9 @@
 
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { loadTemplateState } from '../device/state.js';
 import { fetchRegistry } from '../registry/fetch.js';
-import type { AnyStep, PkgStep } from '../registry/types.js';
+import type { AnyStep, NpmStep, PkgStep, TemplateEntry } from '../registry/types.js';
 import type { PackageManagers } from './detect.js';
 import { realExec } from './exec.js';
 import { checkStep, executeStep, unexecuteStep } from './steps.js';
@@ -60,30 +61,67 @@ export async function runUninstallSteps(
   const skillsDir = join(homedir(), '.pilot', 'skills');
   const cacheDir = join(homedir(), '.pilot', 'registry');
 
-  // Build a set of pkg identifiers used by other templates (shared-package protection)
+  // Build a set of pkg / global-npm identifiers used by other templates
+  // (shared-dependency protection).
   const sharedPkgs = new Set<string>();
-  // If any peer template cannot be resolved we conservatively protect ALL pkg steps.
+  const sharedNpm = new Set<string>();
+  // If any peer template cannot be resolved we conservatively protect ALL shared
+  // step types (pkg + global npm).
   let unknownPeerExists = false;
+
+  function absorbPeerSteps(peerSteps: AnyStep[]): void {
+    for (const s of peerSteps) {
+      if (s.type === 'pkg') {
+        const p = s as PkgStep;
+        if (p.nix) sharedPkgs.add(`nix:${p.nix}`);
+        if (p.brew) sharedPkgs.add(`brew:${p.brew}`);
+        if (p.winget) sharedPkgs.add(`winget:${p.winget}`);
+      } else if (s.type === 'npm') {
+        const n = s as NpmStep;
+        if (n.global) sharedNpm.add(n.pkg);
+      }
+    }
+  }
+
   if (otherInstalledTemplates.length > 0) {
+    // Load locally-persisted template steps as a fallback for peers that are
+    // missing from the registry (offline + bundled fallback, or registry
+    // changes that removed a template).
+    let localState: { templates: Record<string, { steps?: AnyStep[] }> } | undefined;
+    try {
+      localState = loadTemplateState() as {
+        templates: Record<string, { steps?: AnyStep[] }>;
+      };
+    } catch {
+      localState = undefined;
+    }
+
+    let registryTemplates: TemplateEntry[] = [];
     try {
       const { index } = await fetchRegistry({ cacheDir });
-      for (const name of otherInstalledTemplates) {
-        const entry = index.templates.find((t) => t.name === name);
-        if (!entry) {
-          unknownPeerExists = true;
-          continue;
-        }
-        for (const s of entry.steps) {
-          if (s.type === 'pkg') {
-            const p = s as PkgStep;
-            if (p.nix) sharedPkgs.add(`nix:${p.nix}`);
-            if (p.brew) sharedPkgs.add(`brew:${p.brew}`);
-            if (p.winget) sharedPkgs.add(`winget:${p.winget}`);
-          }
-        }
-      }
+      registryTemplates = index.templates;
     } catch {
-      // If registry fetch fails entirely, protect all pkg steps
+      // If registry fetch fails entirely, registryTemplates stays empty and we
+      // rely on local state only.
+    }
+
+    for (const name of otherInstalledTemplates) {
+      // Prefer install-time persisted steps — that is the set the peer actually
+      // relies on. Registry metadata may have drifted since install (steps added,
+      // removed, or renamed) and using it as the source of truth would miss
+      // shared dependencies the peer still needs. Registry is used only when
+      // local state has no stored steps (older installs pre-step-persistence).
+      const stored = localState?.templates[name]?.steps;
+      if (stored && Array.isArray(stored)) {
+        absorbPeerSteps(stored);
+        continue;
+      }
+      const entry = registryTemplates.find((t) => t.name === name);
+      if (entry) {
+        absorbPeerSteps(entry.steps);
+        continue;
+      }
+      // No way to resolve this peer — conservatively protect everything.
       unknownPeerExists = true;
     }
   }
@@ -95,7 +133,7 @@ export async function runUninstallSteps(
     const originalIndex = steps.length - 1 - i;
     callbacks.onStepStart(originalIndex);
 
-    // Shared-package protection
+    // Shared-package protection (pkg)
     if (step.type === 'pkg') {
       const p = step as PkgStep;
       const isShared =
@@ -104,6 +142,15 @@ export async function runUninstallSteps(
         (managers.brew && p.brew && sharedPkgs.has(`brew:${p.brew}`)) ||
         (managers.winget && p.winget && sharedPkgs.has(`winget:${p.winget}`));
       if (isShared) {
+        callbacks.onStepSkip(originalIndex);
+        continue;
+      }
+    }
+
+    // Shared-dependency protection (global npm)
+    if (step.type === 'npm') {
+      const n = step as NpmStep;
+      if (n.global && (unknownPeerExists || sharedNpm.has(n.pkg))) {
         callbacks.onStepSkip(originalIndex);
         continue;
       }
