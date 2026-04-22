@@ -75,7 +75,11 @@ export async function fetchRegistry({
     const raw = await res.json();
     const index = RegistryIndexSchema.parse(raw);
     verifySha256(index);
-    writeCache(cacheDir, index);
+    try {
+      writeCache(cacheDir, index);
+    } catch {
+      // Cache write failure is non-fatal; return the freshly fetched registry anyway
+    }
     return { index, fromCache: false, offline: false };
   } catch (err) {
     if (err instanceof PilotError) throw err; // re-throw tampered error

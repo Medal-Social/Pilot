@@ -107,14 +107,24 @@ async function unexecuteNpm(step: NpmStep, exec: Exec): Promise<void> {
 
 // --- skill ---
 
+const SAFE_SKILL_ID = /^[a-zA-Z0-9_-]+$/;
+
+function resolveSkillPath(dir: string, id: string): string {
+  if (!SAFE_SKILL_ID.test(id)) {
+    throw new PilotError(errorCodes.UP_STEP_FAILED, `Invalid skill id: ${id}`);
+  }
+  return join(dir, `${id}.md`);
+}
+
 async function checkSkill(step: SkillStep, ctx: StepContext): Promise<boolean> {
   const dir = ctx.skillsDir ?? DEFAULT_SKILLS_DIR;
-  return existsSync(join(dir, `${step.id}.md`));
+  return existsSync(resolveSkillPath(dir, step.id));
 }
 
 async function executeSkill(step: SkillStep, ctx: StepContext): Promise<void> {
   const dir = ctx.skillsDir ?? DEFAULT_SKILLS_DIR;
   mkdirSync(dir, { recursive: true });
+  const filePath = resolveSkillPath(dir, step.id);
   let res: Response;
   try {
     res = await fetch(step.url);
@@ -127,12 +137,12 @@ async function executeSkill(step: SkillStep, ctx: StepContext): Promise<void> {
   if (!res.ok)
     throw new PilotError(errorCodes.UP_STEP_FAILED, `Failed to fetch skill: ${res.status}`);
   const content = await res.text();
-  writeFileSync(join(dir, `${step.id}.md`), content);
+  writeFileSync(filePath, content);
 }
 
 async function unexecuteSkill(step: SkillStep, ctx: StepContext): Promise<void> {
   const dir = ctx.skillsDir ?? DEFAULT_SKILLS_DIR;
-  const file = join(dir, `${step.id}.md`);
+  const file = resolveSkillPath(dir, step.id);
   if (existsSync(file)) rmSync(file);
 }
 
@@ -142,7 +152,8 @@ async function checkMcp(step: McpStep): Promise<boolean> {
   try {
     const { loadSettings } = await import('../settings.js');
     const settings = loadSettings();
-    return step.server in settings.mcpServers;
+    const existing = settings.mcpServers[step.server];
+    return existing !== undefined && existing.command === step.command;
   } catch {
     return false;
   }

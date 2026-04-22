@@ -1,14 +1,33 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { NpmStep, PkgStep, SkillStep } from '../registry/types.js';
+import type { McpStep, NpmStep, PkgStep, SkillStep, ZedExtStep } from '../registry/types.js';
+import { loadSettings, saveSettings } from '../settings.js';
 import type { PackageManagers } from './detect.js';
 import type { Exec } from './exec.js';
 import { checkStep, executeStep, unexecuteStep } from './steps.js';
+
+vi.mock('../settings.js', () => ({
+  loadSettings: vi.fn().mockReturnValue({
+    onboarded: true,
+    plugins: {},
+    mcpServers: {},
+    crew: { specialists: {} },
+  }),
+  saveSettings: vi.fn(),
+}));
+
+vi.mock('node:os', async (importOriginal) => {
+  const original = await importOriginal<typeof import('node:os')>();
+  return {
+    ...original,
+    homedir: () => process.env.PILOT_TEST_HOMEDIR ?? original.homedir(),
+  };
+});
 
 const allManagers: PackageManagers = { nix: true, brew: true, winget: false, npm: true };
 const brewOnly: PackageManagers = { nix: false, brew: true, winget: false, npm: false };
@@ -22,9 +41,11 @@ function makeExec(exitCode = 0, stdout = ''): Exec {
 let tmpDir: string;
 beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'pilot-steps-'));
+  process.env.PILOT_TEST_HOMEDIR = tmpDir;
 });
 afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true });
+  delete process.env.PILOT_TEST_HOMEDIR;
 });
 
 // --- pkg step ---
@@ -163,10 +184,153 @@ describe('skill step', () => {
     vi.unstubAllGlobals();
   });
 
+  it('executeStep rejects path-traversal skill IDs', async () => {
+    const traversalStep: SkillStep = {
+      type: 'skill',
+      id: '../evil',
+      url: 'https://example.com/evil.md',
+      label: 'Evil skill',
+    };
+    const exec = makeExec(0);
+    await expect(
+      executeStep(traversalStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({
+      code: 'UP_STEP_FAILED',
+    });
+  });
+
+  it('checkStep rejects path-traversal skill IDs', async () => {
+    const traversalStep: SkillStep = {
+      type: 'skill',
+      id: '../evil',
+      url: 'https://example.com/evil.md',
+      label: 'Evil skill',
+    };
+    const exec = makeExec(0);
+    await expect(
+      checkStep(traversalStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({
+      code: 'UP_STEP_FAILED',
+    });
+  });
+
   it('unexecuteStep deletes the skill file', async () => {
     writeFileSync(join(tmpDir, 'remotion.md'), '# Remotion');
     const exec = makeExec(0);
     await unexecuteStep(skillStep, npmOnly, exec, { skillsDir: tmpDir });
     expect(existsSync(join(tmpDir, 'remotion.md'))).toBe(false);
+  });
+});
+
+// --- mcp step ---
+describe('mcp step', () => {
+  const mcpStep: McpStep = {
+    type: 'mcp',
+    server: 'my-server',
+    command: 'node mcp.js',
+    label: 'My MCP Server',
+  };
+
+  it('checkStep returns false when server is not in mcpServers', async () => {
+    const exec = makeExec(0);
+    expect(await checkStep(mcpStep, allManagers, exec)).toBe(false);
+  });
+
+  it('checkStep returns true when server is in mcpServers with matching command', async () => {
+    vi.mocked(loadSettings).mockReturnValueOnce({
+      onboarded: true,
+      plugins: {},
+      mcpServers: { 'my-server': { command: 'node mcp.js' } },
+      crew: { specialists: {} },
+    });
+    const exec = makeExec(0);
+    expect(await checkStep(mcpStep, allManagers, exec)).toBe(true);
+  });
+
+  it('checkStep returns false when server command differs from step command', async () => {
+    vi.mocked(loadSettings).mockReturnValueOnce({
+      onboarded: true,
+      plugins: {},
+      mcpServers: { 'my-server': { command: 'node old-mcp.js' } },
+      crew: { specialists: {} },
+    });
+    const exec = makeExec(0);
+    expect(await checkStep(mcpStep, allManagers, exec)).toBe(false);
+  });
+
+  it('executeStep adds the server to mcpServers', async () => {
+    const settings = { onboarded: true, plugins: {}, mcpServers: {}, crew: { specialists: {} } };
+    vi.mocked(loadSettings).mockReturnValueOnce(settings);
+    const exec = makeExec(0);
+    await executeStep(mcpStep, allManagers, exec);
+    expect(vi.mocked(saveSettings)).toHaveBeenCalledWith(
+      expect.objectContaining({ mcpServers: { 'my-server': { command: 'node mcp.js' } } })
+    );
+  });
+
+  it('unexecuteStep removes the server from mcpServers', async () => {
+    const settings = {
+      onboarded: true,
+      plugins: {},
+      mcpServers: { 'my-server': { command: 'node mcp.js' } },
+      crew: { specialists: {} },
+    };
+    vi.mocked(loadSettings).mockReturnValueOnce(settings);
+    const exec = makeExec(0);
+    await unexecuteStep(mcpStep, allManagers, exec);
+    expect(vi.mocked(saveSettings)).toHaveBeenCalledWith(
+      expect.objectContaining({ mcpServers: {} })
+    );
+  });
+});
+
+// --- zed-extension step ---
+describe('zed-extension step', () => {
+  const zedStep: ZedExtStep = { type: 'zed-extension', id: 'rust', label: 'Rust Extension' };
+
+  it('checkStep always returns false', async () => {
+    const exec = makeExec(0);
+    expect(await checkStep(zedStep, allManagers, exec)).toBe(false);
+  });
+
+  it('executeStep is a no-op when Zed settings file does not exist', async () => {
+    const exec = makeExec(0);
+    await expect(executeStep(zedStep, allManagers, exec)).resolves.toBeUndefined();
+  });
+
+  it('unexecuteStep is a no-op when Zed settings file does not exist', async () => {
+    const exec = makeExec(0);
+    await expect(unexecuteStep(zedStep, allManagers, exec)).resolves.toBeUndefined();
+  });
+
+  it('executeStep writes extension into Zed settings when file exists', async () => {
+    const zedDir = join(tmpDir, 'Library', 'Application Support', 'Zed');
+    mkdirSync(zedDir, { recursive: true });
+    writeFileSync(join(zedDir, 'settings.json'), JSON.stringify({ auto_install_extensions: {} }));
+
+    const exec = makeExec(0);
+    await executeStep(zedStep, allManagers, exec);
+
+    const written = JSON.parse(readFileSync(join(zedDir, 'settings.json'), 'utf-8')) as {
+      auto_install_extensions: Record<string, boolean>;
+    };
+    expect(written.auto_install_extensions.rust).toBe(true);
+  });
+
+  it('unexecuteStep removes extension from Zed settings when file exists', async () => {
+    const zedDir = join(tmpDir, 'Library', 'Application Support', 'Zed');
+    mkdirSync(zedDir, { recursive: true });
+    writeFileSync(
+      join(zedDir, 'settings.json'),
+      JSON.stringify({ auto_install_extensions: { rust: true } })
+    );
+
+    const exec = makeExec(0);
+    await unexecuteStep(zedStep, allManagers, exec);
+
+    const written = JSON.parse(readFileSync(join(zedDir, 'settings.json'), 'utf-8')) as {
+      auto_install_extensions: Record<string, boolean>;
+    };
+    expect(written.auto_install_extensions.rust).toBeUndefined();
   });
 });
