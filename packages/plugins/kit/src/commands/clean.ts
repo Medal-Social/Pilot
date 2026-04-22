@@ -176,7 +176,10 @@ export async function deleteTarget(exec: Exec, scanned: ScannedTarget): Promise<
     return { id: target.id, freed: m ? parseSize(m[1], m[2]) : 0 };
   }
 
-  const path = target.path!;
+  const path = target.path;
+  if (!path) {
+    return { id: target.id, freed: 0, warning: `target ${target.id} has no path` };
+  }
   const r = target.contentsOnly
     ? await exec.run('find', [
         path,
