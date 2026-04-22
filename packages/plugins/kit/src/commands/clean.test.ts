@@ -147,3 +147,143 @@ describe('scanTargets', () => {
     expect(result).toHaveLength(0);
   });
 });
+
+import type { ScannedTarget } from './clean.js';
+import { deleteTarget, deleteTargets } from './clean.js';
+
+describe('deleteTarget', () => {
+  it('runs rm -rf for a non-contentsOnly path target', async () => {
+    const exec = {
+      run: vi.fn().mockResolvedValue({ stdout: '', stderr: '', code: 0 }),
+      spawn: vi.fn(),
+    };
+    const scanned: ScannedTarget = {
+      target: { id: 'npm', label: 'npm cache', kind: 'path', path: '/home/.npm/_cacache' },
+      bytes: 1024 * 1024,
+    };
+    const result = await deleteTarget(exec, scanned);
+    expect(exec.run).toHaveBeenCalledWith('rm', ['-rf', '/home/.npm/_cacache']);
+    expect(result.freed).toBe(1024 * 1024);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('runs find for a contentsOnly path target', async () => {
+    const exec = {
+      run: vi.fn().mockResolvedValue({ stdout: '', stderr: '', code: 0 }),
+      spawn: vi.fn(),
+    };
+    const scanned: ScannedTarget = {
+      target: {
+        id: 'system-caches',
+        label: 'System Caches',
+        kind: 'path',
+        path: '/Users/x/Library/Caches',
+        contentsOnly: true,
+      },
+      bytes: 500 * 1024 * 1024,
+    };
+    await deleteTarget(exec, scanned);
+    expect(exec.run).toHaveBeenCalledWith('find', [
+      '/Users/x/Library/Caches',
+      '-mindepth',
+      '1',
+      '-maxdepth',
+      '1',
+      '-exec',
+      'rm',
+      '-rf',
+      '{}',
+      '+',
+    ]);
+  });
+
+  it('returns a warning and freed=0 when delete fails', async () => {
+    const exec = {
+      run: vi.fn().mockResolvedValue({ stdout: '', stderr: 'Permission denied', code: 1 }),
+      spawn: vi.fn(),
+    };
+    const scanned: ScannedTarget = {
+      target: { id: 'npm', label: 'npm cache', kind: 'path', path: '/home/.npm/_cacache' },
+      bytes: 1024,
+    };
+    const result = await deleteTarget(exec, scanned);
+    expect(result.freed).toBe(0);
+    expect(result.warning).toContain('Permission denied');
+  });
+
+  it('runs docker system prune and parses freed bytes', async () => {
+    const exec = {
+      run: vi.fn().mockResolvedValue({
+        stdout: 'Deleted Images:\nabc\n\nTotal reclaimed space: 1.234GB\n',
+        stderr: '',
+        code: 0,
+      }),
+      spawn: vi.fn(),
+    };
+    const scanned: ScannedTarget = {
+      target: { id: 'docker', label: 'Docker', kind: 'docker' },
+      bytes: 0,
+    };
+    const result = await deleteTarget(exec, scanned);
+    expect(exec.run).toHaveBeenCalledWith('docker', ['system', 'prune', '-f']);
+    expect(result.freed).toBeGreaterThan(0);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('returns a docker warning when prune exits non-zero', async () => {
+    const exec = {
+      run: vi.fn().mockResolvedValue({ stdout: '', stderr: 'Cannot connect', code: 1 }),
+      spawn: vi.fn(),
+    };
+    const scanned: ScannedTarget = {
+      target: { id: 'docker', label: 'Docker', kind: 'docker' },
+      bytes: 0,
+    };
+    const result = await deleteTarget(exec, scanned);
+    expect(result.freed).toBe(0);
+    expect(result.warning).toContain('Cannot connect');
+  });
+});
+
+describe('deleteTargets', () => {
+  it('calls onProgress for each target and returns total freed', async () => {
+    const exec = {
+      run: vi.fn().mockResolvedValue({ stdout: '', stderr: '', code: 0 }),
+      spawn: vi.fn(),
+    };
+    const targets: ScannedTarget[] = [
+      { target: { id: 'npm', label: 'npm cache', kind: 'path', path: '/a' }, bytes: 1024 * 1024 },
+      {
+        target: { id: 'pip', label: 'pip cache', kind: 'path', path: '/b' },
+        bytes: 2 * 1024 * 1024,
+      },
+    ];
+    const seen: string[] = [];
+    const total = await deleteTargets(targets, exec, (r) => {
+      seen.push(r.id);
+    });
+    expect(seen).toContain('npm');
+    expect(seen).toContain('pip');
+    expect(total).toBe(3 * 1024 * 1024);
+  });
+
+  it('runs docker target after file targets', async () => {
+    const order: string[] = [];
+    const exec = {
+      run: vi.fn().mockImplementation(async (cmd: string, args: string[]) => {
+        if (cmd === 'docker') order.push('docker');
+        else if (args[0] === '-rf') order.push('rm');
+        return { stdout: 'Total reclaimed space: 0B\n', stderr: '', code: 0 };
+      }),
+      spawn: vi.fn(),
+    };
+    const targets: ScannedTarget[] = [
+      { target: { id: 'npm', label: 'npm', kind: 'path', path: '/a' }, bytes: 1024 },
+      { target: { id: 'docker', label: 'Docker', kind: 'docker' }, bytes: 0 },
+    ];
+    await deleteTargets(targets, exec, () => {});
+    const dockerIdx = order.lastIndexOf('docker');
+    const rmIdx = order.indexOf('rm');
+    expect(rmIdx).toBeLessThan(dockerIdx);
+  });
+});

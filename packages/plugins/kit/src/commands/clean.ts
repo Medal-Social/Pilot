@@ -146,3 +146,85 @@ export async function scanTargets(
   );
   return results.filter((r): r is ScannedTarget => r !== null);
 }
+
+function parseSize(num: string, unit: string): number {
+  const n = parseFloat(num);
+  if (Number.isNaN(n)) return 0;
+  switch (unit.toUpperCase()) {
+    case 'TB':
+      return Math.round(n * 1024 ** 4);
+    case 'GB':
+      return Math.round(n * 1024 ** 3);
+    case 'MB':
+      return Math.round(n * 1024 ** 2);
+    case 'KB':
+      return Math.round(n * 1024);
+    default:
+      return Math.round(n);
+  }
+}
+
+export async function deleteTarget(exec: Exec, scanned: ScannedTarget): Promise<DeleteResult> {
+  const { target } = scanned;
+
+  if (target.kind === 'docker') {
+    const r = await exec.run('docker', ['system', 'prune', '-f']);
+    if (r.code !== 0) {
+      return { id: target.id, freed: 0, warning: `Docker prune failed: ${r.stderr.trim()}` };
+    }
+    const m = r.stdout.match(/Total reclaimed space:\s*([\d.]+)\s*(B|kB|MB|GB|TB)/i);
+    return { id: target.id, freed: m ? parseSize(m[1], m[2]) : 0 };
+  }
+
+  const path = target.path!;
+  const r = target.contentsOnly
+    ? await exec.run('find', [
+        path,
+        '-mindepth',
+        '1',
+        '-maxdepth',
+        '1',
+        '-exec',
+        'rm',
+        '-rf',
+        '{}',
+        '+',
+      ])
+    : await exec.run('rm', ['-rf', path]);
+
+  if (r.code !== 0) {
+    return {
+      id: target.id,
+      freed: 0,
+      warning: `Failed: ${r.stderr.trim().split('\n')[0]}`,
+    };
+  }
+  return { id: target.id, freed: scanned.bytes };
+}
+
+export async function deleteTargets(
+  targets: ScannedTarget[],
+  exec: Exec,
+  onProgress: (result: DeleteResult) => void
+): Promise<number> {
+  const fileTargets = targets.filter((t) => t.target.kind !== 'docker');
+  const dockerTarget = targets.find((t) => t.target.kind === 'docker');
+
+  const freed = await Promise.all(
+    fileTargets.map(async (t) => {
+      const r = await deleteTarget(exec, t);
+      onProgress(r);
+      return r.freed;
+    })
+  );
+
+  let total = freed.reduce((sum, n) => sum + n, 0);
+
+  if (dockerTarget) {
+    const r = await deleteTarget(exec, dockerTarget);
+    onProgress(r);
+    total += r.freed;
+  }
+
+  return total;
+}
