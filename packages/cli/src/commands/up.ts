@@ -41,6 +41,7 @@ async function markInstalled(entry: TemplateEntry): Promise<void> {
     lastChecked: new Date().toISOString(),
     dependencies: deps,
     crewSpecialist: entry.crew?.specialist,
+    steps: entry.steps,
   };
   saveTemplateState(state);
 }
@@ -74,6 +75,13 @@ export async function runUp(template?: string): Promise<void> {
 
   const entry = index.templates.find((t) => t.name === template);
   if (!entry) throw new PilotError(errorCodes.UP_TEMPLATE_NOT_FOUND, template);
+
+  if (entry.platforms.length > 0 && !entry.platforms.includes(process.platform)) {
+    throw new PilotError(
+      errorCodes.UP_STEP_FAILED,
+      "This template isn't available for your system."
+    );
+  }
 
   if (offline) {
     process.stderr.write('⚠  Using cached registry (offline)\n');

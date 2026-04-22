@@ -74,4 +74,52 @@ describe('UpInstall', () => {
     expect(onDone).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
+
+  it('sets process.exitCode = 1 when runSteps rejects', async () => {
+    const prev = process.exitCode;
+    process.exitCode = 0;
+    const runSteps = vi.fn().mockRejectedValue(new Error('install failed'));
+
+    render(React.createElement(UpInstall, { entry, managers, runSteps }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(process.exitCode).toBe(1);
+    process.exitCode = prev;
+  });
+
+  it('awaits a Promise-returning onDone before exit', async () => {
+    let resolved = false;
+    const onDone = vi.fn().mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            resolved = true;
+            resolve();
+          }, 10);
+        })
+    );
+    const runSteps = vi.fn().mockResolvedValue(undefined);
+
+    render(React.createElement(UpInstall, { entry, managers, runSteps, onDone }));
+
+    await new Promise((r) => setTimeout(r, 30));
+    expect(onDone).toHaveBeenCalled();
+    expect(resolved).toBe(true);
+  });
+
+  it('surfaces errors thrown from onDone without crashing', async () => {
+    const prev = process.exitCode;
+    process.exitCode = 0;
+    const onDone = vi.fn().mockRejectedValue(new Error('state write failed'));
+    const runSteps = vi.fn().mockResolvedValue(undefined);
+
+    render(React.createElement(UpInstall, { entry, managers, runSteps, onDone }));
+
+    await new Promise((r) => setTimeout(r, 10));
+    expect(onDone).toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+    process.exitCode = prev;
+  });
 });

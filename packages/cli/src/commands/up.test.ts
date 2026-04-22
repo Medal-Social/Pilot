@@ -16,7 +16,7 @@ vi.mock('../registry/fetch.js', () => ({
           description: 'Video',
           version: '1.0.0',
           category: 'video',
-          platforms: ['darwin'],
+          platforms: [process.platform],
           steps: [],
           completionHint: 'Run remotion',
         },
@@ -108,7 +108,7 @@ describe('runUp', () => {
             description: 'Video',
             version: '1.0.0',
             category: 'video',
-            platforms: ['darwin'],
+            platforms: [process.platform],
             steps: [],
             completionHint: 'Run remotion',
           },
@@ -138,7 +138,7 @@ describe('runUp', () => {
             description: 'Video',
             version: '1.0.0',
             category: 'video',
-            platforms: ['darwin'],
+            platforms: [process.platform],
             steps: [],
             completionHint: 'Run remotion',
             crew: {
@@ -184,6 +184,33 @@ describe('runUp', () => {
         }),
       })
     );
+  });
+
+  it('throws UP_STEP_FAILED when template platforms exclude current platform', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'remotion',
+            displayName: 'Remotion Video Studio',
+            description: 'Video',
+            version: '1.0.0',
+            category: 'video',
+            // Use a platform that is not the current one.
+            platforms: [process.platform === 'darwin' ? 'win32' : 'darwin'],
+            steps: [],
+          },
+        ],
+      },
+      fromCache: false,
+      offline: false,
+    });
+    const { runUp } = await import('./up.js');
+    await expect(runUp('remotion')).rejects.toMatchObject({ code: 'UP_STEP_FAILED' });
   });
 
   it('ignores concurrent onInstall calls while install is in progress', async () => {

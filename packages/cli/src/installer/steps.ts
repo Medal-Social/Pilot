@@ -25,6 +25,12 @@ export interface StepContext {
 // --- pkg ---
 
 function resolvePkg(step: PkgStep, managers: PackageManagers): { pm: string; pkg: string } | null {
+  // Known limitation: manager priority (nix > brew > winget) is computed fresh
+  // on both install and uninstall. If the environment changes between install
+  // and uninstall (e.g. Nix is installed later), the uninstall call may target
+  // a different package manager than the one that performed the install. A
+  // future change could persist the chosen manager in template state and
+  // prefer it during uninstall; this requires expanding the state schema.
   if (managers.nix && step.nix) return { pm: 'nix', pkg: step.nix };
   if (managers.brew && step.brew) return { pm: 'brew', pkg: step.brew };
   if (managers.winget && step.winget) return { pm: 'winget', pkg: step.winget };

@@ -140,6 +140,58 @@ describe('runUninstallSteps', () => {
     expect(callbacks.onStepSkip).toHaveBeenCalledWith(0);
   });
 
+  it('skips global npm steps used by other installed templates', async () => {
+    const sharedNpm: AnyStep = {
+      type: 'npm',
+      pkg: 'typescript',
+      global: true,
+      label: 'TypeScript',
+    };
+    vi.mock('../registry/fetch.js', () => ({
+      fetchRegistry: vi.fn().mockResolvedValue({
+        index: {
+          version: 1,
+          publishedAt: '',
+          sha256: 'x',
+          templates: [
+            {
+              name: 'peer',
+              displayName: 'Peer',
+              description: '',
+              version: '1.0.0',
+              category: 'dev',
+              platforms: ['darwin'],
+              steps: [{ type: 'npm', pkg: 'typescript', global: true, label: 'TypeScript' }],
+            },
+          ],
+        },
+        fromCache: false,
+        offline: false,
+      }),
+    }));
+    const handlers = {
+      checkStep: vi.fn().mockResolvedValue(true),
+      executeStep: vi.fn().mockResolvedValue(undefined),
+      unexecuteStep: vi.fn().mockResolvedValue(undefined),
+    };
+    const callbacks = {
+      onStepStart: vi.fn(),
+      onStepSkip: vi.fn(),
+      onStepDone: vi.fn(),
+      onStepError: vi.fn(),
+    };
+    await runUninstallSteps(
+      [sharedNpm],
+      managers,
+      handlers,
+      ['peer'],
+      'current-template',
+      callbacks
+    );
+    expect(handlers.unexecuteStep).not.toHaveBeenCalled();
+    expect(callbacks.onStepSkip).toHaveBeenCalledWith(0);
+  });
+
   it('skips pkg steps used by other installed templates', async () => {
     const pkgStep: AnyStep = { type: 'pkg', brew: 'node', label: 'Node.js' };
     // Mock the fetchRegistry to return a registry where nextmedal also uses brew:node

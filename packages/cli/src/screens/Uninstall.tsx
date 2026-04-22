@@ -165,16 +165,28 @@ export function Uninstall() {
             try {
               const { index } = await fetchRegistry({ cacheDir });
               const managers = await detectPackageManagers(realExec);
+              // Track remaining installed templates so shared-dep protection
+              // (pkg + global npm) sees the real peer set as we uninstall.
+              let remaining = [...templates];
               for (const t of templates) {
+                const otherInstalled = remaining.filter((n) => n !== t);
                 const entry = index.templates.find((e) => e.name === t);
                 if (entry) {
                   try {
-                    await runUninstallSteps(entry.steps, managers, undefined, [], t, noop);
+                    await runUninstallSteps(
+                      entry.steps,
+                      managers,
+                      undefined,
+                      otherInstalled,
+                      t,
+                      noop
+                    );
                   } catch {
                     // best-effort
                   }
                 }
                 removeTemplateFromState(t);
+                remaining = otherInstalled;
               }
             } catch {
               // best-effort if registry unavailable
