@@ -3,6 +3,7 @@
 
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import type { Exec } from '../shell/exec.js';
 
 export type CleanTargetKind = 'path' | 'brew' | 'docker';
 
@@ -106,4 +107,42 @@ export function formatBytes(bytes: number): string {
   if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${bytes} B`;
+}
+
+async function scanPath(exec: Exec, path: string): Promise<number> {
+  const r = await exec.run('du', ['-sk', path]);
+  if (r.code !== 0) return 0;
+  const kb = Number.parseInt(r.stdout.split('\t')[0], 10);
+  return Number.isNaN(kb) ? 0 : kb * 1024;
+}
+
+async function resolveBrewCache(exec: Exec): Promise<string | null> {
+  const r = await exec.run('brew', ['--cache']);
+  return r.code === 0 ? r.stdout.trim() || null : null;
+}
+
+async function isDockerRunning(exec: Exec): Promise<boolean> {
+  return (await exec.run('docker', ['info'])).code === 0;
+}
+
+export async function scanTargets(
+  exec: Exec,
+  targets: CleanTarget[] = CLEAN_TARGETS
+): Promise<ScannedTarget[]> {
+  const results = await Promise.all(
+    targets.map(async (target): Promise<ScannedTarget | null> => {
+      if (target.kind === 'docker') {
+        return (await isDockerRunning(exec)) ? { target, bytes: 0 } : null;
+      }
+      if (target.kind === 'brew') {
+        const cachePath = await resolveBrewCache(exec);
+        if (!cachePath) return null;
+        const bytes = await scanPath(exec, cachePath);
+        return bytes > 0 ? { target: { ...target, path: cachePath }, bytes } : null;
+      }
+      const bytes = await scanPath(exec, target.path!);
+      return bytes > 0 ? { target, bytes } : null;
+    })
+  );
+  return results.filter((r): r is ScannedTarget => r !== null);
 }
