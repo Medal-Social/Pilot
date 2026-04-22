@@ -304,7 +304,10 @@ describe('zed-extension step', () => {
   });
 
   it('executeStep writes extension into Zed settings when file exists', async () => {
-    const zedDir = join(tmpDir, 'Library', 'Application Support', 'Zed');
+    const zedDir =
+      process.platform === 'darwin'
+        ? join(tmpDir, 'Library', 'Application Support', 'Zed')
+        : join(tmpDir, '.config', 'zed');
     mkdirSync(zedDir, { recursive: true });
     writeFileSync(join(zedDir, 'settings.json'), JSON.stringify({ auto_install_extensions: {} }));
 
@@ -318,7 +321,10 @@ describe('zed-extension step', () => {
   });
 
   it('unexecuteStep removes extension from Zed settings when file exists', async () => {
-    const zedDir = join(tmpDir, 'Library', 'Application Support', 'Zed');
+    const zedDir =
+      process.platform === 'darwin'
+        ? join(tmpDir, 'Library', 'Application Support', 'Zed')
+        : join(tmpDir, '.config', 'zed');
     mkdirSync(zedDir, { recursive: true });
     writeFileSync(
       join(zedDir, 'settings.json'),
