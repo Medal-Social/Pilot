@@ -39,7 +39,7 @@
     "@vitest/coverage-v8": "^4.1.4",
     "fast-check": "^4.6.0",
     "husky": "^9.1.7",
-    "knip": "^5.63.1",
+    "knip": "^6.6.1",
     "lint-staged": "^16.2.6",
     "only-allow": "^1.2.1",
     "secretlint": "^9.3.2",
