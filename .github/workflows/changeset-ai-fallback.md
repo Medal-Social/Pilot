@@ -1,14 +1,21 @@
 ---
-name: Changeset Generator
-description: Automatically creates changeset files for PRs that touch package source files
+name: Changeset Generator (AI Fallback)
+description: AI fallback for ambiguous PRs — invoked via workflow_call from changeset.yml
 on:
-  pull_request:
-    types: [opened, ready_for_review]
+  workflow_call:
+    inputs:
+      pr:
+        description: Pull request number to classify
+        required: true
+        type: number
   workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number to classify
+        required: true
+        type: number
 if: |
-  !github.event.pull_request.draft &&
-  !startsWith(github.head_ref, 'changeset-release/') &&
-  github.actor != 'dependabot[bot]'
+  !startsWith(github.head_ref, 'changeset-release/')
 permissions:
   contents: read
   pull-requests: read
@@ -58,7 +65,7 @@ When a pull request is marked as ready for review, analyze the changes and creat
 ## Current Context
 
 - **Repository**: ${{ github.repository }}
-- **Pull Request Number**: ${{ github.event.pull_request.number }}
+- **Pull Request Number**: ${{ inputs.pr || github.event.pull_request.number }}
 - **Pull Request Content**: "${{ steps.sanitized.outputs.text }}"
 
 **IMPORTANT - Token Optimization**: The pull request content above is already sanitized and available. DO NOT use `pull_request_read` or similar GitHub API tools to fetch PR details - you already have everything you need in the context above. Using API tools wastes 40k+ tokens per call.

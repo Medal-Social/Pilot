@@ -1,0 +1,174 @@
+name: Changeset Automation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number
+        required: true
+        type: number
+
+concurrency:
+  group: changeset-${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  issues: read
+
+jobs:
+  classify-and-write:
+    if: |
+      (github.event_name != 'pull_request' || (
+        github.event.pull_request.draft == false &&
+        !startsWith(github.head_ref, 'changeset-release/')
+      )) &&
+      (github.event_name != 'issue_comment' || (
+        github.event.issue.pull_request != null &&
+        (contains(github.event.comment.body, '/changeset') || contains(github.event.comment.body, '/skip-changeset'))
+      ))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      exit_code: ${{ steps.classify.outputs.exit_code }}
+      result: ${{ steps.classify.outputs.result }}
+    steps:
+      - name: Generate token from Medal Bot app
+        id: app-token
+        uses: actions/create-github-app-token@7bd03711494f032dfa3be3558f7dc8787b0be333 # v4
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Resolve PR head ref
+        id: pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "head_ref=${{ github.event.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
+            echo "head_sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            PR_NUM="${{ github.event.issue.number }}"
+            echo "number=$PR_NUM" >> "$GITHUB_OUTPUT"
+            gh pr view "$PR_NUM" --json headRefName,headRefOid --jq '"head_ref=\(.headRefName)\nhead_sha=\(.headRefOid)"' >> "$GITHUB_OUTPUT"
+          else
+            PR_NUM="${{ github.event.inputs.pr }}"
+            echo "number=$PR_NUM" >> "$GITHUB_OUTPUT"
+            gh pr view "$PR_NUM" --json headRefName,headRefOid --jq '"head_ref=\(.headRefName)\nhead_sha=\(.headRefOid)"' >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.head_sha }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '24'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Classify & write changeset
+        id: classify
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          INPUT_PR: ${{ steps.pr.outputs.number }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          CHANGESET_AUTO_DISABLE: ${{ vars.CHANGESET_AUTO_DISABLE }}
+        run: |
+          set +e
+          node scripts/changeset-auto.mjs
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Configure git
+        if: steps.classify.outputs.exit_code == '1'
+        run: |
+          git config user.name 'medal-bot[bot]'
+          git config user.email 'medal-bot[bot]@users.noreply.github.com'
+
+      - name: Commit & push changeset with retry
+        if: steps.classify.outputs.exit_code == '1'
+        env:
+          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- .changeset/; then
+            echo 'No changeset diff to commit.'
+            exit 0
+          fi
+          git add .changeset/
+          git commit -m "chore: update changeset [skip-ci]"
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:$HEAD_REF"; then
+              echo "Pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; rebasing and retrying..."
+            sleep_time=$((2 * 3 ** (attempt - 1)))
+            sleep "$sleep_time"
+            git fetch origin "$HEAD_REF"
+            git pull --rebase origin "$HEAD_REF" || true
+          done
+          echo '::warning::Changeset push failed after 3 attempts; please run /changeset on the PR.'
+          exit 1
+
+      - name: Post/update sticky PR comment
+        if: always() && steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_NUM: ${{ steps.pr.outputs.number }}
+          EXIT_CODE: ${{ steps.classify.outputs.exit_code }}
+          RESULT: ${{ steps.classify.outputs.result }}
+        run: |
+          set -euo pipefail
+          marker='<!-- changeset-bot -->'
+          case "${EXIT_CODE:-0}" in
+            0) body_line='No changeset needed.' ;;
+            1) body_line='Changeset generated and pushed.' ;;
+            2) body_line='Could not auto-classify — AI fallback invoked.' ;;
+            *) body_line="Classifier finished with exit code ${EXIT_CODE}." ;;
+          esac
+          {
+            printf '%s\n' "$marker"
+            printf '### Changeset bot\n\n'
+            printf '%s\n\n' "$body_line"
+            printf '<details><summary>Commands</summary>\n\n'
+            printf -- '- `/changeset` — regenerate\n'
+            printf -- '- `/changeset patch: fix X` — override type and description\n'
+            printf -- '- `/skip-changeset` — declare no changeset needed\n\n'
+            printf 'Labels: `no-changeset`, `patch`, `minor`, `major`.\n\n'
+            printf '</details>\n'
+          } > /tmp/changeset-bot-body.md
+          existing=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUM/comments" --paginate \
+            --jq "[.[] | select(.body | startswith(\"$marker\"))][0].id" || echo '')
+          if [ -n "$existing" ] && [ "$existing" != "null" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existing" \
+              -F "body=@/tmp/changeset-bot-body.md"
+          else
+            gh pr comment "$PR_NUM" --body-file /tmp/changeset-bot-body.md
+          fi
+
+  ai-fallback:
+    needs: classify-and-write
+    if: needs.classify-and-write.outputs.exit_code == '2'
+    uses: ./.github/workflows/changeset-ai-fallback.lock.yml
+    with:
+      pr: ${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr }}
+    secrets: inherit
