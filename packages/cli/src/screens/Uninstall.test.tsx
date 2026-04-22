@@ -22,15 +22,7 @@ vi.mock('../device/backup.js', () => ({
 
 vi.mock('../device/state.js', () => ({
   getInstalledTemplateNames: vi.fn(() => []),
-}));
-
-vi.mock('../device/uninstaller.js', () => ({
-  uninstallTemplate: vi.fn(async (name: string) => ({
-    template: name,
-    removed: [],
-    failed: [],
-    skipped: [],
-  })),
+  removeTemplateFromState: vi.fn(),
 }));
 
 vi.mock('../deploy/deployer.js', () => ({
@@ -42,6 +34,41 @@ vi.mock('node:child_process', () => ({
   execFile: vi.fn((_cmd: string, _args: string[], _opts: unknown, cb: (err: null) => void) => {
     cb(null);
   }),
+}));
+
+vi.mock('../registry/fetch.js', () => ({
+  fetchRegistry: vi.fn().mockResolvedValue({
+    index: {
+      version: 1,
+      publishedAt: '',
+      sha256: 'x',
+      templates: [
+        {
+          name: 'pencil',
+          displayName: 'Pencil',
+          description: '',
+          version: '1.0.0',
+          category: 'design',
+          platforms: ['darwin'],
+          steps: [{ type: 'npm', pkg: '@pencil/core', global: true, label: 'Pencil CLI' }],
+        },
+      ],
+    },
+    fromCache: false,
+    offline: false,
+  }),
+}));
+
+vi.mock('../installer/detect.js', () => ({
+  detectPackageManagers: vi
+    .fn()
+    .mockResolvedValue({ nix: false, brew: false, winget: false, npm: true }),
+}));
+
+vi.mock('../installer/exec.js', () => ({ realExec: {} }));
+
+vi.mock('../installer/runner.js', () => ({
+  runUninstallSteps: vi.fn().mockResolvedValue(undefined),
 }));
 
 const delay = (ms = 150) => new Promise((r) => setTimeout(r, ms));
@@ -344,5 +371,141 @@ describe('Uninstall', () => {
 
     const frame = lastFrame() ?? '';
     expect(frame).toContain('removed');
+  });
+
+  it('runs runUninstallSteps for each installed template during step4', async () => {
+    const state = await import('../device/state.js');
+    const runner = await import('../installer/runner.js');
+    const fetchMod = await import('../registry/fetch.js');
+    vi.mocked(state.getInstalledTemplateNames).mockReturnValueOnce(['pencil']);
+    vi.mocked(runner.runUninstallSteps).mockClear();
+    // Invoke every no-op callback so v8 function coverage sees them execute.
+    vi.mocked(runner.runUninstallSteps).mockImplementationOnce(
+      async (_steps, _managers, _handlers, _others, _name, callbacks) => {
+        callbacks.onStepStart(0);
+        callbacks.onStepSkip(0);
+        callbacks.onStepDone(0);
+        callbacks.onStepError(0, new Error('x'));
+      }
+    );
+    vi.mocked(fetchMod.fetchRegistry).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'pencil',
+            displayName: 'Pencil',
+            description: '',
+            version: '1.0.0',
+            category: 'design',
+            platforms: ['darwin'],
+            steps: [{ type: 'npm', pkg: '@pencil/core', global: true, label: 'Pencil CLI' }],
+          },
+        ],
+      },
+      fromCache: false,
+      offline: false,
+    });
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y'); // step 4 confirm
+    await delay(300);
+    stdin.write('n');
+    await delay();
+
+    expect(runner.runUninstallSteps).toHaveBeenCalled();
+    expect(vi.mocked(state.removeTemplateFromState)).toHaveBeenCalledWith('pencil');
+  });
+
+  it('falls back to bulk state removal when fetchRegistry throws during step4', async () => {
+    const state = await import('../device/state.js');
+    const runner = await import('../installer/runner.js');
+    const fetchMod = await import('../registry/fetch.js');
+    vi.mocked(state.getInstalledTemplateNames).mockReturnValueOnce(['ghost']);
+    vi.mocked(runner.runUninstallSteps).mockClear();
+    vi.mocked(fetchMod.fetchRegistry).mockRejectedValueOnce(new Error('network down'));
+    vi.mocked(state.removeTemplateFromState).mockClear();
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y'); // step 4 confirm
+    await delay(300);
+    stdin.write('n');
+    await delay();
+
+    expect(runner.runUninstallSteps).not.toHaveBeenCalled();
+    expect(vi.mocked(state.removeTemplateFromState)).toHaveBeenCalledWith('ghost');
+  });
+
+  it('keeps template state when runUninstallSteps rejects so the user can retry', async () => {
+    const state = await import('../device/state.js');
+    const runner = await import('../installer/runner.js');
+    const fetchMod = await import('../registry/fetch.js');
+    vi.mocked(state.getInstalledTemplateNames).mockReturnValueOnce(['pencil']);
+    vi.mocked(fetchMod.fetchRegistry).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'pencil',
+            displayName: 'Pencil',
+            description: '',
+            version: '1.0.0',
+            category: 'design',
+            platforms: ['darwin'],
+            steps: [{ type: 'npm', pkg: '@pencil/core', global: true, label: 'Pencil CLI' }],
+          },
+        ],
+      },
+      fromCache: false,
+      offline: false,
+    });
+    vi.mocked(runner.runUninstallSteps).mockRejectedValueOnce(new Error('nope'));
+    vi.mocked(state.removeTemplateFromState).mockClear();
+
+    const { Uninstall } = await import('./Uninstall.js');
+    const { stdin } = render(<Uninstall />);
+    await delay();
+
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y');
+    await delay();
+    stdin.write('y'); // step 4 confirm
+    await delay(300);
+    stdin.write('n');
+    await delay();
+
+    // Template still tracked because uninstall failed; retry via `pilot down`.
+    expect(vi.mocked(state.removeTemplateFromState)).not.toHaveBeenCalledWith('pencil');
   });
 });

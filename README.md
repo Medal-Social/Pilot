@@ -127,6 +127,9 @@ pilot
 | `pilot update` | Check for and apply updates |
 | `pilot status` | Machine and system health |
 | `pilot status --json` | Machine-readable JSON output (see [schema](#status---json)) |
+| `pilot usage` | AI token usage and costs for this project |
+| `pilot usage --week` / `--month` / `--since YYYYMMDD` | Usage by time window |
+| `pilot usage --json` | Machine-readable JSON output |
 | `pilot completions <shell>` | Generate shell completions (bash, zsh, fish) |
 | `pilot help` | Help reference |
 
@@ -240,15 +243,35 @@ Status: **Pre-release** · Building v1
 |---------|--------|------|-------------|
 | Admin Dashboard | In Progress | [Spec](docs/superpowers/specs/2026-04-19-admin-dashboard-design.md) | CLI command center with health strip, tabbed panels, SDK-powered data |
 
+### Machine Management (Kit)
+| Feature | Status | Spec |
+|---------|--------|------|
+| `pilot kit init` — bootstrap a fresh machine | Done | [Spec](docs/superpowers/specs/2026-04-20-kit-machine-package-v1-design.md) |
+| `pilot kit status` — health checks (TTY + JSON) | Done | [Spec](docs/superpowers/specs/2026-04-20-kit-machine-package-v1-design.md) |
+| `pilot kit update` — pull + rebuild with progress UI | Done | [Spec](docs/superpowers/specs/2026-04-20-kit-machine-package-v1-design.md) |
+| `pilot kit clean` — scan and remove junk/dev caches | Done | [Spec](docs/superpowers/specs/2026-04-22-kit-clean-design.md) |
+
 ### pilot up (One-Click Setup)
 | Feature | Status | Spec |
 |---------|--------|------|
-| Hosted registry (fetch, cache, SHA verify, offline fallback) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| Template manifest format (pkg/npm/mcp/skill steps, cross-platform) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| `pilot up <template>` install flow with progress UI | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| `pilot up` browse UI (split-panel, categories) | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| `pilot down <template>` step-based uninstall | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
-| Specialist crew wiring on install | In Progress | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| Hosted registry (fetch, cache, SHA verify, offline fallback) | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| Template manifest format (pkg/npm/mcp/skill steps, cross-platform) | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot up <template>` install flow with progress UI | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot up` browse UI (split-panel, categories) | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| `pilot down <template>` step-based uninstall | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+| Specialist crew wiring on install | Done | [Spec](docs/superpowers/specs/2026-04-21-pilot-up-registry-design.md) |
+
+### Observability
+| Feature | Status | Spec |
+|---------|--------|------|
+| `pilot usage` — Claude Code + Codex token/cost report | Done | [Spec](docs/superpowers/specs/2026-04-22-pilot-usage-design.md) |
+
+### MedalSocial SDK Integration
+| Feature | Status | Spec |
+|---------|--------|------|
+| SDK mainstreaming design | Planned | [Spec](docs/superpowers/specs/2026-04-21-medalsocial-sdk-mainstreaming-design.md) |
+| PR1: Release pipeline | Planned | [Plan](docs/superpowers/plans/2026-04-21-medalsocial-sdk-pr1-release-pipeline.md) |
+| PR2: Pilot integration | Planned | [Plan](docs/superpowers/plans/2026-04-21-medalsocial-sdk-pr2-pilot-integration.md) |
 
 ### Distribution & Quality
 | Feature | Status | Spec |

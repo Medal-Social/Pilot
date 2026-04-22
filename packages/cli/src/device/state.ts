@@ -4,6 +4,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import type { AnyStep } from '../registry/types.js';
 
 const PILOT_DIR = join(homedir(), '.pilot');
 const STATE_FILE = join(PILOT_DIR, 'templates.json');
@@ -18,6 +19,13 @@ export interface InstalledTemplate {
   installedAt: string;
   lastChecked: string;
   dependencies: Record<string, boolean>;
+  crewSpecialist?: string;
+  /**
+   * Snapshot of the step list at install time. Used as a fallback for
+   * shared-dependency protection when the template is no longer present in
+   * the registry (e.g. offline + bundled fallback, or registry changes).
+   */
+  steps?: AnyStep[];
 }
 
 export interface TemplateState {

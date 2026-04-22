@@ -11,8 +11,11 @@ import { colors } from '../colors.js';
 import { Step } from '../components/Step.js';
 import { removeRoutingFromClaudeMd, removeSkillSymlink } from '../deploy/deployer.js';
 import { backupKnowledge } from '../device/backup.js';
-import { getInstalledTemplateNames } from '../device/state.js';
-import { uninstallTemplate } from '../device/uninstaller.js';
+import { getInstalledTemplateNames, removeTemplateFromState } from '../device/state.js';
+import { detectPackageManagers } from '../installer/detect.js';
+import { realExec } from '../installer/exec.js';
+import { runUninstallSteps } from '../installer/runner.js';
+import { fetchRegistry } from '../registry/fetch.js';
 
 type Phase =
   | 'intro'
@@ -150,11 +153,55 @@ export function Uninstall() {
         /* v8 ignore stop */
         if (yes) {
           setBusy(true);
-          Promise.all(templates.map((t) => uninstallTemplate(t))).then(() => {
+          const home = homedir();
+          const cacheDir = join(home, '.pilot', 'registry');
+          const noop = {
+            onStepStart: () => {},
+            onStepSkip: () => {},
+            onStepDone: () => {},
+            onStepError: () => {},
+          };
+          (async () => {
+            try {
+              const { index } = await fetchRegistry({ cacheDir });
+              const managers = await detectPackageManagers(realExec);
+              // Track remaining installed templates so shared-dep protection
+              // (pkg + global npm) sees the real peer set as we uninstall.
+              let remaining = [...templates];
+              for (const t of templates) {
+                const otherInstalled = remaining.filter((n) => n !== t);
+                const entry = index.templates.find((e) => e.name === t);
+                let cleanupSucceeded = true;
+                if (entry) {
+                  try {
+                    await runUninstallSteps(
+                      entry.steps,
+                      managers,
+                      undefined,
+                      otherInstalled,
+                      t,
+                      noop
+                    );
+                  } catch {
+                    // Keep template tracked so the user can retry cleanup via
+                    // `pilot down <template>` instead of losing state visibility.
+                    cleanupSucceeded = false;
+                  }
+                }
+                if (cleanupSucceeded) {
+                  removeTemplateFromState(t);
+                  remaining = otherInstalled;
+                }
+                // else: template remains tracked so the user can retry cleanup.
+              }
+            } catch {
+              // best-effort if registry unavailable
+              for (const t of templates) removeTemplateFromState(t);
+            }
             addStep('Dev tools removed', false);
             setBusy(false);
             setPhase('step5-cli');
-          });
+          })();
         } else {
           addStep('Dev tools', true);
           setPhase('step5-cli');

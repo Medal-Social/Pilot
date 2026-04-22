@@ -2,6 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { addApp, listApps, removeApp } from './commands/apps.js';
+export type { CleanTarget, DeleteResult, ScannedTarget } from './commands/clean.js';
+export {
+  CLEAN_TARGETS,
+  deleteTarget,
+  deleteTargets,
+  formatBytes,
+  scanTargets,
+} from './commands/clean.js';
 export { resolveEditor, runEdit } from './commands/edit.js';
 export { initSteps, runInit } from './commands/init.js';
 export { migrateMachineFile } from './commands/migrate-apps.js';

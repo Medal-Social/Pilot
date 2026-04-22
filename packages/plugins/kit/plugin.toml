@@ -3,7 +3,7 @@ namespace = "medalsocial"
 description = "Open-source MDM and dotfiles for engineers — machine config, version-controlled."
 
 [provides]
-commands = ["kit init", "kit new", "kit update", "kit status", "kit apps", "kit edit"]
+commands = ["kit init", "kit new", "kit update", "kit status", "kit apps", "kit edit", "kit clean"]
 mcpServers = []
 
 [permissions]
