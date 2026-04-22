@@ -43,7 +43,7 @@
     "lint-staged": "^16.2.6",
     "only-allow": "^1.2.1",
     "secretlint": "^9.3.2",
-    "@secretlint/secretlint-rule-preset-recommend": "^9.3.2",
+    "@secretlint/secretlint-rule-preset-recommend": "^12.2.0",
     "turbo": "2.9.6",
     "typescript": "6.0.2",
     "vitest": "4.1.4"
