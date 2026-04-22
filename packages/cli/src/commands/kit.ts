@@ -445,7 +445,8 @@ export async function runKitClean(): Promise<void> {
   process.stdout.write('\n');
 
   const totalFreed = await deleteTargets(targets, realExec, (result) => {
-    const t = targets.find((r) => r.target.id === result.id)!;
+    const t = targets.find((r) => r.target.id === result.id);
+    if (!t) return;
     if (result.warning) {
       process.stdout.write(
         `  ${red('✗')} ${t.target.label.padEnd(labelWidth + 2)} ${dim(result.warning)}\n`
