@@ -53,14 +53,20 @@
 #   - ghcr.io/github/github-mcp-server:v0.32.0@sha256:2763823c63bcca718ce53850a1d7fcf2f501ec84028394f1b63ce7e9f4f9be28
 #   - node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
 
-name: "Changeset Generator"
+name: "Changeset Generator (AI Fallback)"
 "on":
-  pull_request:
-    types:
-    - opened
-    - ready_for_review
+  workflow_call:
+    inputs:
+      pr:
+        description: Pull request number to classify
+        required: true
+        type: number
   workflow_dispatch:
     inputs:
+      pr:
+        description: Pull request number to classify
+        required: true
+        type: number
       aw_context:
         default: ""
         description: Agent caller context (used internally by Agentic Workflows).
