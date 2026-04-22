@@ -36,6 +36,63 @@ vi.mock('node:child_process', () => ({
   }),
 }));
 
+vi.mock('../registry/fetch.js', () => ({
+  fetchRegistry: vi.fn().mockResolvedValue({
+    index: {
+      version: 1,
+      publishedAt: '',
+      sha256: 'x',
+      templates: [
+        {
+          name: 'pencil',
+          displayName: 'Pencil',
+          description: 'Design tool',
+          version: '1.0.0',
+          category: 'design',
+          platforms: ['darwin'],
+          steps: [],
+        },
+      ],
+    },
+    fromCache: false,
+    offline: false,
+  }),
+}));
+
+vi.mock('../installer/runner.js', () => ({
+  runUninstallSteps: vi.fn().mockImplementation(
+    async (
+      _steps: unknown,
+      _managers: unknown,
+      _ctx: unknown,
+      _installed: unknown,
+      _name: unknown,
+      callbacks: {
+        onStepStart: () => void;
+        onStepSkip: () => void;
+        onStepDone: () => void;
+        onStepError: () => void;
+      }
+    ) => {
+      callbacks.onStepStart();
+      callbacks.onStepSkip();
+      callbacks.onStepDone();
+      callbacks.onStepError();
+    }
+  ),
+}));
+
+vi.mock('../installer/detect.js', () => ({
+  detectPackageManagers: vi.fn().mockResolvedValue({
+    nix: false,
+    brew: false,
+    winget: false,
+    npm: true,
+  }),
+}));
+
+vi.mock('../installer/exec.js', () => ({ realExec: {} }));
+
 const delay = (ms = 150) => new Promise((r) => setTimeout(r, ms));
 
 describe('Uninstall', () => {

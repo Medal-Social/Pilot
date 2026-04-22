@@ -3,11 +3,13 @@
 
 import type { ModelBreakdown, ProviderReport, UsageReport } from './types.js';
 
-const isTty = (process.stdout.isTTY ?? false) && !process.env['NO_COLOR'];
-const bold = (s: string) => (isTty ? `\x1b[1m${s}\x1b[0m` : s);
-const dim = (s: string) => (isTty ? `\x1b[2m${s}\x1b[0m` : s);
-const purple = (s: string) => (isTty ? `\x1b[35m${s}\x1b[0m` : s);
-const teal = (s: string) => (isTty ? `\x1b[36m${s}\x1b[0m` : s);
+function isTty(): boolean {
+  return (process.stdout.isTTY ?? false) && !process.env.NO_COLOR;
+}
+const bold = (s: string) => (isTty() ? `\x1b[1m${s}\x1b[0m` : s);
+const dim = (s: string) => (isTty() ? `\x1b[2m${s}\x1b[0m` : s);
+const purple = (s: string) => (isTty() ? `\x1b[35m${s}\x1b[0m` : s);
+const teal = (s: string) => (isTty() ? `\x1b[36m${s}\x1b[0m` : s);
 
 const SEP = '─'.repeat(69);
 
@@ -50,12 +52,15 @@ function providerTotalRow(p: ProviderReport): string {
   );
 }
 
-const HEADER_ROW =
-  `  ${dim(padL('Model', 24))}` +
-  `${dim(padR('Input', 14))}` +
-  `  ${dim(padR('Output', 14))}` +
-  `  ${dim(padR('Cache', 14))}` +
-  `  ${dim(padR('Cost', 7))}`;
+function headerRow(): string {
+  return (
+    `  ${dim(padL('Model', 24))}` +
+    `${dim(padR('Input', 14))}` +
+    `  ${dim(padR('Output', 14))}` +
+    `  ${dim(padR('Cache', 14))}` +
+    `  ${dim(padR('Cost', 7))}`
+  );
+}
 
 export function formatTable(report: UsageReport): void {
   const w = process.stdout.write.bind(process.stdout);
@@ -71,7 +76,7 @@ export function formatTable(report: UsageReport): void {
     const scopeSuffix =
       provider.scope !== projectLabel ? `  ${dim('·')}  ${dim(provider.scope)}` : '';
     w(`  ${label}${scopeSuffix}\n`);
-    w(`${HEADER_ROW}\n`);
+    w(`${headerRow()}\n`);
     w(`  ${dim(SEP)}\n`);
     for (const m of provider.models) {
       w(`${modelRow(m)}\n`);

@@ -188,4 +188,43 @@ describe('formatJson', () => {
     formatJson(makeReport());
     expect(written.endsWith('\n')).toBe(true);
   });
+
+  it('outputs null totalCostUSD for unknown-cost provider', () => {
+    const report = makeReport();
+    const provider = report.providers[0];
+    if (provider) provider.hasCostUnknown = true;
+    formatJson(report);
+    const parsed = JSON.parse(written);
+    expect(parsed.providers.claude.totalCostUSD).toBeNull();
+  });
+});
+
+describe('formatTable with TTY colors enabled', () => {
+  let written: string;
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let isTTYDescriptor: PropertyDescriptor | undefined;
+
+  beforeEach(() => {
+    written = '';
+    isTTYDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      written += String(chunk);
+      return true;
+    });
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+    if (isTTYDescriptor) {
+      Object.defineProperty(process.stdout, 'isTTY', isTTYDescriptor);
+    } else {
+      Object.defineProperty(process.stdout, 'isTTY', { value: undefined, configurable: true });
+    }
+  });
+
+  it('includes ANSI escape codes when TTY is enabled', () => {
+    formatTable(makeReport());
+    expect(written).toContain('\x1b[');
+  });
 });

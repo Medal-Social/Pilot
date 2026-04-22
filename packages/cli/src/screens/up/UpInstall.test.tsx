@@ -58,6 +58,8 @@ describe('UpInstall', () => {
     await Promise.resolve();
 
     expect(onDone).toHaveBeenCalled();
+    // Advance timers to execute the setTimeout(() => exit(), 800) callback
+    vi.runAllTimers();
     vi.useRealTimers();
   });
 
@@ -72,6 +74,8 @@ describe('UpInstall', () => {
     await Promise.resolve();
 
     expect(onDone).not.toHaveBeenCalled();
+    // Advance timers to execute the setTimeout(() => exit(), 2000) callback in catch
+    vi.runAllTimers();
     vi.useRealTimers();
   });
 });

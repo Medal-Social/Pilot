@@ -76,6 +76,15 @@ describe('groupByModel', () => {
     expect(result[0]?.costUnknown).toBe(true);
   });
 
+  it('marks costUnknown when second entry for same model has costKnown=false', () => {
+    const entries = [
+      makeEntry({ model: 'gpt-5', costKnown: true, costUSD: 0.5 }),
+      makeEntry({ model: 'gpt-5', costKnown: false, costUSD: 0 }),
+    ];
+    const result = groupByModel(entries);
+    expect(result[0]?.costUnknown).toBe(true);
+  });
+
   it('returns empty array for empty input', () => {
     expect(groupByModel([])).toHaveLength(0);
   });

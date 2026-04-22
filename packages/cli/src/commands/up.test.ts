@@ -186,6 +186,57 @@ describe('runUp', () => {
     );
   });
 
+  it('invokes runSteps prop with callbacks when UpInstall renders', async () => {
+    const { runInstallSteps } = await import('../installer/runner.js');
+    const React = await import('react');
+    (React.default.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props?.runSteps) {
+          const callbacks = {
+            onStepStart: vi.fn(),
+            onStepSkip: vi.fn(),
+            onStepDone: vi.fn(),
+            onStepError: vi.fn(),
+          };
+          void (props.runSteps as (cbs: typeof callbacks) => Promise<void>)(callbacks);
+        }
+        return null;
+      }
+    );
+    const { runUp } = await import('./up.js');
+    await runUp('remotion');
+    expect(runInstallSteps).toHaveBeenCalled();
+  });
+
+  it('writes to stderr when onInstall triggers a failing runUp', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    // Return an index without the target template so runUp('unknown') throws
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: { version: 1, publishedAt: '', sha256: 'x', templates: [] },
+      fromCache: false,
+      offline: false,
+    });
+
+    const React = await import('react');
+    (React.default.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props?.onInstall) {
+          // Call onInstall synchronously with an entry that won't exist in registry
+          (props.onInstall as (e: { name: string }) => void)({ name: 'no-such-template' });
+        }
+        return null;
+      }
+    );
+
+    const { runUp } = await import('./up.js');
+    await runUp(); // browse mode
+    await new Promise((r) => setTimeout(r, 50)); // let the catch handler run
+    expect(stderrSpy).toHaveBeenCalled();
+    stderrSpy.mockRestore();
+  });
+
   it('ignores concurrent onInstall calls while install is in progress', async () => {
     const react = await import('react');
     const { render } = await import('ink');

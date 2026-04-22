@@ -5,10 +5,20 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { NpmStep, PkgStep, SkillStep } from '../registry/types.js';
+import type { McpStep, NpmStep, PkgStep, SkillStep, ZedExtStep } from '../registry/types.js';
 import type { PackageManagers } from './detect.js';
 import type { Exec } from './exec.js';
 import { checkStep, executeStep, unexecuteStep } from './steps.js';
+
+vi.mock('../settings.js', () => ({
+  loadSettings: vi.fn(() => ({
+    onboarded: false,
+    plugins: {},
+    mcpServers: {},
+    crew: { specialists: {} },
+  })),
+  saveSettings: vi.fn(),
+}));
 
 const allManagers: PackageManagers = { nix: true, brew: true, winget: false, npm: true };
 const brewOnly: PackageManagers = { nix: false, brew: true, winget: false, npm: false };
@@ -168,5 +178,210 @@ describe('skill step', () => {
     const exec = makeExec(0);
     await unexecuteStep(skillStep, npmOnly, exec, { skillsDir: tmpDir });
     expect(existsSync(join(tmpDir, 'remotion.md'))).toBe(false);
+  });
+
+  it('unexecuteStep does nothing when skill file does not exist', async () => {
+    const exec = makeExec(0);
+    // Should not throw
+    await expect(
+      unexecuteStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).resolves.not.toThrow();
+  });
+
+  it('executeStep throws UP_STEP_FAILED when fetch fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
+    const exec = makeExec(0);
+    await expect(
+      executeStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({ code: 'UP_STEP_FAILED' });
+    vi.unstubAllGlobals();
+  });
+
+  it('executeStep throws UP_STEP_FAILED when fetch returns non-ok', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve('') })
+    );
+    const exec = makeExec(0);
+    await expect(
+      executeStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({ code: 'UP_STEP_FAILED' });
+    vi.unstubAllGlobals();
+  });
+});
+
+// --- winget pkg step ---
+describe('winget pkg step', () => {
+  const wingetStep: PkgStep = {
+    type: 'pkg',
+    winget: 'Microsoft.NodeJs',
+    label: 'Node.js (winget)',
+  };
+  const wingetOnly: PackageManagers = { nix: false, brew: false, winget: true, npm: false };
+
+  it('checkStep uses winget list', async () => {
+    const exec = makeExec(0);
+    expect(await checkStep(wingetStep, wingetOnly, exec)).toBe(true);
+    expect(exec.run).toHaveBeenCalledWith('winget', ['list', '--id', 'Microsoft.NodeJs']);
+  });
+
+  it('executeStep uses winget install', async () => {
+    const exec = makeExec(0);
+    await executeStep(wingetStep, wingetOnly, exec);
+    expect(exec.run).toHaveBeenCalledWith(
+      'winget',
+      expect.arrayContaining(['install', '--id', 'Microsoft.NodeJs'])
+    );
+  });
+
+  it('unexecuteStep uses winget uninstall', async () => {
+    const exec = makeExec(0);
+    await unexecuteStep(wingetStep, wingetOnly, exec);
+    expect(exec.run).toHaveBeenCalledWith('winget', [
+      'uninstall',
+      '--id',
+      'Microsoft.NodeJs',
+      '--silent',
+    ]);
+  });
+
+  it('checkStep returns false when no manager matches', async () => {
+    const exec = makeExec(0);
+    expect(await checkStep(wingetStep, noneAvailable, exec)).toBe(false);
+  });
+
+  it('executeStep throws UP_STEP_FAILED on non-zero exit', async () => {
+    const exec = makeExec(1);
+    await expect(executeStep(wingetStep, wingetOnly, exec)).rejects.toMatchObject({
+      code: 'UP_STEP_FAILED',
+    });
+  });
+
+  it('unexecuteStep does nothing when no manager available', async () => {
+    const exec = makeExec(0);
+    await expect(unexecuteStep(wingetStep, noneAvailable, exec)).resolves.not.toThrow();
+  });
+});
+
+// --- npm local step ---
+describe('npm local step', () => {
+  const localNpmStep: NpmStep = {
+    type: 'npm',
+    pkg: 'typescript',
+    global: false,
+    label: 'TypeScript',
+  };
+
+  it('executeStep runs npm install (local)', async () => {
+    const exec = makeExec(0);
+    await executeStep(localNpmStep, noneAvailable, exec);
+    expect(exec.run).toHaveBeenCalledWith('npm', ['install', 'typescript']);
+  });
+
+  it('unexecuteStep runs npm uninstall (local)', async () => {
+    const exec = makeExec(0);
+    await unexecuteStep(localNpmStep, noneAvailable, exec);
+    expect(exec.run).toHaveBeenCalledWith('npm', ['uninstall', 'typescript']);
+  });
+
+  it('executeStep throws UP_STEP_FAILED on non-zero exit', async () => {
+    const exec = makeExec(1);
+    await expect(executeStep(localNpmStep, noneAvailable, exec)).rejects.toMatchObject({
+      code: 'UP_STEP_FAILED',
+    });
+  });
+});
+
+// --- mcp step ---
+describe('mcp step', () => {
+  const mcpStep: McpStep = {
+    type: 'mcp',
+    server: 'test-server',
+    command: 'npx test-mcp',
+    label: 'Test MCP',
+  };
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('checkStep returns false when server not in settings', async () => {
+    const exec = makeExec(0);
+    expect(await checkStep(mcpStep, noneAvailable, exec)).toBe(false);
+  });
+
+  it('checkStep returns true when server is in settings', async () => {
+    const { loadSettings } = await import('../settings.js');
+    vi.mocked(loadSettings).mockReturnValueOnce({
+      onboarded: false,
+      plugins: {},
+      mcpServers: { 'test-server': { command: 'npx test-mcp' } },
+      crew: { specialists: {} },
+    });
+    const exec = makeExec(0);
+    expect(await checkStep(mcpStep, noneAvailable, exec)).toBe(true);
+  });
+
+  it('checkStep returns false when loadSettings throws', async () => {
+    const { loadSettings } = await import('../settings.js');
+    vi.mocked(loadSettings).mockImplementationOnce(() => {
+      throw new Error('settings error');
+    });
+    const exec = makeExec(0);
+    expect(await checkStep(mcpStep, noneAvailable, exec)).toBe(false);
+  });
+
+  it('executeStep adds server to mcpServers', async () => {
+    const { saveSettings } = await import('../settings.js');
+    const exec = makeExec(0);
+    await executeStep(mcpStep, noneAvailable, exec);
+    expect(vi.mocked(saveSettings)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mcpServers: expect.objectContaining({ 'test-server': { command: 'npx test-mcp' } }),
+      })
+    );
+  });
+
+  it('unexecuteStep removes server from mcpServers', async () => {
+    const { loadSettings, saveSettings } = await import('../settings.js');
+    vi.mocked(loadSettings).mockReturnValueOnce({
+      onboarded: false,
+      plugins: {},
+      mcpServers: { 'test-server': { command: 'npx test-mcp' } },
+      crew: { specialists: {} },
+    });
+    const exec = makeExec(0);
+    await unexecuteStep(mcpStep, noneAvailable, exec);
+    const savedArg = vi.mocked(saveSettings).mock.calls[0]?.[0];
+    expect(savedArg?.mcpServers).not.toHaveProperty('test-server');
+  });
+});
+
+// --- zed-extension step ---
+describe('zed-extension step', () => {
+  const zedStep: ZedExtStep = {
+    type: 'zed-extension',
+    id: 'gleam',
+    label: 'Gleam language support',
+  };
+
+  it('checkStep always returns false', async () => {
+    const exec = makeExec(0);
+    expect(await checkStep(zedStep, noneAvailable, exec)).toBe(false);
+  });
+
+  it('executeStep does nothing when zed settings file does not exist', async () => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
+    // On linux, path would be ~/.config/zed/settings.json — which won't exist
+    const exec = makeExec(0);
+    await expect(executeStep(zedStep, noneAvailable, exec)).resolves.not.toThrow();
+    vi.restoreAllMocks();
+  });
+
+  it('unexecuteStep does nothing when zed settings file does not exist', async () => {
+    vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
+    const exec = makeExec(0);
+    await expect(unexecuteStep(zedStep, noneAvailable, exec)).resolves.not.toThrow();
+    vi.restoreAllMocks();
   });
 });

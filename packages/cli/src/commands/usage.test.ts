@@ -128,4 +128,26 @@ describe('runUsage', () => {
     expect(stdoutSpy).toHaveBeenCalledWith(expect.stringContaining('YYYYMMDD'));
     exitSpy.mockRestore();
   });
+
+  it('includes Codex section when readCodexEntries returns data', async () => {
+    const { readCodexEntries } = await import('../usage/reader.js');
+    vi.mocked(readCodexEntries).mockResolvedValueOnce([
+      {
+        timestamp: new Date('2026-04-22T10:00:00Z'),
+        model: 'gpt-5',
+        inputTokens: 5000,
+        outputTokens: 1000,
+        cacheCreationTokens: 0,
+        cacheReadTokens: 200,
+        costUSD: 0.18,
+        costKnown: true,
+        provider: 'codex',
+      },
+    ]);
+    const { runUsage } = await import('./usage.js');
+    const { formatTable } = await import('../usage/format.js');
+    await runUsage({});
+    const report = vi.mocked(formatTable).mock.calls[0]?.[0];
+    expect(report?.providers.some((p) => p.provider === 'codex')).toBe(true);
+  });
 });

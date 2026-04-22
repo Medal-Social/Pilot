@@ -125,7 +125,7 @@ export async function readClaudeEntries(
 }
 
 export async function readCodexEntries(window: UsageWindow): Promise<UsageEntry[]> {
-  const codexHome = process.env['CODEX_HOME'];
+  const codexHome = process.env.CODEX_HOME;
   const sessionsDir = codexHome
     ? join(codexHome, 'sessions')
     : join(homedir(), '.codex', 'sessions');
@@ -149,31 +149,31 @@ export async function readCodexEntries(window: UsageWindow): Promise<UsageEntry[
       }
       if (!isObj(raw)) continue;
 
-      const tsRaw = raw['timestamp'];
+      const tsRaw = raw.timestamp;
       const timestamp = typeof tsRaw === 'string' ? new Date(tsRaw) : new Date(0);
       if (Number.isNaN(timestamp.getTime())) continue;
 
-      const type = raw['type'];
+      const type = raw.type;
 
       if (type === 'turn_context') {
-        const payload = raw['payload'];
-        if (isObj(payload) && typeof payload['model'] === 'string') {
-          currentModel = payload['model'];
+        const payload = raw.payload;
+        if (isObj(payload) && typeof payload.model === 'string') {
+          currentModel = payload.model;
         }
         continue;
       }
 
       if (type === 'event_msg') {
-        const payload = raw['payload'];
-        if (!isObj(payload) || payload['type'] !== 'token_count') continue;
-        const info = payload['info'];
+        const payload = raw.payload;
+        if (!isObj(payload) || payload.type !== 'token_count') continue;
+        const info = payload.info;
         if (!isObj(info)) continue;
-        const usage = info['total_token_usage'];
+        const usage = info.total_token_usage;
         if (!isObj(usage)) continue;
 
-        const currInput = asNum(usage['input_tokens']);
-        const currCached = asNum(usage['cached_input_tokens']);
-        const currOutput = asNum(usage['output_tokens']);
+        const currInput = asNum(usage.input_tokens);
+        const currCached = asNum(usage.cached_input_tokens);
+        const currOutput = asNum(usage.output_tokens);
 
         const deltaInput = Math.max(currInput - prevInput, 0);
         const deltaCached = Math.max(currCached - prevCachedInput, 0);

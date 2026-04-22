@@ -56,6 +56,18 @@ describe('findClaudeProjectDir', () => {
     vi.stubEnv('CLAUDE_CONFIG_DIR', `${firstDir},${secondDir}`);
     expect(findClaudeProjectDir('/some/project')).toBe(projectDir);
   });
+
+  it('uses default paths when CLAUDE_CONFIG_DIR is not set', () => {
+    const original = process.env.CLAUDE_CONFIG_DIR;
+    delete process.env.CLAUDE_CONFIG_DIR;
+    try {
+      // Default paths (~/.config/claude/projects, ~/.claude/projects) won't have
+      // an entry for a nonexistent path, so null is returned — but homedir() was called
+      expect(findClaudeProjectDir('/nonexistent/path/xyz')).toBeNull();
+    } finally {
+      if (original !== undefined) process.env.CLAUDE_CONFIG_DIR = original;
+    }
+  });
 });
 
 describe('readClaudeEntries', () => {
@@ -156,6 +168,87 @@ describe('readClaudeEntries', () => {
   it('returns empty array for nonexistent directory', async () => {
     const entries = await readClaudeEntries(join(tmpDir, 'nonexistent'), WINDOW);
     expect(entries).toHaveLength(0);
+  });
+
+  it('skips non-object JSON lines', async () => {
+    await writeFile(join(tmpDir, 'arr.jsonl'), `[1,2,3]\n${entry()}`);
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('skips entries without message object', async () => {
+    const noMsg = JSON.stringify({ timestamp: '2026-04-22T10:00:00Z', message: 'not-object' });
+    await writeFile(join(tmpDir, 'nomsg.jsonl'), `${noMsg}\n${entry()}`);
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('skips entries without usage object', async () => {
+    const noUsage = JSON.stringify({
+      timestamp: '2026-04-22T10:00:00Z',
+      message: { id: 'msg-nu', model: 'claude-opus-4', usage: 'not-object' },
+    });
+    await writeFile(join(tmpDir, 'nousage.jsonl'), `${noUsage}\n${entry()}`);
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('skips entries with non-string timestamp', async () => {
+    const badTs = JSON.stringify({
+      timestamp: 12345,
+      message: { id: 'msg-bt', model: 'claude-opus-4', usage: { input_tokens: 1 } },
+    });
+    await writeFile(join(tmpDir, 'badts.jsonl'), `${badTs}\n${entry()}`);
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('skips entries with invalid timestamp string', async () => {
+    const badTs = JSON.stringify({
+      timestamp: 'not-a-date',
+      message: { id: 'msg-bt2', model: 'claude-opus-4', usage: { input_tokens: 1 } },
+    });
+    await writeFile(join(tmpDir, 'badts2.jsonl'), `${badTs}\n${entry()}`);
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('falls back to "unknown" when message has no model string', async () => {
+    const noModel = JSON.stringify({
+      timestamp: '2026-04-22T10:00:00Z',
+      message: { id: 'msg-nm', usage: { input_tokens: 100, output_tokens: 50 } },
+      costUSD: 0.1,
+      requestId: 'req-nm',
+    });
+    await writeFile(join(tmpDir, 'nomodel.jsonl'), noModel);
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    expect(entries[0]?.model).toBe('unknown');
+  });
+
+  it('skips non-.jsonl files in directory', async () => {
+    await writeFile(join(tmpDir, 'ignored.txt'), 'not jsonl');
+    await writeFile(join(tmpDir, 'session.jsonl'), entry());
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('skips empty lines in JSONL file', async () => {
+    await writeFile(join(tmpDir, 'empty-lines.jsonl'), `\n   \n${entry()}\n\n`);
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('allows entries with empty messageId without deduplication', async () => {
+    const noId = JSON.stringify({
+      timestamp: '2026-04-22T10:00:00Z',
+      message: { model: 'claude-opus-4', usage: { input_tokens: 100, output_tokens: 50 } },
+      costUSD: 0.1,
+      requestId: 'req-x',
+    });
+    await writeFile(join(tmpDir, 'noid.jsonl'), `${noId}\n${noId}`);
+    const entries = await readClaudeEntries(tmpDir, WINDOW);
+    // No dedup when messageId is empty — both entries included
+    expect(entries).toHaveLength(2);
   });
 });
 
@@ -328,6 +421,190 @@ describe('readCodexEntries', () => {
               output_tokens: 500,
               reasoning_output_tokens: 0,
               total_tokens: 1500,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('skips malformed JSON lines in Codex session files', async () => {
+    const sessionsDir = join(tmpDir, 'sessions');
+    await mkdir(sessionsDir, { recursive: true });
+    await writeFile(
+      join(sessionsDir, 'malformed.jsonl'),
+      [
+        'not-valid-json',
+        JSON.stringify({
+          timestamp: '2026-04-22T10:00:00Z',
+          type: 'turn_context',
+          payload: { model: 'gpt-5' },
+        }),
+        JSON.stringify({
+          timestamp: '2026-04-22T10:01:00Z',
+          type: 'event_msg',
+          payload: {
+            type: 'token_count',
+            info: {
+              total_token_usage: {
+                input_tokens: 500,
+                cached_input_tokens: 0,
+                output_tokens: 200,
+                reasoning_output_tokens: 0,
+                total_tokens: 700,
+              },
+            },
+          },
+        }),
+      ].join('\n')
+    );
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.inputTokens).toBe(500);
+  });
+
+  it('uses homedir fallback when CODEX_HOME is not set', async () => {
+    // Remove CODEX_HOME so the homedir() fallback path runs
+    const original = process.env.CODEX_HOME;
+    delete process.env.CODEX_HOME;
+    try {
+      // ~/.codex/sessions won't have our test data — so returns empty
+      const entries = await readCodexEntries(WINDOW);
+      expect(Array.isArray(entries)).toBe(true);
+    } finally {
+      if (original !== undefined) process.env.CODEX_HOME = original;
+    }
+  });
+
+  it('skips non-object lines in Codex session files', async () => {
+    await writeSession('nonobj.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+    ]);
+    // Manually append a non-object JSON line
+    const sessionsDir = join(tmpDir, 'sessions');
+    const { appendFile } = await import('node:fs/promises');
+    await appendFile(join(sessionsDir, 'nonobj.jsonl'), '\n"just-a-string"');
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('skips turn_context when payload model is not a string', async () => {
+    await writeSession('badmodel.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 42 } },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 500,
+              cached_input_tokens: 0,
+              output_tokens: 200,
+              reasoning_output_tokens: 0,
+              total_tokens: 700,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    // Model stays as default 'gpt-5'
+    expect(entries[0]?.model).toBe('gpt-5');
+  });
+
+  it('skips unknown event types', async () => {
+    await writeSession('unknown-type.jsonl', [
+      {
+        timestamp: '2026-04-22T10:00:00Z',
+        type: 'some_other_type',
+        payload: { data: 'irrelevant' },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('skips event_msg with non-token_count payload type', async () => {
+    await writeSession('non-token.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: { type: 'something_else', info: {} },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('skips event_msg with non-object info', async () => {
+    await writeSession('bad-info.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: { type: 'token_count', info: 'not-object' },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('skips event_msg with non-object total_token_usage', async () => {
+    await writeSession('bad-usage.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: { type: 'token_count', info: { total_token_usage: 'not-object' } },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('skips event_msg when delta input + output is zero', async () => {
+    await writeSession('zero-delta.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: '2026-04-22T10:01:00Z',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 0,
+              cached_input_tokens: 0,
+              output_tokens: 0,
+              reasoning_output_tokens: 0,
+              total_tokens: 0,
+            },
+          },
+        },
+      },
+    ]);
+    const entries = await readCodexEntries(WINDOW);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('skips event_msg with invalid timestamp', async () => {
+    await writeSession('bad-ts.jsonl', [
+      { timestamp: '2026-04-22T10:00:00Z', type: 'turn_context', payload: { model: 'gpt-5' } },
+      {
+        timestamp: 'not-a-date',
+        type: 'event_msg',
+        payload: {
+          type: 'token_count',
+          info: {
+            total_token_usage: {
+              input_tokens: 500,
+              cached_input_tokens: 0,
+              output_tokens: 200,
+              reasoning_output_tokens: 0,
+              total_tokens: 700,
             },
           },
         },
