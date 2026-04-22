@@ -16,6 +16,7 @@ export const errorCodes = {
   UP_TEMPLATE_NOT_FOUND: 'UP_TEMPLATE_NOT_FOUND',
   UP_STEP_FAILED: 'UP_STEP_FAILED',
   UP_NO_PACKAGE_MANAGER: 'UP_NO_PACKAGE_MANAGER',
+  USAGE_INVALID_SINCE: 'USAGE_INVALID_SINCE',
   PLUGIN_INVALID_MANIFEST: 'PLUGIN_INVALID_MANIFEST',
   COMPLETIONS_UNKNOWN_SHELL: 'COMPLETIONS_UNKNOWN_SHELL',
   ADMIN_NOT_AUTHENTICATED: 'ADMIN_NOT_AUTHENTICATED',
@@ -44,6 +45,7 @@ const userMessages: Record<ErrorCode, string> = {
     'An install step failed. Fix the error above and run `pilot up <template>` again.',
   UP_NO_PACKAGE_MANAGER:
     'No compatible package manager found for your platform. Visit medalsocial.com/pilot/setup for install instructions.',
+  USAGE_INVALID_SINCE: '--since expects a date in YYYYMMDD format (e.g. 20260401).',
   PLUGIN_INVALID_MANIFEST: 'Plugin has an invalid manifest — missing name or namespace.',
   COMPLETIONS_UNKNOWN_SHELL: 'Unknown shell. Supported shells: bash, zsh, fish.',
   ADMIN_NOT_AUTHENTICATED: 'You must be signed in to access the admin dashboard. Run: pilot login',
