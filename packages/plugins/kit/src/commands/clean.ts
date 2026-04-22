@@ -140,7 +140,8 @@ export async function scanTargets(
         const bytes = await scanPath(exec, cachePath);
         return bytes > 0 ? { target: { ...target, path: cachePath }, bytes } : null;
       }
-      const bytes = await scanPath(exec, target.path!);
+      if (!target.path) return null;
+      const bytes = await scanPath(exec, target.path);
       return bytes > 0 ? { target, bytes } : null;
     })
   );
@@ -148,7 +149,7 @@ export async function scanTargets(
 }
 
 function parseSize(num: string, unit: string): number {
-  const n = parseFloat(num);
+  const n = Number.parseFloat(num);
   if (Number.isNaN(n)) return 0;
   switch (unit.toUpperCase()) {
     case 'TB':

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
-import type { CleanTarget } from './clean.js';
-import { CLEAN_TARGETS, formatBytes, scanTargets } from './clean.js';
+import type { CleanTarget, ScannedTarget } from './clean.js';
+import { CLEAN_TARGETS, deleteTarget, deleteTargets, formatBytes, scanTargets } from './clean.js';
 
 describe('formatBytes', () => {
   it.each([
@@ -147,9 +147,6 @@ describe('scanTargets', () => {
     expect(result).toHaveLength(0);
   });
 });
-
-import type { ScannedTarget } from './clean.js';
-import { deleteTarget, deleteTargets } from './clean.js';
 
 describe('deleteTarget', () => {
   it('runs rm -rf for a non-contentsOnly path target', async () => {
