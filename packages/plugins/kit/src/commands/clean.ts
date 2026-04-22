@@ -81,12 +81,9 @@ export const CLEAN_TARGETS: CleanTarget[] = [
     kind: 'path',
     path: join(HOME, '.yarn/cache'),
   },
-  {
-    id: 'pip',
-    label: 'pip cache',
-    kind: 'path',
-    path: join(HOME, 'Library/Caches/pip'),
-  },
+  // Note: ~/Library/Caches/pip is intentionally omitted; it is a child of
+  // the `system-caches` target above, and including it separately would
+  // double-count bytes and race during deletion.
   {
     id: 'gradle',
     label: 'Gradle caches',

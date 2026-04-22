@@ -250,4 +250,136 @@ describe('runUp', () => {
     // 1 for UpBrowse + 1 for UpInstall = 2, not 3
     expect(render).toHaveBeenCalledTimes(2);
   });
+
+  it('writes to stderr when the nested runUp from onInstall rejects', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: { version: 1, publishedAt: '', sha256: 'x', templates: [] },
+      fromCache: false,
+      offline: false,
+    });
+
+    const react = await import('react');
+    type OnInstall = (entry: { name: string }) => void;
+    let capturedOnInstall: OnInstall | undefined;
+    (react.default.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props?.onInstall) capturedOnInstall = props.onInstall as OnInstall;
+        return null;
+      }
+    );
+
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const { runUp } = await import('./up.js');
+    void runUp(); // browse mode
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Template name not in the registry → nested runUp rejects with UP_TEMPLATE_NOT_FOUND.
+    capturedOnInstall?.({ name: 'unknown-template' });
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(stderrSpy).toHaveBeenCalled();
+    stderrSpy.mockRestore();
+  });
+
+  it('records each step label in the installed-template state', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'remotion',
+            displayName: 'Remotion Video Studio',
+            description: 'Video',
+            version: '1.0.0',
+            category: 'video',
+            platforms: [process.platform],
+            steps: [
+              { type: 'npm', pkg: '@remotion/cli', global: true, label: 'Remotion CLI' },
+              { type: 'skill', id: 'remotion', url: 'https://x/y.md', label: 'Remotion skill' },
+            ],
+          },
+        ],
+      },
+      fromCache: false,
+      offline: false,
+    });
+
+    const { saveTemplateState } = await import('../device/state.js');
+    const React = await import('react');
+    (React.default.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props?.onDone) void (props.onDone as () => Promise<void>)();
+        return null;
+      }
+    );
+
+    const { runUp } = await import('./up.js');
+    await runUp('remotion');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(saveTemplateState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        templates: expect.objectContaining({
+          remotion: expect.objectContaining({
+            dependencies: expect.objectContaining({
+              'Remotion CLI': true,
+              'Remotion skill': true,
+            }),
+          }),
+        }),
+      })
+    );
+  });
+
+  it('invokes runInstallSteps when the UpInstall runSteps prop is called', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'remotion',
+            displayName: 'Remotion Video Studio',
+            description: 'Video',
+            version: '1.0.0',
+            category: 'video',
+            platforms: [process.platform],
+            steps: [],
+          },
+        ],
+      },
+      fromCache: false,
+      offline: false,
+    });
+
+    const { runInstallSteps } = await import('../installer/runner.js');
+    (runInstallSteps as ReturnType<typeof vi.fn>).mockClear();
+
+    const React = await import('react');
+    (React.default.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props && typeof props.runSteps === 'function') {
+          (props.runSteps as (cbs: Record<string, unknown>) => void)({
+            onStepStart: vi.fn(),
+            onStepSkip: vi.fn(),
+            onStepDone: vi.fn(),
+            onStepError: vi.fn(),
+          });
+        }
+        return null;
+      }
+    );
+
+    const { runUp } = await import('./up.js');
+    await runUp('remotion');
+
+    expect(runInstallSteps).toHaveBeenCalled();
+  });
 });

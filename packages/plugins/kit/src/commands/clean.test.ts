@@ -34,13 +34,24 @@ describe('CLEAN_TARGETS', () => {
       'npm',
       'pnpm',
       'yarn',
-      'pip',
       'gradle',
       'maven',
       'docker',
     ]) {
       expect(ids).toContain(id);
     }
+  });
+
+  it('does not include child targets of system-caches', () => {
+    // ~/Library/Caches/pip was removed because it was a child of the
+    // `system-caches` target (~/Library/Caches), which caused double-counting.
+    const systemCaches = CLEAN_TARGETS.find((t) => t.id === 'system-caches');
+    expect(systemCaches).toBeDefined();
+    const cachesPath = systemCaches?.path ?? '';
+    const overlaps = CLEAN_TARGETS.filter(
+      (t) => t.id !== 'system-caches' && t.path?.startsWith(`${cachesPath}/`)
+    );
+    expect(overlaps).toEqual([]);
   });
 
   it('all path-kind targets have a path defined', () => {

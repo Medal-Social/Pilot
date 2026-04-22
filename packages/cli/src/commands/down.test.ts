@@ -152,6 +152,86 @@ describe('runDown', () => {
     expect(runUninstallSteps).toHaveBeenCalled();
   });
 
+  it('orphan cleanup skips crew settings when template has no crewSpecialist', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    const { getInstalledTemplateNames, removeTemplateFromState, loadTemplateState } = await import(
+      '../device/state.js'
+    );
+    const { saveSettings } = await import('../settings.js');
+
+    (getInstalledTemplateNames as ReturnType<typeof vi.fn>).mockReturnValueOnce(['orphan']);
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: { version: 1, publishedAt: '', sha256: 'x', templates: [] },
+      fromCache: false,
+      offline: false,
+    });
+    // Template is in state but has no crewSpecialist set.
+    (loadTemplateState as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      templates: {
+        orphan: {
+          name: 'orphan',
+          installedAt: '',
+          lastChecked: '',
+          dependencies: {},
+        },
+      },
+    });
+
+    (saveSettings as ReturnType<typeof vi.fn>).mockClear();
+
+    const { runDown } = await import('./down.js');
+    await runDown('orphan');
+
+    expect(removeTemplateFromState).toHaveBeenCalledWith('orphan');
+    expect(saveSettings).not.toHaveBeenCalled();
+  });
+
+  it('onDone path runs when template has no crew block (removeCrewSpecialist early-returns)', async () => {
+    const { fetchRegistry } = await import('../registry/fetch.js');
+    (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      index: {
+        version: 1,
+        publishedAt: '',
+        sha256: 'x',
+        templates: [
+          {
+            name: 'remotion',
+            displayName: 'Remotion Video Studio',
+            description: 'Video',
+            version: '1.0.0',
+            category: 'video',
+            platforms: ['darwin'],
+            steps: [{ type: 'npm', pkg: '@remotion/cli', global: true, label: 'Remotion CLI' }],
+            // no crew — early return in removeCrewSpecialist
+          },
+        ],
+      },
+      fromCache: false,
+      offline: false,
+    });
+
+    const { removeTemplateFromState } = await import('../device/state.js');
+    const { saveSettings } = await import('../settings.js');
+    (saveSettings as ReturnType<typeof vi.fn>).mockClear();
+
+    const React = await import('react');
+    (React.createElement as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_type: unknown, props: Record<string, unknown> | null) => {
+        if (props?.onDone) void (props.onDone as () => Promise<void>)();
+        return null;
+      }
+    );
+
+    const { runDown } = await import('./down.js');
+    await runDown('remotion');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(removeTemplateFromState).toHaveBeenCalledWith('remotion');
+    // removeCrewSpecialist returned early, so saveSettings is not invoked for crew.
+    expect(saveSettings).not.toHaveBeenCalled();
+  });
+
   it('calls removeTemplateFromState and removeCrewSpecialist in onDone', async () => {
     const { fetchRegistry } = await import('../registry/fetch.js');
     (fetchRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({

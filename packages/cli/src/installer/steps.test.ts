@@ -101,6 +101,46 @@ describe('pkg step', () => {
       code: 'UP_STEP_FAILED',
     });
   });
+
+  it('executeStep runs winget install when only winget is available', async () => {
+    const wingetStep: PkgStep = {
+      type: 'pkg',
+      winget: 'Contoso.App',
+      label: 'Contoso App',
+    };
+    const wingetOnly: PackageManagers = { nix: false, brew: false, winget: true, npm: false };
+    const exec = makeExec(0);
+    await executeStep(wingetStep, wingetOnly, exec);
+    expect(exec.run).toHaveBeenCalledWith(
+      'winget',
+      expect.arrayContaining(['install', '--id', 'Contoso.App'])
+    );
+  });
+
+  it('unexecuteStep runs winget uninstall when only winget is available', async () => {
+    const wingetStep: PkgStep = {
+      type: 'pkg',
+      winget: 'Contoso.App',
+      label: 'Contoso App',
+    };
+    const wingetOnly: PackageManagers = { nix: false, brew: false, winget: true, npm: false };
+    const exec = makeExec(0);
+    await unexecuteStep(wingetStep, wingetOnly, exec);
+    expect(exec.run).toHaveBeenCalledWith('winget', [
+      'uninstall',
+      '--id',
+      'Contoso.App',
+      '--silent',
+    ]);
+  });
+
+  it('checkStep uses winget when only winget is available', async () => {
+    const wingetStep: PkgStep = { type: 'pkg', winget: 'Contoso.App', label: 'Contoso App' };
+    const wingetOnly: PackageManagers = { nix: false, brew: false, winget: true, npm: false };
+    const exec = makeExec(0);
+    expect(await checkStep(wingetStep, wingetOnly, exec)).toBe(true);
+    expect(exec.run).toHaveBeenCalledWith('winget', ['list', '--id', 'Contoso.App']);
+  });
 });
 
 // --- npm step ---
@@ -220,6 +260,36 @@ describe('skill step', () => {
     await unexecuteStep(skillStep, npmOnly, exec, { skillsDir: tmpDir });
     expect(existsSync(join(tmpDir, 'remotion.md'))).toBe(false);
   });
+
+  it('executeStep wraps fetch errors in UP_STEP_FAILED', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
+    const exec = makeExec(0);
+    await expect(
+      executeStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({ code: 'UP_STEP_FAILED' });
+    vi.unstubAllGlobals();
+  });
+
+  it('executeStep wraps non-Error fetch rejections in UP_STEP_FAILED', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue('plain string rejection'));
+    const exec = makeExec(0);
+    await expect(
+      executeStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({ code: 'UP_STEP_FAILED' });
+    vi.unstubAllGlobals();
+  });
+
+  it('executeStep throws UP_STEP_FAILED when fetch returns !ok', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve('') })
+    );
+    const exec = makeExec(0);
+    await expect(
+      executeStep(skillStep, npmOnly, exec, { skillsDir: tmpDir })
+    ).rejects.toMatchObject({ code: 'UP_STEP_FAILED' });
+    vi.unstubAllGlobals();
+  });
 });
 
 // --- mcp step ---
@@ -281,6 +351,14 @@ describe('mcp step', () => {
     expect(vi.mocked(saveSettings)).toHaveBeenCalledWith(
       expect.objectContaining({ mcpServers: {} })
     );
+  });
+
+  it('checkStep returns false when loadSettings throws', async () => {
+    vi.mocked(loadSettings).mockImplementationOnce(() => {
+      throw new Error('settings unreadable');
+    });
+    const exec = makeExec(0);
+    expect(await checkStep(mcpStep, allManagers, exec)).toBe(false);
   });
 });
 

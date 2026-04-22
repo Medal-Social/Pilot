@@ -19,11 +19,18 @@ import { fetchRegistry } from '../registry/fetch.js';
 import type { TemplateEntry } from '../registry/types.js';
 import { loadSettings, saveSettings } from '../settings.js';
 
-async function removeCrewSpecialist(entry: TemplateEntry): Promise<void> {
-  if (!entry.crew) return;
+async function removeCrewSpecialist(entry: TemplateEntry, templateName: string): Promise<void> {
+  // Prefer the specialist recorded at install time — the registry entry may have
+  // dropped its `crew` block since install, but the persisted state is what
+  // actually wired the specialist into settings.
+  const installed = loadTemplateState().templates[templateName]?.crewSpecialist;
+  const specialist = installed ?? entry.crew?.specialist;
+  if (!specialist) return;
   const settings = loadSettings();
-  delete settings.crew.specialists[entry.crew.specialist];
-  saveSettings(settings);
+  if (settings.crew.specialists[specialist]) {
+    delete settings.crew.specialists[specialist];
+    saveSettings(settings);
+  }
 }
 
 export async function runDown(template: string): Promise<void> {
@@ -61,8 +68,10 @@ export async function runDown(template: string): Promise<void> {
       runSteps: (callbacks: RunCallbacks) =>
         runUninstallSteps(entry.steps, managers, undefined, otherInstalled, template, callbacks),
       onDone: async () => {
+        // Remove crew settings BEFORE deleting template state so the installed
+        // crewSpecialist lookup still works.
+        await removeCrewSpecialist(entry, template);
         removeTemplateFromState(template);
-        await removeCrewSpecialist(entry);
       },
     })
   );

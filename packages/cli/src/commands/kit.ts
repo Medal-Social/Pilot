@@ -390,12 +390,13 @@ export async function runKitEdit(): Promise<void> {
 // Exported for tests.
 export { resolveMachine };
 
-async function promptConfirm(question: string): Promise<boolean> {
+export async function promptConfirm(question: string): Promise<boolean> {
   return new Promise((resolve) => {
     const rl = createInterface({ input: process.stdin, output: process.stdout });
     rl.question(question, (answer) => {
       rl.close();
-      resolve(answer.toLowerCase() === 'y');
+      const normalized = answer.trim().toLowerCase();
+      resolve(normalized === 'y' || normalized === 'yes');
     });
   });
 }

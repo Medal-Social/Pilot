@@ -171,6 +171,7 @@ export function Uninstall() {
               for (const t of templates) {
                 const otherInstalled = remaining.filter((n) => n !== t);
                 const entry = index.templates.find((e) => e.name === t);
+                let cleanupSucceeded = true;
                 if (entry) {
                   try {
                     await runUninstallSteps(
@@ -182,11 +183,16 @@ export function Uninstall() {
                       noop
                     );
                   } catch {
-                    // best-effort
+                    // Keep template tracked so the user can retry cleanup via
+                    // `pilot down <template>` instead of losing state visibility.
+                    cleanupSucceeded = false;
                   }
                 }
-                removeTemplateFromState(t);
-                remaining = otherInstalled;
+                if (cleanupSucceeded) {
+                  removeTemplateFromState(t);
+                  remaining = otherInstalled;
+                }
+                // else: template remains tracked so the user can retry cleanup.
               }
             } catch {
               // best-effort if registry unavailable
