@@ -2,7 +2,7 @@ name: Scorecard
 
 on:
   push:
-    branches: [main]
+    branches: [prod]
   schedule:
     - cron: '0 6 * * 1'
 
