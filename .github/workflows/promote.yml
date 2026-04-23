@@ -61,7 +61,7 @@ jobs:
       - name: Open promotion PR
         if: |
           steps.existing.outputs.existing == '' &&
-          (steps.check.outputs.pending != '0' || inputs.force == 'true') &&
+          (steps.check.outputs.pending != '0' || (github.event_name == 'workflow_dispatch' && inputs.force)) &&
           steps.check.outputs.commits != '0'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -96,7 +96,7 @@ jobs:
       - name: No-op summary
         if: |
           steps.existing.outputs.existing != '' ||
-          (steps.check.outputs.pending == '0' && inputs.force != 'true') ||
+          (steps.check.outputs.pending == '0' && !(github.event_name == 'workflow_dispatch' && inputs.force)) ||
           steps.check.outputs.commits == '0'
         run: |
           if [ -n "${{ steps.existing.outputs.existing }}" ]; then
