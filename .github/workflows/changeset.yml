@@ -52,20 +52,30 @@ jobs:
         id: pr
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER_FROM_EVENT: ${{ github.event.pull_request.number }}
+          PR_HEAD_REF_FROM_EVENT: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_SHA_FROM_EVENT: ${{ github.event.pull_request.head.sha }}
+          ISSUE_NUMBER_FROM_EVENT: ${{ github.event.issue.number }}
+          DISPATCH_PR_FROM_EVENT: ${{ github.event.inputs.pr }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-            echo "head_ref=${{ github.event.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
-            echo "head_sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-            PR_NUM="${{ github.event.issue.number }}"
-            echo "number=$PR_NUM" >> "$GITHUB_OUTPUT"
-            gh pr view "$PR_NUM" --json headRefName,headRefOid --jq '"head_ref=\(.headRefName)\nhead_sha=\(.headRefOid)"' >> "$GITHUB_OUTPUT"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            {
+              printf 'number=%s\n' "$PR_NUMBER_FROM_EVENT"
+              printf 'head_ref=%s\n' "$PR_HEAD_REF_FROM_EVENT"
+              printf 'head_sha=%s\n' "$PR_HEAD_SHA_FROM_EVENT"
+            } >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT_NAME" = "issue_comment" ]; then
+            PR_NUM="$ISSUE_NUMBER_FROM_EVENT"
+            printf 'number=%s\n' "$PR_NUM" >> "$GITHUB_OUTPUT"
+            gh pr view "$PR_NUM" --json headRefName,headRefOid \
+              --jq '"head_ref=\(.headRefName)\nhead_sha=\(.headRefOid)"' >> "$GITHUB_OUTPUT"
           else
-            PR_NUM="${{ github.event.inputs.pr }}"
-            echo "number=$PR_NUM" >> "$GITHUB_OUTPUT"
-            gh pr view "$PR_NUM" --json headRefName,headRefOid --jq '"head_ref=\(.headRefName)\nhead_sha=\(.headRefOid)"' >> "$GITHUB_OUTPUT"
+            PR_NUM="$DISPATCH_PR_FROM_EVENT"
+            printf 'number=%s\n' "$PR_NUM" >> "$GITHUB_OUTPUT"
+            gh pr view "$PR_NUM" --json headRefName,headRefOid \
+              --jq '"head_ref=\(.headRefName)\nhead_sha=\(.headRefOid)"' >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
