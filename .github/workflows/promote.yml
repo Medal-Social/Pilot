@@ -1,0 +1,108 @@
+name: Promote dev to prod
+
+on:
+  schedule:
+    - cron: '0 15 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Open a promotion PR even if no pending changesets'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions: {}
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Check for pending changesets on dev
+        id: check
+        run: |
+          git fetch origin dev prod --quiet
+
+          # Changeset files present on dev but not on prod (excluding README and config)
+          pending="$(comm -23 \
+            <(git ls-tree -r origin/dev --name-only -- '.changeset/*.md' | grep -v 'README.md' | sort) \
+            <(git ls-tree -r origin/prod --name-only -- '.changeset/*.md' | grep -v 'README.md' | sort) \
+            | wc -l | tr -d ' ')"
+
+          commits="$(git rev-list origin/prod..origin/dev --count)"
+
+          echo "pending=$pending" >> "$GITHUB_OUTPUT"
+          echo "commits=$commits" >> "$GITHUB_OUTPUT"
+          echo "Pending changesets: $pending"
+          echo "Dev ahead of prod by: $commits commits"
+
+      - name: Check for existing promotion PR
+        id: existing
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          n="$(gh pr list --repo ${{ github.repository }} --base prod --head dev --state open --json number --jq '.[0].number // empty')"
+          echo "existing=$n" >> "$GITHUB_OUTPUT"
+
+      - name: Open promotion PR
+        if: |
+          steps.existing.outputs.existing == '' &&
+          (steps.check.outputs.pending != '0' || inputs.force == 'true') &&
+          steps.check.outputs.commits != '0'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          body=$(cat <<EOF
+          ## Summary
+
+          Automated promotion of \`dev\` to \`prod\`.
+
+          - Pending changesets: ${{ steps.check.outputs.pending }}
+          - Commits ahead of prod: ${{ steps.check.outputs.commits }}
+
+          ## What happens after merge
+
+          1. Merging this to \`prod\` triggers the Release workflow.
+          2. Release workflow opens a \`chore: release packages\` PR that bumps versions and regenerates the changelog.
+          3. Merging that PR publishes to npm.
+
+          ---
+
+          _Opened automatically by [\`promote.yml\`](.github/workflows/promote.yml). Trigger manually via the Actions tab or wait for the next scheduled run._
+          EOF
+          )
+
+          gh pr create \
+            --repo ${{ github.repository }} \
+            --base prod \
+            --head dev \
+            --title "chore: promote dev to prod" \
+            --body "$body"
+
+      - name: No-op summary
+        if: |
+          steps.existing.outputs.existing != '' ||
+          (steps.check.outputs.pending == '0' && inputs.force != 'true') ||
+          steps.check.outputs.commits == '0'
+        run: |
+          if [ -n "${{ steps.existing.outputs.existing }}" ]; then
+            echo "Skip: existing open promotion PR #${{ steps.existing.outputs.existing }}"
+          elif [ "${{ steps.check.outputs.commits }}" = '0' ]; then
+            echo "Skip: dev and prod are in sync"
+          else
+            echo "Skip: no pending changesets (use workflow_dispatch with force=true to override)"
+          fi
