@@ -1,5 +1,11 @@
 # @medalsocial/pilot
 
+## 0.2.1
+
+### Patch Changes
+
+- [#60](https://github.com/Medal-Social/Pilot/pull/60) [`8ec036b`](https://github.com/Medal-Social/Pilot/commit/8ec036b94a3dd3648d36fed91cb9f52ae995091f) Thanks [@alioftech](https://github.com/alioftech)! - Internal improvements: deterministic changeset automation with AI fallback, two-branch governance (dev → prod), auto-merge for dependency and release bot PRs, updated developer toolchain (biome 2.4.12, knip 6, secretlint 12, fast-check 4.7).
+
 ## 0.2.0
 
 ### Minor Changes
