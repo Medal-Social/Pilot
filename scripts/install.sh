@@ -14,8 +14,7 @@ main() {
     linux*)  OS="linux" ;;
     darwin*) OS="darwin" ;;
     mingw*|msys*|cygwin*)
-      echo "For Windows, install via: npm install -g @medalsocial/pilot"
-      echo "Or download from https://github.com/$REPO/releases"
+      echo "For Windows, see installation instructions at https://github.com/$REPO#install"
       exit 0
       ;;
     *) echo "Unsupported operating system: $OS"; exit 1 ;;
@@ -27,8 +26,8 @@ main() {
     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
   esac
 
-  # Prefer npm install — always pulls the current "latest" dist-tag,
-  # which is authoritative and independent of GitHub release tag naming.
+  # Prefer the Node path — resolves the current release via the registry's
+  # "latest" tag, which is independent of GitHub release tag naming.
   if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
     NODE_MAJOR="$(node -v | sed 's/v//' | cut -d. -f1)"
     if [ "$NODE_MAJOR" -ge 24 ] 2>/dev/null; then
@@ -36,24 +35,14 @@ main() {
       if npm install -g "@medalsocial/pilot@latest"; then
         echo ""
         echo "Pilot installed! Run \`pilot\` to get started."
-        echo "(zsh users: run \`rehash\` or open a new terminal if \`pilot\` isn't found yet.)"
+        echo "If \`pilot\` isn't found right away, open a new terminal."
         exit 0
       fi
-      echo "npm install failed, falling back to binary download..."
+      echo "Node install didn't work — falling back to a standalone download..."
     else
-      echo "Node.js 24+ required for npm install, falling back to binary download..."
+      echo "Your Node is older than Pilot needs — falling back to a standalone download..."
     fi
   fi
-
-  # Fetch the latest release tag for the binary download fallback.
-  # Supports both legacy "vX.Y.Z" and Changesets "@medalsocial/pilot@X.Y.Z" tag formats.
-  if command -v curl >/dev/null 2>&1; then
-    RAW_TAG="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | head -n 1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
-  elif command -v wget >/dev/null 2>&1; then
-    RAW_TAG="$(wget -qO- "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | head -n 1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
-  fi
-  # Strip either leading "v" or "@medalsocial/pilot@" prefix; fall back to raw tag.
-  LATEST_VERSION="$(printf '%s' "$RAW_TAG" | sed -E 's|^v||; s|^@medalsocial/pilot@||')"
 
   # Download standalone binary
   echo "Installing Pilot..."
