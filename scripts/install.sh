@@ -14,8 +14,7 @@ main() {
     linux*)  OS="linux" ;;
     darwin*) OS="darwin" ;;
     mingw*|msys*|cygwin*)
-      echo "For Windows, install via: npm install -g @medalsocial/pilot"
-      echo "Or download from https://github.com/$REPO/releases"
+      echo "For Windows, see installation instructions at https://github.com/$REPO#install"
       exit 0
       ;;
     *) echo "Unsupported operating system: $OS"; exit 1 ;;
@@ -27,24 +26,21 @@ main() {
     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
   esac
 
-  # Fetch the latest version tag for pinned install
-  if command -v curl >/dev/null 2>&1; then
-    LATEST_VERSION="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')"
-  elif command -v wget >/dev/null 2>&1; then
-    LATEST_VERSION="$(wget -qO- "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')"
-  fi
-
-  # Check for Node.js 24+
+  # Prefer the Node path — resolves the current release via the registry's
+  # "latest" tag, which is independent of GitHub release tag naming.
   if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
     NODE_MAJOR="$(node -v | sed 's/v//' | cut -d. -f1)"
     if [ "$NODE_MAJOR" -ge 24 ] 2>/dev/null; then
       echo "Installing Pilot..."
-      if [ -n "$LATEST_VERSION" ] && npm install -g "@medalsocial/pilot@${LATEST_VERSION}" 2>/dev/null; then
+      if npm install -g "@medalsocial/pilot@latest"; then
         echo ""
         echo "Pilot installed! Run \`pilot\` to get started."
+        echo "If \`pilot\` isn't found right away, open a new terminal."
         exit 0
       fi
-      echo "npm install failed, falling back to binary download..."
+      echo "Node install didn't work — falling back to a standalone download..."
+    else
+      echo "Your Node is older than Pilot needs — falling back to a standalone download..."
     fi
   fi
 
