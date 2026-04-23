@@ -27,26 +27,33 @@ main() {
     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
   esac
 
-  # Fetch the latest version tag for pinned install
-  if command -v curl >/dev/null 2>&1; then
-    LATEST_VERSION="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')"
-  elif command -v wget >/dev/null 2>&1; then
-    LATEST_VERSION="$(wget -qO- "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')"
-  fi
-
-  # Check for Node.js 24+
+  # Prefer npm install — always pulls the current "latest" dist-tag,
+  # which is authoritative and independent of GitHub release tag naming.
   if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
     NODE_MAJOR="$(node -v | sed 's/v//' | cut -d. -f1)"
     if [ "$NODE_MAJOR" -ge 24 ] 2>/dev/null; then
       echo "Installing Pilot..."
-      if [ -n "$LATEST_VERSION" ] && npm install -g "@medalsocial/pilot@${LATEST_VERSION}" 2>/dev/null; then
+      if npm install -g "@medalsocial/pilot@latest"; then
         echo ""
         echo "Pilot installed! Run \`pilot\` to get started."
+        echo "(zsh users: run \`rehash\` or open a new terminal if \`pilot\` isn't found yet.)"
         exit 0
       fi
       echo "npm install failed, falling back to binary download..."
+    else
+      echo "Node.js 24+ required for npm install, falling back to binary download..."
     fi
   fi
+
+  # Fetch the latest release tag for the binary download fallback.
+  # Supports both legacy "vX.Y.Z" and Changesets "@medalsocial/pilot@X.Y.Z" tag formats.
+  if command -v curl >/dev/null 2>&1; then
+    RAW_TAG="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | head -n 1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
+  elif command -v wget >/dev/null 2>&1; then
+    RAW_TAG="$(wget -qO- "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | head -n 1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
+  fi
+  # Strip either leading "v" or "@medalsocial/pilot@" prefix; fall back to raw tag.
+  LATEST_VERSION="$(printf '%s' "$RAW_TAG" | sed -E 's|^v||; s|^@medalsocial/pilot@||')"
 
   # Download standalone binary
   echo "Installing Pilot..."
