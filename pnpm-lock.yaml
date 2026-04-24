@@ -66,11 +66,11 @@ importers:
         specifier: 14.0.3
         version: 14.0.3
       ink:
-        specifier: 7.0.0
-        version: 7.0.0(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5)
+        specifier: 7.0.1
+        version: 7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5)
       ink-text-input:
         specifier: 6.0.0
-        version: 6.0.0(ink@7.0.0(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5))(react@19.2.5)
+        version: 6.0.0(ink@7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5))(react@19.2.5)
       react:
         specifier: 19.2.5
         version: 19.2.5
@@ -100,8 +100,8 @@ importers:
   packages/plugins/kit:
     dependencies:
       ink:
-        specifier: 7.0.0
-        version: 7.0.0(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5)
+        specifier: 7.0.1
+        version: 7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5)
       react:
         specifier: 19.2.5
         version: 19.2.5
@@ -1361,8 +1361,8 @@ packages:
   es-module-lexer@2.0.0:
     resolution: {integrity: sha512-5POEcUuZybH7IdmGsD8wlf0AI55wMecM9rVBTI/qEAy2c1kTOm3DjFYjrBdI2K3BaJjJYfYFeRtM0t9ssnRuxw==}
 
-  es-toolkit@1.45.1:
-    resolution: {integrity: sha512-/jhoOj/Fx+A+IIyDNOvO3TItGmlMKhtX8ISAHKE90c4b/k1tqaqEZ+uUqfpU8DMnW5cgNJv606zS55jGvza0Xw==}
+  es-toolkit@1.46.0:
+    resolution: {integrity: sha512-IToJ6ct9OLl5zz6WsC/1vZEwfSZ7Myil+ygl5Tf30Xjn9AEkzNB4kqp2G7VUJKF1DtTx/ra5M5KLlXvzOg51BA==}
 
   esbuild@0.27.7:
     resolution: {integrity: sha512-IxpibTjyVnmrIQo5aqNpCgoACA/dTKLTlhMHihVHhdkxKyPO1uBBthumT0rdHmcsk9uMonIWS0m4FljWzILh3w==}
@@ -1555,8 +1555,8 @@ packages:
       ink: '>=5'
       react: '>=18'
 
-  ink@7.0.0:
-    resolution: {integrity: sha512-fMie5/VwIYXofMyND0s+fOVhwVBBPYx+uuqJ6V6rUBGjui+2UYp+0fWtvhSeKT4z+X1uH98a4ge5Vj3aTlL6mg==}
+  ink@7.0.1:
+    resolution: {integrity: sha512-o6LAC268PLawlGVYrXTyaTfke4VtJftEheuwbgkQf7yvSXyWp1nRwBbAyKEkWXFZZsW/la5wrMuNbuBvZK2C1w==}
     engines: {node: '>=22'}
     peerDependencies:
       '@types/react': '>=19.2.0'
@@ -2188,8 +2188,8 @@ packages:
     resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
     engines: {node: '>=16'}
 
-  type-fest@5.5.0:
-    resolution: {integrity: sha512-PlBfpQwiUvGViBNX84Yxwjsdhd1TUlXr6zjX7eoirtCPIr08NAmxwa+fcYBTeRQxHo9YC9wwF3m9i700sHma8g==}
+  type-fest@5.6.0:
+    resolution: {integrity: sha512-8ZiHFm91orbSAe2PSAiSVBVko18pbhbiB3U9GglSzF/zCGkR+rxpHx6sEMCUm4kxY4LjDIUGgCfUMtwfZfjfUA==}
     engines: {node: '>=20'}
 
   typescript@6.0.2:
@@ -3521,7 +3521,7 @@ snapshots:
 
   es-module-lexer@2.0.0: {}
 
-  es-toolkit@1.45.1: {}
+  es-toolkit@1.46.0: {}
 
   esbuild@0.27.7:
     optionalDependencies:
@@ -3709,14 +3709,14 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  ink-text-input@6.0.0(ink@7.0.0(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5))(react@19.2.5):
+  ink-text-input@6.0.0(ink@7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5))(react@19.2.5):
     dependencies:
       chalk: 5.6.2
-      ink: 7.0.0(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5)
+      ink: 7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5)
       react: 19.2.5
       type-fest: 4.41.0
 
-  ink@7.0.0(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5):
+  ink@7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5):
     dependencies:
       '@alcalzone/ansi-tokenize': 0.3.0
       ansi-escapes: 7.3.0
@@ -3727,7 +3727,7 @@ snapshots:
       cli-cursor: 4.0.0
       cli-truncate: 6.0.0
       code-excerpt: 4.0.0
-      es-toolkit: 1.45.1
+      es-toolkit: 1.46.0
       indent-string: 5.0.0
       is-in-ci: 2.0.0
       patch-console: 2.0.0
@@ -3739,7 +3739,7 @@ snapshots:
       stack-utils: 2.0.6
       string-width: 8.2.0
       terminal-size: 4.0.1
-      type-fest: 5.5.0
+      type-fest: 5.6.0
       widest-line: 6.0.0
       wrap-ansi: 10.0.0
       ws: 8.20.0
@@ -4390,7 +4390,7 @@ snapshots:
 
   type-fest@4.41.0: {}
 
-  type-fest@5.5.0:
+  type-fest@5.6.0:
     dependencies:
       tagged-tag: 1.0.0
 
