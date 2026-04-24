@@ -38,9 +38,9 @@ main() {
         echo "If \`pilot\` isn't found right away, open a new terminal."
         exit 0
       fi
-      echo "Node install didn't work — falling back to a standalone download..."
+      echo "Fast install didn't complete — falling back to a standalone download..."
     else
-      echo "Your Node is older than Pilot needs — falling back to a standalone download..."
+      echo "Falling back to a standalone download..."
     fi
   fi
 
