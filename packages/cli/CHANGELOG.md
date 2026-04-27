@@ -1,5 +1,27 @@
 # @medalsocial/pilot
 
+## 0.2.3
+
+### Patch Changes
+
+- [#86](https://github.com/Medal-Social/Pilot/pull/86) [`8676efd`](https://github.com/Medal-Social/Pilot/commit/8676efd4bc74149af66f62da8f5c70ccd6ac1c0f) Thanks [@alioftech](https://github.com/alioftech)! - back-merge prod into dev
+
+  Refs: [#67](https://github.com/Medal-Social/Pilot/issues/67)
+
+- [#86](https://github.com/Medal-Social/Pilot/pull/86) [`8676efd`](https://github.com/Medal-Social/Pilot/commit/8676efd4bc74149af66f62da8f5c70ccd6ac1c0f) Thanks [@alioftech](https://github.com/alioftech)! - chore(deps): bulk-bump dependencies to latest. Notable: `ink` 7.0.0 → 7.0.1 (runtime), `@biomejs/biome` 2.4.12 → 2.4.13, `secretlint` 9.3.4 → 12.3.1 (major), `typescript` 6.0.2 → 6.0.3, `vitest` 4.1.4 → 4.1.5, plus changesets/cli, knip, lint-staged, commitlint, coverage-v8.
+
+- [#86](https://github.com/Medal-Social/Pilot/pull/86) [`8676efd`](https://github.com/Medal-Social/Pilot/commit/8676efd4bc74149af66f62da8f5c70ccd6ac1c0f) Thanks [@alioftech](https://github.com/alioftech)! - chore: dependency hygiene — drop unused `ink-text-input` from cli runtime deps, consolidate `react-devtools-core` to a single declaration (devDep only, removing the duplicate CI install step), pin `typescript` and `vitest` exactly in the kit workspace to match root, add a `commitlint-pr-title` CI gate so non-conventional PR titles fail before merge, and fix the stale build-pipeline note in CLAUDE.md.
+
+- [#86](https://github.com/Medal-Social/Pilot/pull/86) [`8676efd`](https://github.com/Medal-Social/Pilot/commit/8676efd4bc74149af66f62da8f5c70ccd6ac1c0f) Thanks [@alioftech](https://github.com/alioftech)! - fix(ci): make Windows binary build work and stop matrix fail-fast from skipping uploads. Replace `inject-version.sh` with a portable Node ESM script (works on Windows git-bash where POSIX path translation breaks `node -p`), set `fail-fast: false` on the binary matrix, and let `upload-release` run on partial matrix success so single-target failures no longer skip publishing assets to the release.
+
+- [#86](https://github.com/Medal-Social/Pilot/pull/86) [`8676efd`](https://github.com/Medal-Social/Pilot/commit/8676efd4bc74149af66f62da8f5c70ccd6ac1c0f) Thanks [@alioftech](https://github.com/alioftech)! - Reliability and governance improvements: deterministic release automation with an AI fallback, a two-channel release pipeline, and auto-merge for routine dependency and release updates.
+
+- [#86](https://github.com/Medal-Social/Pilot/pull/86) [`8676efd`](https://github.com/Medal-Social/Pilot/commit/8676efd4bc74149af66f62da8f5c70ccd6ac1c0f) Thanks [@alioftech](https://github.com/alioftech)! - Install experience and release pipeline fixes:
+
+  - The one-line install always grabs the current Pilot release, not a stale cache.
+  - Release downloads now include prebuilt binaries for macOS (Intel + Apple Silicon), Linux (x64 + arm64), and Windows.
+  - Routine promotions from the dev channel to prod run on a schedule without manual effort.
+
 ## 0.2.2
 
 ### Patch Changes
