@@ -34,7 +34,7 @@ admin imports on pre-existing files) are tolerated; errors block. Don't use
 - **CLI**: React Ink + Commander.js
 - **AI**: Vercel AI SDK + @ai-sdk/anthropic (Claude)
 - **Plugins**: @medalsocial/kit (sanity, pencil are planned)
-- **Build**: tsup (dual CJS/ESM) + @vercel/ncc (binary)
+- **Build**: tsc (ESM) + bun build --compile (binary)
 - **Test**: Vitest + ink-testing-library + E2E
 - **Lint**: Biome (strict, matching medal-monorepo)
 - **Release**: Changesets + GitHub Actions

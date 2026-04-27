@@ -68,9 +68,6 @@ importers:
       ink:
         specifier: 7.0.1
         version: 7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5)
-      ink-text-input:
-        specifier: 6.0.0
-        version: 6.0.0(ink@7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5))(react@19.2.5)
       react:
         specifier: 19.2.5
         version: 19.2.5
@@ -119,10 +116,10 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(@types/react@19.2.14)
       typescript:
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       vitest:
-        specifier: ^4.1.5
+        specifier: 4.1.5
         version: 4.1.5(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(vite@7.3.2(@types/node@25.6.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
 
 packages:
@@ -1536,13 +1533,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  ink-text-input@6.0.0:
-    resolution: {integrity: sha512-Fw64n7Yha5deb1rHY137zHTAbSTNelUKuB5Kkk2HACXEtwIHBCf9OH2tP/LQ9fRYTl1F0dZgbW0zPnZk6FA9Lw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      ink: '>=5'
-      react: '>=18'
 
   ink@7.0.1:
     resolution: {integrity: sha512-o6LAC268PLawlGVYrXTyaTfke4VtJftEheuwbgkQf7yvSXyWp1nRwBbAyKEkWXFZZsW/la5wrMuNbuBvZK2C1w==}
@@ -3673,13 +3663,6 @@ snapshots:
   ink-testing-library@4.0.0(@types/react@19.2.14):
     optionalDependencies:
       '@types/react': 19.2.14
-
-  ink-text-input@6.0.0(ink@7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5))(react@19.2.5):
-    dependencies:
-      chalk: 5.6.2
-      ink: 7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5)
-      react: 19.2.5
-      type-fest: 4.41.0
 
   ink@7.0.1(@types/react@19.2.14)(react-devtools-core@7.0.1)(react@19.2.5):
     dependencies:
