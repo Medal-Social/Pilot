@@ -51,16 +51,15 @@
   },
   "scripts": {
     "dev": "tsx watch src/bin/pilot.ts",
-    "build": "sh scripts/inject-version.sh && tsc",
+    "build": "node scripts/inject-version.mjs && tsc",
     "test": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "prepublishOnly": "sh scripts/inject-version.sh && tsc"
+    "prepublishOnly": "node scripts/inject-version.mjs && tsc"
   },
   "dependencies": {
     "@medalsocial/kit": "workspace:*",
     "commander": "14.0.3",
-    "ink": "7.0.0",
-    "ink-text-input": "6.0.0",
+    "ink": "7.0.1",
     "react": "19.2.5",
     "smol-toml": "1.6.1",
     "zod": "4.3.6"

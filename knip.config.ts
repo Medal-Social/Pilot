@@ -11,7 +11,6 @@ const config = {
     'packages/cli': {
       project: ['src/**/*.{ts,tsx}'],
       ignoreFiles: ['src/components/index.ts'],
-      ignoreDependencies: ['ink-text-input'],
     },
     'packages/plugins/kit': {
       project: ['src/**/*.{ts,tsx}'],

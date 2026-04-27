@@ -1,0 +1,34 @@
+name: PR Title Lint
+
+on:
+  pull_request:
+    branches: [dev, prod]
+    # Default pull_request types are [opened, synchronize, reopened] — that
+    # misses title edits, which is exactly when this gate matters most.
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '24'
+
+      - run: pnpm install --frozen-lockfile
+
+      # Squash-merged PR titles become the merge commit subject — gate them
+      # against conventional-commits so the changeset auto-classifier and the
+      # generated changelog stay clean. Use printf rather than echo so titles
+      # starting with -e / -n / -E aren't interpreted as echo flags.
+      - name: Lint PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | pnpm exec commitlint
