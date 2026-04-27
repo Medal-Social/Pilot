@@ -41,6 +41,7 @@ jobs:
       - run: pnpm quality
 
       - name: Create release PR or publish packages
+        id: changesets
         uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
         with:
           commit: 'chore: release packages'
@@ -50,3 +51,94 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_CONFIG_PROVENANCE: 'true'
+
+      - name: Open back-merge PR (prod → dev) after publish
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          set -euo pipefail
+
+          # After a successful publish, prod has version bumps + a regenerated
+          # CHANGELOG.md + the consumed `.changeset/*.md` files deleted. Dev
+          # still has the old versions and the un-deleted changeset files —
+          # which is exactly what causes future promotion PRs to carry stale
+          # already-shipped changesets and trigger duplicate releases.
+          # Opening this back-merge PR automatically prevents that drift.
+
+          # Idempotency: if a back-merge PR is already open for this run, skip.
+          # Also re-use a pre-existing branch by name to avoid orphan branches.
+          branch="chore/backmerge-prod-into-dev-after-${GITHUB_RUN_ID}"
+
+          existing_pr="$(gh pr list \
+            --repo ${{ github.repository }} \
+            --base dev \
+            --state open \
+            --search 'head:chore/backmerge-prod-into-dev-after-' \
+            --json number \
+            --jq '.[0].number // empty' || true)"
+
+          if [ -n "$existing_pr" ]; then
+            echo "Open back-merge PR #${existing_pr} already exists; skipping."
+            exit 0
+          fi
+
+          git config user.name "medal-social-release-bot[bot]"
+          git config user.email "277925859+medal-social-release-bot[bot]@users.noreply.github.com"
+
+          # Build a branch off prod that's identical to it. The PR is then
+          # head=branch, base=dev, so the merge into dev brings prod's tree
+          # (version bumps, CHANGELOG, deleted changesets) onto dev.
+          git fetch origin dev prod --quiet
+          git checkout -B "$branch" origin/prod
+          git push origin "$branch"
+
+          # The empty-frontmatter changeset satisfies `changeset-required`
+          # without affecting versions on the next release.
+          mkdir -p .changeset
+          cat > ".changeset/${branch//\//-}-skip.md" <<EOF
+          ---
+          ---
+
+          No changeset: prod→dev back-merge after a successful release. Brings
+          version bumps, CHANGELOG entries, and consumed changeset deletions
+          back to dev.
+          EOF
+          git add .changeset/
+          git commit -m "chore: skip changeset for automated back-merge"
+          git push origin "$branch"
+
+          body=$(cat <<EOF
+          ## Summary
+
+          Automated back-merge after publishing: ${PUBLISHED_PACKAGES}.
+
+          Brings prod's post-release tree onto dev:
+          - Version bump in \`packages/cli/package.json\`
+          - Regenerated \`packages/cli/CHANGELOG.md\`
+          - Deletion of consumed \`.changeset/*.md\` files
+
+          Without this, dev's stale \`.changeset/*.md\` files would ride along on the next promotion PR and \`changesets/action\` would open a duplicate release PR with copy-pasted changelog entries.
+
+          ---
+
+          _Opened automatically by [\`release.yml\`](.github/workflows/release.yml) after the publish step succeeded._
+          EOF
+          )
+
+          gh pr create \
+            --repo ${{ github.repository }} \
+            --base dev \
+            --head "$branch" \
+            --title "chore: back-merge prod into dev (post-release)" \
+            --body "$body"
+
+          # Best-effort auto-merge so the back-merge lands without a human
+          # touching it. Branch protection on dev will normally still require
+          # one approval — auto-approve.yml picks up bot-authored PRs.
+          gh pr merge \
+            --repo ${{ github.repository }} \
+            --auto \
+            --squash \
+            "$branch" || echo "Auto-merge not enabled — back-merge PR awaits manual merge."
