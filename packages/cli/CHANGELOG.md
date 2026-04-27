@@ -1,5 +1,21 @@
 # @medalsocial/pilot
 
+## 0.2.2
+
+### Patch Changes
+
+- [#65](https://github.com/Medal-Social/Pilot/pull/65) [`0379f1f`](https://github.com/Medal-Social/Pilot/commit/0379f1f1ffaff2b2fc02194e429ed9b876313ef9) Thanks [@alioftech](https://github.com/alioftech)! - back-merge prod into dev
+
+  Refs: [#67](https://github.com/Medal-Social/Pilot/issues/67)
+
+- [#65](https://github.com/Medal-Social/Pilot/pull/65) [`0379f1f`](https://github.com/Medal-Social/Pilot/commit/0379f1f1ffaff2b2fc02194e429ed9b876313ef9) Thanks [@alioftech](https://github.com/alioftech)! - Reliability and governance improvements: deterministic release automation with an AI fallback, a two-channel release pipeline, and auto-merge for routine dependency and release updates.
+
+- [#65](https://github.com/Medal-Social/Pilot/pull/65) [`0379f1f`](https://github.com/Medal-Social/Pilot/commit/0379f1f1ffaff2b2fc02194e429ed9b876313ef9) Thanks [@alioftech](https://github.com/alioftech)! - Install experience and release pipeline fixes:
+
+  - The one-line install always grabs the current Pilot release, not a stale cache.
+  - Release downloads now include prebuilt binaries for macOS (Intel + Apple Silicon), Linux (x64 + arm64), and Windows.
+  - Routine promotions from the dev channel to prod run on a schedule without manual effort.
+
 ## 0.2.1
 
 ### Patch Changes
