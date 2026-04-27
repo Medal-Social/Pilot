@@ -51,10 +51,10 @@
   },
   "scripts": {
     "dev": "tsx watch src/bin/pilot.ts",
-    "build": "sh scripts/inject-version.sh && tsc",
+    "build": "node scripts/inject-version.mjs && tsc",
     "test": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "prepublishOnly": "sh scripts/inject-version.sh && tsc"
+    "prepublishOnly": "node scripts/inject-version.mjs && tsc"
   },
   "dependencies": {
     "@medalsocial/kit": "workspace:*",
