@@ -46,9 +46,6 @@ jobs:
       - name: Build workspace (kit first, then CLI via turbo)
         run: pnpm build
 
-      - name: Install optional deps for bundling
-        run: pnpm add -D react-devtools-core --filter @medalsocial/pilot
-
       - name: Compile binary (Unix)
         if: "!contains(matrix.target, 'win')"
         run: bun build packages/cli/dist/bin/pilot.js --compile --outfile ${{ matrix.target }}
