@@ -97,7 +97,9 @@ jobs:
 
   upload-release:
     needs: build
-    if: startsWith(github.event.release.tag_name, '@medalsocial/pilot@')
+    # Run even if some matrix targets failed, so partial artifacts still publish.
+    # Skips only if the workflow itself was cancelled or the tag is not a pilot release.
+    if: ${{ !cancelled() && startsWith(github.event.release.tag_name, '@medalsocial/pilot@') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -106,6 +108,16 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: artifacts
+
+      - name: Report which targets produced artifacts
+        run: |
+          set -euo pipefail
+          echo "Artifacts present:"
+          ls -1 artifacts/ || echo "(none)"
+          if [ -z "$(ls -A artifacts/ 2>/dev/null)" ]; then
+            echo "::error::No matrix target produced artifacts — nothing to upload."
+            exit 1
+          fi
 
       - name: Upload binaries and bundles to release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
