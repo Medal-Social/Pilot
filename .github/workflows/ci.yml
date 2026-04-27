@@ -77,7 +77,23 @@ jobs:
         run: sh -n scripts/install.sh
 
   changeset-required:
-    if: github.event_name == 'pull_request'
+    # Skip ONLY on release-pipeline traffic — and require both the expected
+    # head prefix AND the expected base, so a regular feature branch named
+    # `chore/promote-with-ancestry-anything` can't bypass the gate.
+    #
+    # Skipped pairs (head → base):
+    #   dev                                       → prod    (legacy promote)
+    #   chore/promote-with-ancestry-*             → prod    (promote.yml)
+    #   changeset-release/*                       → prod    (changesets/action release PR)
+    #   prod                                      → dev     (legacy back-merge)
+    #   chore/backmerge-prod-into-dev-after-*     → dev     (release.yml back-merge)
+    if: |
+      github.event_name == 'pull_request' &&
+      !(github.base_ref == 'prod' && github.head_ref == 'dev') &&
+      !(github.base_ref == 'prod' && startsWith(github.head_ref, 'chore/promote-with-ancestry-')) &&
+      !(github.base_ref == 'prod' && startsWith(github.head_ref, 'changeset-release/')) &&
+      !(github.base_ref == 'dev' && github.head_ref == 'prod') &&
+      !(github.base_ref == 'dev' && startsWith(github.head_ref, 'chore/backmerge-prod-into-dev-after-'))
     needs: [test]
     runs-on: ubuntu-latest
     steps:

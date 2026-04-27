@@ -17,7 +17,7 @@ jobs:
   promote:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     steps:
       - name: Generate app token
@@ -35,12 +35,16 @@ jobs:
       - name: Check for pending changesets on dev
         id: check
         run: |
+          set -euo pipefail
           git fetch origin dev prod --quiet
 
-          # Changeset files present on dev but not on prod (excluding README and config)
+          # Pathspec must use :(glob) — git's default pathspec matching is
+          # literal, so '.changeset/*.md' would match a file LITERALLY named
+          # '*.md' and return empty (the bug that forced force=true on every
+          # manual promote prior to this fix).
           pending="$(comm -23 \
-            <(git ls-tree -r origin/dev --name-only -- '.changeset/*.md' | grep -v 'README.md' | sort) \
-            <(git ls-tree -r origin/prod --name-only -- '.changeset/*.md' | grep -v 'README.md' | sort) \
+            <(git ls-tree -r origin/dev --name-only -- ':(glob).changeset/*.md' | grep -v 'README.md' | sort) \
+            <(git ls-tree -r origin/prod --name-only -- ':(glob).changeset/*.md' | grep -v 'README.md' | sort) \
             | wc -l | tr -d ' ')"
 
           commits="$(git rev-list origin/prod..origin/dev --count)"
@@ -55,10 +59,15 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          n="$(gh pr list --repo ${{ github.repository }} --base prod --head dev --state open --json number --jq '.[0].number // empty')"
-          echo "existing=$n" >> "$GITHUB_OUTPUT"
+          # Match any open PR targeting prod whose head branch is `dev` or
+          # any auto-generated `chore/promote-*` branch from a prior run.
+          dev_pr="$(gh pr list --repo ${{ github.repository }} --base prod --head dev --state open --json number --jq '.[0].number // empty')"
+          ancestry_pr="$(gh pr list --repo ${{ github.repository }} --base prod --state open --search 'head:chore/promote-with-ancestry-' --json number --jq '.[0].number // empty')"
+          existing="${dev_pr:-$ancestry_pr}"
+          echo "existing=$existing" >> "$GITHUB_OUTPUT"
 
-      - name: Open promotion PR
+      - name: Build promote-with-ancestry branch
+        id: branch
         if: |
           steps.existing.outputs.existing == '' &&
           (steps.check.outputs.pending != '0' || (github.event_name == 'workflow_dispatch' && inputs.force)) &&
@@ -66,30 +75,69 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
+          set -euo pipefail
+
+          # Required by `required_linear_history: true` on dev: every back-merge
+          # of prod into dev gets squashed, which loses prod's commits as
+          # ancestors of dev. Each subsequent dev→prod promote then re-discovers
+          # the same conflicts (exactly what the manual #86 / #91 dance fixed).
+          #
+          # Workaround: build a sibling branch off dev with prod merged in via
+          # `--no-ff -X ours`. dev's content is authoritative (prod's content is
+          # already on dev via the prior squash back-merge), so `-X ours`
+          # auto-resolves any text conflicts to dev's version. The promote PR
+          # uses this branch as head, so the diff vs prod is clean.
+          branch="chore/promote-with-ancestry-$(date -u +%Y%m%d-%H%M%S)"
+
+          git config user.name "medal-social-release-bot[bot]"
+          git config user.email "277925859+medal-social-release-bot[bot]@users.noreply.github.com"
+
+          git checkout -B "$branch" origin/dev
+          if ! git merge origin/prod --no-ff -X ours -m "chore: merge prod into promote branch (re-add prod ancestry)"; then
+            echo "::error::Auto-merge failed even with -X ours — there are unmergeable changes (likely both sides modified the same lines incompatibly). Resolve manually and re-run."
+            git merge --abort || true
+            exit 1
+          fi
+
+          git push origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Open promotion PR
+        if: steps.branch.outputs.branch != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+          PENDING: ${{ steps.check.outputs.pending }}
+          COMMITS: ${{ steps.check.outputs.commits }}
+        run: |
+          set -euo pipefail
           body=$(cat <<EOF
           ## Summary
 
           Automated promotion of \`dev\` to \`prod\`.
 
-          - Pending changesets: ${{ steps.check.outputs.pending }}
-          - Commits ahead of prod: ${{ steps.check.outputs.commits }}
+          - Pending changesets: ${PENDING}
+          - Commits ahead of prod: ${COMMITS}
+          - Head branch: \`${BRANCH}\` (dev with prod merged in via \`--no-ff -X ours\` to preserve ancestry)
 
           ## What happens after merge
 
           1. Merging this to \`prod\` triggers the Release workflow.
           2. Release workflow opens a \`chore: release packages\` PR that bumps versions and regenerates the changelog.
-          3. Merging that PR publishes to npm.
+          3. Merging that PR publishes to npm and creates the GitHub release tag.
+          4. Tag publish triggers \`build-binaries.yml\` which uploads binaries + opens a Homebrew formula PR.
+          5. \`release.yml\` opens a \`chore: back-merge prod into dev\` PR so the version bumps and consumed changesets land back on \`dev\`.
 
           ---
 
-          _Opened automatically by [\`promote.yml\`](.github/workflows/promote.yml). Trigger manually via the Actions tab or wait for the next scheduled run._
+          _Opened automatically by [\`promote.yml\`](.github/workflows/promote.yml)._
           EOF
           )
 
           gh pr create \
             --repo ${{ github.repository }} \
             --base prod \
-            --head dev \
+            --head "$BRANCH" \
             --title "chore: promote dev to prod" \
             --body "$body"
 

@@ -38,6 +38,7 @@
   - Release downloads now include prebuilt binaries for macOS (Intel + Apple Silicon), Linux (x64 + arm64), and Windows.
   - Routine promotions from the dev channel to prod run on a schedule without manual effort.
 
+
 ## 0.2.1
 
 ### Patch Changes
