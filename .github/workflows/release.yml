@@ -67,21 +67,39 @@ jobs:
           # already-shipped changesets and trigger duplicate releases.
           # Opening this back-merge PR automatically prevents that drift.
 
-          # Idempotency: if a back-merge PR is already open for this run, skip.
-          # Also re-use a pre-existing branch by name to avoid orphan branches.
+          # Idempotency: only skip if a back-merge PR for THIS run already
+          # exists (e.g. a re-run of the same publish). A back-merge PR from a
+          # *previous* release that's still awaiting approval must NOT block
+          # the current run — otherwise dev would silently miss this release's
+          # version bumps and changeset deletions, exactly what we're trying
+          # to prevent.
           branch="chore/backmerge-prod-into-dev-after-${GITHUB_RUN_ID}"
 
-          existing_pr="$(gh pr list \
+          existing_for_this_run="$(gh pr list \
+            --repo ${{ github.repository }} \
+            --base dev \
+            --head "$branch" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty' || true)"
+
+          if [ -n "$existing_for_this_run" ]; then
+            echo "Back-merge PR #${existing_for_this_run} for this run already exists; nothing to do."
+            exit 0
+          fi
+
+          # Surface (don't block on) prior unmerged back-merge PRs so the
+          # operator knows to clean them up. The new PR's content supersedes
+          # them anyway.
+          stale_open="$(gh pr list \
             --repo ${{ github.repository }} \
             --base dev \
             --state open \
             --search 'head:chore/backmerge-prod-into-dev-after-' \
-            --json number \
-            --jq '.[0].number // empty' || true)"
-
-          if [ -n "$existing_pr" ]; then
-            echo "Open back-merge PR #${existing_pr} already exists; skipping."
-            exit 0
+            --json number,headRefName \
+            --jq '[.[] | select(.headRefName != "'"$branch"'") | .number] | join(", ")' || true)"
+          if [ -n "$stale_open" ]; then
+            echo "::warning::Found earlier unmerged back-merge PRs (#${stale_open}). They are now superseded by this run's PR — close them after this one merges."
           fi
 
           git config user.name "medal-social-release-bot[bot]"
