@@ -37,7 +37,7 @@
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.31.0",
     "@commitlint/cli": "^20.5.2",
-    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.3",
     "@secretlint/secretlint-rule-preset-recommend": "^12.3.1",
     "@vitest/coverage-v8": "^4.1.5",
     "fast-check": "^4.7.0",
