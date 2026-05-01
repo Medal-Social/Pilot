@@ -36,7 +36,7 @@
     "@biomejs/biome": "2.4.13",
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.31.0",
-    "@commitlint/cli": "^20.5.2",
+    "@commitlint/cli": "^20.5.3",
     "@commitlint/config-conventional": "^20.5.0",
     "@secretlint/secretlint-rule-preset-recommend": "^12.3.1",
     "@vitest/coverage-v8": "^4.1.5",
