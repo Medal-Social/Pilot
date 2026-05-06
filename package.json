@@ -14,6 +14,8 @@
     "test:repo": "vitest run tests/",
     "test": "turbo test",
     "quality": "pnpm lint && pnpm typecheck && pnpm test:repo && pnpm test",
+    "pilot-100": "node scripts/pilot-100.mjs",
+    "quality:100": "pnpm quality && pnpm test -- --run --coverage && pnpm knip:check && pnpm secret:scan && pnpm pilot-100",
     "lint": "biome check .",
     "lint:fix": "biome check --fix .",
     "changeset": "changeset",

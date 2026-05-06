@@ -29,23 +29,24 @@ Pilot uses two workflow families:
 ### CI
 
 - **File**: `.github/workflows/ci.yml`
-- **Triggers**: `push` and `pull_request` on `main`
+- **Triggers**: `push` and `pull_request` on `dev` and `prod`
 - **Purpose**: repo quality gate
 - **Jobs**:
   - `test`: installs dependencies, runs `pnpm quality`, then runs coverage-enabled tests and uploads coverage to Codecov
   - `lint`: runs `pnpm lint`
   - `security`: runs `pnpm secret:scan` and `pnpm knip:check`
+  - `pilot-100`: runs `pnpm quality:100` as the composite Pilot 100 quality gate
   - `shellcheck`: validates `scripts/install.sh`
 
 ### Release
 
 - **File**: `.github/workflows/release.yml`
-- **Triggers**: `push` on `main`, `workflow_dispatch`
+- **Triggers**: `push` on `prod`, `workflow_dispatch`
 - **Purpose**: publish the npm package and create/update release PRs via Changesets
 - **Behavior**:
   - checks out with a GitHub App token
   - runs `pnpm install --frozen-lockfile`
-  - runs `pnpm quality`
+  - runs `pnpm quality:100`
   - invokes `changesets/action`
   - publishes with npm provenance enabled
 
@@ -67,7 +68,7 @@ Pilot uses two workflow families:
 ### Deploy Worker
 
 - **File**: `.github/workflows/deploy-worker.yml`
-- **Triggers**: `push` to `main` when `workers/pilot-landing/**` changes
+- **Triggers**: `push` to `prod` when `workers/pilot-landing/**` changes
 - **Purpose**: deploy the landing page and install-script worker to Cloudflare
 - **Behavior**:
   - installs dependencies in `workers/pilot-landing`
@@ -76,19 +77,19 @@ Pilot uses two workflow families:
 ### CodeQL
 
 - **File**: `.github/workflows/codeql.yml`
-- **Triggers**: `push`, `pull_request` on `main`, and weekly schedule
+- **Triggers**: `push`, `pull_request`, and weekly schedule
 - **Purpose**: static security analysis for JavaScript/TypeScript
 
 ### Scorecard
 
 - **File**: `.github/workflows/scorecard.yml`
-- **Triggers**: `push` on `main` and weekly schedule
+- **Triggers**: `push` and weekly schedule
 - **Purpose**: OpenSSF Scorecard analysis published to code scanning
 
 ### Auto Approve
 
 - **File**: `.github/workflows/auto-approve.yml`
-- **Triggers**: `pull_request_target` on `main`
+- **Triggers**: `pull_request_target`
 - **Purpose**: approve trusted bot PRs and enable auto-merge for release bot PRs
 - **Allowed actors**:
   - `dependabot[bot]`

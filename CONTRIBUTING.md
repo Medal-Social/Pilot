@@ -14,6 +14,7 @@ Thanks for your interest in contributing to Pilot!
 ```bash
 pnpm dev          # Start CLI in watch mode
 pnpm quality      # Lint, typecheck, repo tests, package tests
+pnpm quality:100  # Full Pilot 100 gate: quality, coverage, knip, secret scan, verifier
 pnpm test         # Run tests
 pnpm test:repo    # Verify repo guardrails (hooks, workflows, metadata)
 pnpm lint         # Check code style
@@ -25,17 +26,21 @@ pnpm knip:check   # Detect unused files, exports, and dependencies
 ## Project Structure
 
 ```
-packages/
-  cli/              # Main CLI package (@medalsocial/pilot)
-  plugins/
-    kit/            # Machine management plugin
-    sanity/         # CMS plugin
-    pencil/         # Design tools plugin
+pilot/
+  packages/
+    cli/                  # @medalsocial/pilot
+    plugins/
+      kit/                # @medalsocial/kit bundled plugin
+  workers/pilot-landing/  # Cloudflare Worker landing/install surface
+  tests/                  # repo-level guardrail tests
+  scripts/                # repo automation and verification scripts
 ```
+
+Quality-sensitive paths: `packages/cli`, `packages/plugins/kit`, and `workers/pilot-landing`.
 
 ## Pull Requests
 
-- Create a feature branch from `main`
+- Create a feature branch from `dev`
 - Write tests for new functionality
 - Ensure all tests pass before submitting
 - Follow existing code conventions (TypeScript strict, Biome linting)
@@ -101,6 +106,7 @@ AI assistance is allowed, but contributors are responsible for the final patch.
 - Pilot uses Changesets for releases; create one with `pnpm changeset`
 - Conventional commits are enforced through the `commit-msg` hook
 - `pnpm quality` is the baseline maintainer check before opening a PR
+- `pnpm quality:100` is required for quality, workflow, package, or plugin changes
 - Releases are published only through GitHub Actions after the controlled release workflow validates the branch
 
 ## Testing Policy
@@ -118,7 +124,7 @@ AI assistance is allowed, but contributors are responsible for the final patch.
 
 ## Code Review Policy
 
-All pull requests require approval from at least one reviewer who is not the author before merging. This is enforced by GitHub branch protection on the `main` branch.
+All pull requests require approval from at least one reviewer who is not the author before merging. This is enforced by GitHub branch protection on the protected branches.
 
 **Reviewers should check:**
 - Code correctness and edge cases
