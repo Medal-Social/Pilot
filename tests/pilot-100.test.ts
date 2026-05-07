@@ -40,7 +40,10 @@ async function fixtureRepo(): Promise<string> {
     'packages:\n  - "packages/*"\n  - "packages/plugins/*"\n'
   );
   await writeJson(rootFile(root, 'package.json'), {
-    scripts: { 'quality:100': 'pnpm test:repo:coverage && node scripts/pilot-100.mjs' },
+    scripts: {
+      'quality:100':
+        'pnpm quality && pnpm test:repo:coverage && pnpm quality:worker && pnpm test -- --run --coverage && pnpm knip:check && pnpm secret:scan && pnpm pilot-100',
+    },
   });
   await writeJson(rootFile(root, 'packages/cli/package.json'), {
     name: '@medalsocial/pilot',
@@ -247,6 +250,10 @@ describe('checkPackageMetadata', () => {
         expect.objectContaining({
           code: 'package-root-quality-command-missing',
           message: expect.stringContaining('pnpm test -- --run --coverage'),
+        }),
+        expect.objectContaining({
+          code: 'package-root-quality-command-missing',
+          message: expect.stringContaining('pnpm quality:worker'),
         }),
         expect.objectContaining({
           code: 'package-root-quality-command-missing',

@@ -13,6 +13,7 @@ const requiredWorkflowFiles = ['.github/workflows/ci.yml', '.github/workflows/re
 const requiredQuality100Commands = [
   'pnpm quality',
   'pnpm test:repo:coverage',
+  'pnpm quality:worker',
   'pnpm test -- --run --coverage',
   'pnpm knip:check',
   'pnpm secret:scan',
