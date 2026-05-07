@@ -13,8 +13,8 @@ import type {
   SkillStep,
   ZedExtStep,
 } from '../registry/types.js';
+import type { Exec } from '../shell/exec.js';
 import type { PackageManagers } from './detect.js';
-import type { Exec } from './exec.js';
 
 const DEFAULT_SKILLS_DIR = join(homedir(), '.pilot', 'skills');
 

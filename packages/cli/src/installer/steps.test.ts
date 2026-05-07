@@ -7,8 +7,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { McpStep, NpmStep, PkgStep, SkillStep, ZedExtStep } from '../registry/types.js';
 import { loadSettings, saveSettings } from '../settings.js';
+import type { Exec } from '../shell/exec.js';
 import type { PackageManagers } from './detect.js';
-import type { Exec } from './exec.js';
 import { checkStep, executeStep, unexecuteStep } from './steps.js';
 
 vi.mock('../settings.js', () => ({
