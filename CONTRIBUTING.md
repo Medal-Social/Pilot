@@ -117,7 +117,8 @@ AI assistance is allowed, but contributors are responsible for the final patch.
 - Use `ink-testing-library` for React Ink component tests
 - Use `vitest` with `describe`/`it`/`expect`
 - Coverage target is **100%** — we aim for full coverage on all new code
-- Hard minimums enforced by CI: **95% statements, 90% branches, 100% functions**
+- Hard minimums enforced by CI: **100% statements, 100% functions, 100% lines**.
+- Branch minimums are package-specific: **95%** for the CLI and **90%** for the kit plugin.
 - PRs that drop coverage below these thresholds are blocked
 
 **Regression tests:** When fixing a bug, first write a test that reproduces the bug (it should fail), then fix the bug and verify the test passes. This prevents the same bug from recurring.
