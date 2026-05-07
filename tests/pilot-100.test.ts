@@ -239,6 +239,18 @@ describe('checkWorkflowGate', () => {
       expect.objectContaining({ code: 'workflow-quality-gate-missing' })
     );
   });
+
+  it('ignores commented quality:100 workflow commands', async () => {
+    const root = await fixtureRepo();
+    await writeFile(
+      rootFile(root, '.github/workflows/ci.yml'),
+      'jobs:\n  pilot-100:\n    steps:\n      # - run: pnpm quality:100\n'
+    );
+
+    expect(await checkWorkflowGate(root)).toContainEqual(
+      expect.objectContaining({ code: 'workflow-quality-gate-missing' })
+    );
+  });
 });
 
 describe('runPilot100', () => {

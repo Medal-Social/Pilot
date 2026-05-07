@@ -263,7 +263,7 @@ export async function checkWorkflowGate(root = process.cwd()) {
     }
 
     const text = await readFile(path, 'utf8');
-    if (!text.includes('pnpm quality:100')) {
+    if (!hasWorkflowQualityRun(text)) {
       findings.push(
         result('workflow-quality-gate-missing', `${workflow} must run pnpm quality:100`, workflow)
       );
@@ -271,6 +271,19 @@ export async function checkWorkflowGate(root = process.cwd()) {
   }
 
   return findings;
+}
+
+function hasWorkflowQualityRun(text) {
+  return text.split(/\r?\n/).some((line) => {
+    const trimmed = line.trimStart();
+    if (!trimmed || trimmed.startsWith('#')) return false;
+
+    const match = trimmed.match(/^(?:-\s*)?run:\s*(.+)$/);
+    if (!match) return false;
+
+    const command = match[1].trim().replace(/^['"]|['"]$/g, '');
+    return /^pnpm\s+quality:100(?:\s|$)/.test(command);
+  });
 }
 
 export async function runPilot100(root = process.cwd()) {
