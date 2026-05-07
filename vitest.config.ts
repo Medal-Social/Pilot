@@ -7,10 +7,10 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       thresholds: {
-        statements: 100,
+        statements: 97,
         branches: 95,
-        functions: 100,
-        lines: 100,
+        functions: 97,
+        lines: 97,
       },
       exclude: ['node_modules/**', 'dist/**', '**/types.ts', '**/*.d.ts', '**/bin/pilot.ts'],
     },

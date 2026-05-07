@@ -54,7 +54,7 @@ admin imports on pre-existing files) are tolerated; errors block. Don't use
 - Co-located tests: `Step.tsx` → `Step.test.tsx`
 - ink-testing-library for component tests
 - E2E tests in `tests/e2e/` with isolated `PILOT_HOME`
-- Coverage target: 100% (hard minimums: 95% statements, 90% branches, 100% functions)
+- Coverage target: 100% while the project is small (hard minimums: 97% statements/functions/lines; branches 95% CLI, 90% kit)
 
 ## Changeset Automation
 

@@ -52,6 +52,20 @@ describe('repo guardrails', () => {
     expect(read('.github/workflows/release.yml')).toContain('pnpm release');
   });
 
+  it('keeps coverage gates within the accepted drift window', () => {
+    const rootConfig = read('vitest.config.ts');
+    const kitConfig = read('packages/plugins/kit/vitest.config.ts');
+
+    for (const config of [rootConfig, kitConfig]) {
+      expect(config).toContain('statements: 97');
+      expect(config).toContain('functions: 97');
+      expect(config).toContain('lines: 97');
+    }
+
+    expect(rootConfig).toContain('branches: 95');
+    expect(kitConfig).toContain('branches: 90');
+  });
+
   it('locks down publish surfaces for shipped packages', () => {
     const cliPkg = readJson<{
       exports?: Record<string, unknown>;
