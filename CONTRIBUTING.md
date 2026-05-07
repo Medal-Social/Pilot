@@ -14,7 +14,7 @@ Thanks for your interest in contributing to Pilot!
 ```bash
 pnpm dev          # Start CLI in watch mode
 pnpm quality      # Lint, typecheck, repo tests, package tests
-pnpm quality:100  # Full Pilot 100 gate: quality, coverage, knip, secret scan, verifier
+pnpm quality:100  # Full Pilot 100 gate: quality, repo/package coverage, knip, secret scan, verifier
 pnpm test         # Run tests
 pnpm test:repo    # Verify repo guardrails (hooks, workflows, metadata)
 pnpm lint         # Check code style
@@ -106,7 +106,7 @@ AI assistance is allowed, but contributors are responsible for the final patch.
 - Pilot uses Changesets for releases; create one with `pnpm changeset`
 - Conventional commits are enforced through the `commit-msg` hook
 - `pnpm quality` is the baseline maintainer check before opening a PR
-- `pnpm quality:100` is required for quality, workflow, package, or plugin changes
+- `pnpm quality:100` is required for quality, workflow, package, or plugin changes and includes coverage for repo guardrails plus workspace packages
 - Releases are published only through GitHub Actions after the controlled release workflow validates the branch
 
 ## Testing Policy

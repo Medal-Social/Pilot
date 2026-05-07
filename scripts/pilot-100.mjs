@@ -20,6 +20,12 @@ function displayPath(root, file) {
   return isAbsolute(file) ? relative(root, file) : file;
 }
 
+export function formatFinding(root, item) {
+  const file = displayPath(root, item.file);
+  const location = file ? `${file}: ` : '';
+  return `[${item.code}] ${location}${item.message}`;
+}
+
 async function exists(path) {
   try {
     await access(path);
@@ -140,6 +146,14 @@ export async function checkPackageMetadata(root = process.cwd()) {
       result(
         'package-root-quality-missing',
         'Root package.json needs scripts.quality:100',
+        'package.json'
+      )
+    );
+  } else if (!rootPackage.scripts['quality:100'].includes('test:repo:coverage')) {
+    findings.push(
+      result(
+        'package-root-repo-coverage-missing',
+        'scripts.quality:100 must run repo tests with coverage',
         'package.json'
       )
     );
@@ -301,15 +315,15 @@ function isMainModule() {
   return Boolean(process.argv[1]) && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 }
 
+/* v8 ignore start -- subprocess smoke tests cover the executable entrypoint. */
 if (isMainModule()) {
   const root = process.cwd();
   const findings = await runPilot100(root);
 
   for (const item of findings) {
-    const file = displayPath(root, item.file);
-    const location = file ? `${file}: ` : '';
-    console.error(`[${item.code}] ${location}${item.message}`);
+    console.error(formatFinding(root, item));
   }
 
   process.exitCode = findings.length === 0 ? 0 : 1;
 }
+/* v8 ignore stop */

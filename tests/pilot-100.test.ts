@@ -12,6 +12,7 @@ import {
   checkPackageMetadata,
   checkPluginManifests,
   checkWorkflowGate,
+  formatFinding,
   runPilot100,
 } from '../scripts/pilot-100.mjs';
 
@@ -39,7 +40,7 @@ async function fixtureRepo(): Promise<string> {
     'packages:\n  - "packages/*"\n  - "packages/plugins/*"\n'
   );
   await writeJson(rootFile(root, 'package.json'), {
-    scripts: { 'quality:100': 'node scripts/pilot-100.mjs' },
+    scripts: { 'quality:100': 'pnpm test:repo:coverage && node scripts/pilot-100.mjs' },
   });
   await writeJson(rootFile(root, 'packages/cli/package.json'), {
     name: '@medalsocial/pilot',
@@ -114,6 +115,24 @@ describe('checkLedger', () => {
     expect(await checkLedger(root)).toEqual([]);
   });
 
+  it('requires the ledger file to exist', async () => {
+    const root = await fixtureRepo();
+    await rm(rootFile(root, 'docs/quality/pilot-100.md'));
+
+    expect(await checkLedger(root)).toContainEqual(
+      expect.objectContaining({ code: 'ledger-missing' })
+    );
+  });
+
+  it('requires a findings table in the ledger', async () => {
+    const root = await fixtureRepo();
+    await writeFile(rootFile(root, 'docs/quality/pilot-100.md'), '# Pilot 100 Quality Ledger\n');
+
+    expect(await checkLedger(root)).toContainEqual(
+      expect.objectContaining({ code: 'ledger-empty' })
+    );
+  });
+
   it('ignores non-findings tables in the ledger', async () => {
     const root = await fixtureRepo();
     const ledger = rootFile(root, 'docs/quality/pilot-100.md');
@@ -147,6 +166,17 @@ describe('checkLedger', () => {
     );
   });
 
+  it('rejects rows without verification', async () => {
+    const root = await fixtureRepo();
+    const ledger = rootFile(root, 'docs/quality/pilot-100.md');
+    const text = await readFile(ledger, 'utf8');
+    await writeFile(ledger, text.replace('node scripts/pilot-100.mjs', ' '));
+
+    expect(await checkLedger(root)).toContainEqual(
+      expect.objectContaining({ code: 'ledger-verification-missing' })
+    );
+  });
+
   it('rejects unknown statuses', async () => {
     const root = await fixtureRepo();
     const ledger = rootFile(root, 'docs/quality/pilot-100.md');
@@ -171,6 +201,21 @@ describe('checkLedger', () => {
 });
 
 describe('checkPluginManifests', () => {
+  it('allows repos without plugin packages', async () => {
+    const root = await fixtureRepo();
+    await rm(rootFile(root, 'packages/plugins'), { recursive: true, force: true });
+
+    expect(await checkPluginManifests(root)).toEqual([]);
+  });
+
+  it('ignores non-package entries under packages/plugins', async () => {
+    const root = await fixtureRepo();
+    await writeFile(rootFile(root, 'packages/plugins/README.md'), 'notes\n');
+    await mkdir(rootFile(root, 'packages/plugins/local'), { recursive: true });
+
+    expect(await checkPluginManifests(root)).toEqual([]);
+  });
+
   it('requires every plugin package to ship plugin.toml', async () => {
     const root = await fixtureRepo();
     await rm(rootFile(root, 'packages/plugins/kit/plugin.toml'));
@@ -191,6 +236,17 @@ describe('checkPackageMetadata', () => {
     );
   });
 
+  it('requires quality:100 to cover repo guardrails', async () => {
+    const root = await fixtureRepo();
+    await writeJson(rootFile(root, 'package.json'), {
+      scripts: { 'quality:100': 'pnpm quality && pnpm test -- --run --coverage' },
+    });
+
+    expect(await checkPackageMetadata(root)).toContainEqual(
+      expect.objectContaining({ code: 'package-root-repo-coverage-missing' })
+    );
+  });
+
   it('requires package tests and exported package entrypoints', async () => {
     const root = await fixtureRepo();
     await writeJson(rootFile(root, 'packages/cli/package.json'), {
@@ -205,6 +261,23 @@ describe('checkPackageMetadata', () => {
         expect.objectContaining({ code: 'package-typecheck-missing' }),
         expect.objectContaining({ code: 'package-exports-missing' }),
         expect.objectContaining({ code: 'package-files-missing' }),
+      ])
+    );
+  });
+
+  it('requires package files to exist and include names', async () => {
+    const root = await fixtureRepo();
+    await rm(rootFile(root, 'packages/plugins/kit/package.json'));
+    await writeJson(rootFile(root, 'packages/cli/package.json'), {
+      scripts: { test: 'vitest', typecheck: 'tsc --noEmit -p tsconfig.json' },
+      exports: { '.': './dist/index.js' },
+      files: ['dist'],
+    });
+
+    expect(await checkPackageMetadata(root)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'package-missing' }),
+        expect.objectContaining({ code: 'package-name-missing' }),
       ])
     );
   });
@@ -228,9 +301,59 @@ describe('checkDocsDrift', () => {
       expect.objectContaining({ code: 'docs-quality-command-missing' })
     );
   });
+
+  it('allows optional docs to be absent', async () => {
+    const root = await fixtureRepo();
+    await rm(rootFile(root, 'README.md'));
+    await rm(rootFile(root, 'CONTRIBUTING.md'));
+    await rm(rootFile(root, 'docs/ARCHITECTURE.md'));
+    await rm(rootFile(root, 'docs/WORKFLOWS.md'));
+
+    expect(await checkDocsDrift(root)).toEqual([]);
+  });
+
+  it('requires workflow docs to mention dev/prod and Pilot 100', async () => {
+    const root = await fixtureRepo();
+    await writeFile(rootFile(root, 'docs/WORKFLOWS.md'), 'main\n');
+
+    expect(await checkDocsDrift(root)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'docs-workflow-branches-missing' }),
+        expect.objectContaining({ code: 'docs-workflow-quality-missing' }),
+      ])
+    );
+  });
+
+  it('requires documented layout targets to exist', async () => {
+    const root = await fixtureRepo();
+    await rm(rootFile(root, 'workers/pilot-landing'), { recursive: true, force: true });
+
+    expect(await checkDocsDrift(root)).toContainEqual(
+      expect.objectContaining({ code: 'docs-layout-target-missing' })
+    );
+  });
 });
 
 describe('checkWorkflowGate', () => {
+  it('requires workflow files to exist', async () => {
+    const root = await fixtureRepo();
+    await rm(rootFile(root, '.github/workflows/ci.yml'));
+
+    expect(await checkWorkflowGate(root)).toContainEqual(
+      expect.objectContaining({ code: 'workflow-missing' })
+    );
+  });
+
+  it('accepts quoted quality:100 workflow commands', async () => {
+    const root = await fixtureRepo();
+    await writeFile(
+      rootFile(root, '.github/workflows/ci.yml'),
+      'jobs:\n  pilot-100:\n    steps:\n      - run: "pnpm quality:100"\n'
+    );
+
+    expect(await checkWorkflowGate(root)).toEqual([]);
+  });
+
   it('requires CI and release workflows to run quality:100', async () => {
     const root = await fixtureRepo();
     await writeFile(rootFile(root, '.github/workflows/release.yml'), 'jobs: {}\n');
@@ -250,6 +373,20 @@ describe('checkWorkflowGate', () => {
     expect(await checkWorkflowGate(root)).toContainEqual(
       expect.objectContaining({ code: 'workflow-quality-gate-missing' })
     );
+  });
+});
+
+describe('formatFinding', () => {
+  it('formats relative, absolute, and file-less findings', () => {
+    const root = '/tmp/pilot';
+
+    expect(formatFinding(root, { code: 'x', message: 'bad', file: 'package.json' })).toBe(
+      '[x] package.json: bad'
+    );
+    expect(formatFinding(root, { code: 'x', message: 'bad', file: '/tmp/pilot/docs/a.md' })).toBe(
+      '[x] docs/a.md: bad'
+    );
+    expect(formatFinding(root, { code: 'x', message: 'bad' })).toBe('[x] bad');
   });
 });
 
