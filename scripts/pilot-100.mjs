@@ -1,6 +1,7 @@
 import { access, readdir, readFile } from 'node:fs/promises';
-import { isAbsolute, join, relative } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 const validStatuses = new Set(['open', 'fixed', 'accepted-exclusion', 'removed']);
 const docsWithLayoutClaims = ['README.md', 'CONTRIBUTING.md', 'docs/ARCHITECTURE.md'];
@@ -87,6 +88,9 @@ export async function checkLedger(root = process.cwd()) {
       findings.push(
         result('ledger-invalid-status', `${id} has invalid status "${row.status}"`, file)
       );
+    }
+    if (row.status === 'open') {
+      findings.push(result('ledger-open-finding', `${id} must be fixed or justified`, file));
     }
     if (!row.verification) {
       findings.push(result('ledger-verification-missing', `${id} needs verification`, file));
@@ -280,7 +284,11 @@ export async function runPilot100(root = process.cwd()) {
   return checks.flat();
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+function isMainModule() {
+  return Boolean(process.argv[1]) && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
+}
+
+if (isMainModule()) {
   const root = process.cwd();
   const findings = await runPilot100(root);
 

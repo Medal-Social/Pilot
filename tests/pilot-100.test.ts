@@ -1,6 +1,9 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -12,6 +15,8 @@ import {
   runPilot100,
 } from '../scripts/pilot-100.mjs';
 
+const execFileAsync = promisify(execFile);
+const scriptPath = fileURLToPath(new URL('../scripts/pilot-100.mjs', import.meta.url));
 const roots: string[] = [];
 
 async function writeJson(path: string, value: unknown): Promise<void> {
@@ -152,6 +157,17 @@ describe('checkLedger', () => {
       expect.objectContaining({ code: 'ledger-invalid-status' })
     );
   });
+
+  it('rejects open findings', async () => {
+    const root = await fixtureRepo();
+    const ledger = rootFile(root, 'docs/quality/pilot-100.md');
+    const text = await readFile(ledger, 'utf8');
+    await writeFile(ledger, text.replace('| fixed |', '| open |'));
+
+    expect(await checkLedger(root)).toContainEqual(
+      expect.objectContaining({ code: 'ledger-open-finding' })
+    );
+  });
 });
 
 describe('checkPluginManifests', () => {
@@ -233,5 +249,27 @@ describe('runPilot100', () => {
     const findings = await runPilot100(root);
 
     expect(findings).toContainEqual(expect.objectContaining({ code: 'plugin-manifest-missing' }));
+  });
+
+  it('executes the CLI verifier when Node receives a relative script path', async () => {
+    const root = await fixtureRepo();
+    await mkdir(rootFile(root, 'scripts'), { recursive: true });
+    await copyFile(scriptPath, rootFile(root, 'scripts/pilot-100.mjs'));
+    await rm(rootFile(root, 'packages/plugins/kit/plugin.toml'));
+
+    await expect(
+      execFileAsync(
+        process.execPath,
+        [
+          '--input-type=module',
+          '--eval',
+          "process.argv[1] = 'scripts/pilot-100.mjs'; await import('./scripts/pilot-100.mjs');",
+        ],
+        { cwd: root }
+      )
+    ).rejects.toMatchObject({
+      code: 1,
+      stderr: expect.stringContaining('[plugin-manifest-missing]'),
+    });
   });
 });
