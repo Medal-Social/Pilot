@@ -74,6 +74,15 @@ function splitRow(line) {
     .map((cell) => cell.trim());
 }
 
+function splitCommandChain(script) {
+  return new Set(
+    script
+      .split('&&')
+      .map((command) => command.trim())
+      .filter(Boolean)
+  );
+}
+
 function findingsSection(text) {
   const start = text.indexOf('## Findings');
   if (start === -1) return '';
@@ -160,8 +169,9 @@ export async function checkPackageMetadata(root = process.cwd()) {
       )
     );
   } else {
+    const quality100Commands = splitCommandChain(quality100);
     for (const command of requiredQuality100Commands) {
-      if (!quality100.includes(command)) {
+      if (!quality100Commands.has(command)) {
         findings.push(
           result(
             'package-root-quality-command-missing',

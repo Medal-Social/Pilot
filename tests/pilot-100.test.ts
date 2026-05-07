@@ -271,6 +271,23 @@ describe('checkPackageMetadata', () => {
     );
   });
 
+  it('matches quality:100 commands exactly', async () => {
+    const root = await fixtureRepo();
+    await writeJson(rootFile(root, 'package.json'), {
+      scripts: {
+        'quality:100':
+          'pnpm quality:worker && pnpm test:repo:coverage && pnpm test -- --run --coverage && pnpm knip:check && pnpm secret:scan && pnpm pilot-100',
+      },
+    });
+
+    expect(await checkPackageMetadata(root)).toContainEqual(
+      expect.objectContaining({
+        code: 'package-root-quality-command-missing',
+        message: expect.stringContaining('pnpm quality'),
+      })
+    );
+  });
+
   it('requires package tests and exported package entrypoints', async () => {
     const root = await fixtureRepo();
     await writeJson(rootFile(root, 'packages/cli/package.json'), {
