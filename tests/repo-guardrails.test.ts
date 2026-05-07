@@ -22,7 +22,11 @@ describe('repo guardrails', () => {
     expect(pkg.scripts).toMatchObject({
       preinstall: 'npx only-allow pnpm',
       typecheck: 'turbo typecheck',
+      'test:repo': 'vitest run tests/',
+      'test:repo:coverage': 'vitest run tests/ --coverage',
       quality: 'pnpm lint && pnpm typecheck && pnpm test:repo && pnpm test',
+      'quality:worker':
+        'npm --prefix workers/pilot-landing ci && npm --prefix workers/pilot-landing run typecheck && npm --prefix workers/pilot-landing run build',
       changeset: 'changeset',
       version: 'changeset version',
       release: 'pnpm build && changeset publish',
@@ -31,6 +35,9 @@ describe('repo guardrails', () => {
     });
     expect(pkg.scripts?.['secret:scan']).toContain('secretlint');
     expect(pkg.scripts?.['secret:scan:staged']).toContain('secretlint');
+    expect(pkg.scripts?.['quality:100']).toContain('pnpm test:repo:coverage');
+    expect(pkg.scripts?.['quality:100']).toContain('pnpm quality:worker');
+    expect(pkg.scripts?.['quality:100']).toContain('pnpm test -- --run --coverage');
     expect(pkg.engines?.node).toBe('>=24.0.0 <25');
   });
 
@@ -50,6 +57,20 @@ describe('repo guardrails', () => {
     expect(read('.github/workflows/ci.yml')).toContain('pnpm knip:check');
     expect(read('.github/workflows/release.yml')).toContain('changesets/action');
     expect(read('.github/workflows/release.yml')).toContain('pnpm release');
+  });
+
+  it('keeps coverage gates within the accepted drift window', () => {
+    const rootConfig = read('vitest.config.ts');
+    const kitConfig = read('packages/plugins/kit/vitest.config.ts');
+
+    for (const config of [rootConfig, kitConfig]) {
+      expect(config).toContain('statements: 97');
+      expect(config).toContain('functions: 97');
+      expect(config).toContain('lines: 97');
+    }
+
+    expect(rootConfig).toContain('branches: 95');
+    expect(kitConfig).toContain('branches: 90');
   });
 
   it('locks down publish surfaces for shipped packages', () => {

@@ -151,6 +151,7 @@ pilot completions fish > ~/.config/fish/completions/pilot.fish
 pnpm install
 pnpm build
 pnpm quality
+pnpm quality:100
 pnpm test
 pnpm dev
 ```
@@ -158,6 +159,7 @@ pnpm dev
 Contributor guardrails:
 
 - Use `pnpm` only; other package managers are blocked
+- Run `pnpm quality:100` before opening quality, workflow, package, or plugin changes
 - Add a changeset for release-worthy changes unless the PR is explicitly internal-only
 - Do not commit generated `dist/` or `coverage/` output
 - Review AI-assisted patches before merging and add tests for behavior changes

@@ -654,7 +654,6 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.actor == 'dependabot[bot]' ||
-      github.actor == 'renovate[bot]' ||
       github.actor == 'medal-social-release-bot[bot]'
     steps:
       - name: Generate token from Medal Bot app
