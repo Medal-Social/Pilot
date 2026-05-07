@@ -466,6 +466,26 @@ describe('zed-extension step', () => {
     }
   });
 
+  it('uses Application Support for Zed settings on macOS', async () => {
+    const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+    Object.defineProperty(process, 'platform', { value: 'darwin' });
+    try {
+      const zedDir = join(tmpDir, 'Library', 'Application Support', 'Zed');
+      mkdirSync(zedDir, { recursive: true });
+      writeFileSync(join(zedDir, 'settings.json'), JSON.stringify({ auto_install_extensions: {} }));
+
+      const exec = makeExec(0);
+      await executeStep(zedStep, allManagers, exec);
+
+      const written = JSON.parse(readFileSync(join(zedDir, 'settings.json'), 'utf-8')) as {
+        auto_install_extensions: Record<string, boolean>;
+      };
+      expect(written.auto_install_extensions.rust).toBe(true);
+    } finally {
+      if (originalPlatform) Object.defineProperty(process, 'platform', originalPlatform);
+    }
+  });
+
   it('uses ~/.config for Zed settings on Linux', async () => {
     const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
     Object.defineProperty(process, 'platform', { value: 'linux' });
