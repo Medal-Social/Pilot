@@ -236,14 +236,31 @@ describe('checkPackageMetadata', () => {
     );
   });
 
-  it('requires quality:100 to cover repo guardrails', async () => {
+  it('requires quality:100 to run the full quality chain', async () => {
     const root = await fixtureRepo();
     await writeJson(rootFile(root, 'package.json'), {
-      scripts: { 'quality:100': 'pnpm quality && pnpm test -- --run --coverage' },
+      scripts: { 'quality:100': 'pnpm quality && pnpm test:repo:coverage' },
     });
 
-    expect(await checkPackageMetadata(root)).toContainEqual(
-      expect.objectContaining({ code: 'package-root-repo-coverage-missing' })
+    expect(await checkPackageMetadata(root)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'package-root-quality-command-missing',
+          message: expect.stringContaining('pnpm test -- --run --coverage'),
+        }),
+        expect.objectContaining({
+          code: 'package-root-quality-command-missing',
+          message: expect.stringContaining('pnpm knip:check'),
+        }),
+        expect.objectContaining({
+          code: 'package-root-quality-command-missing',
+          message: expect.stringContaining('pnpm secret:scan'),
+        }),
+        expect.objectContaining({
+          code: 'package-root-quality-command-missing',
+          message: expect.stringContaining('pnpm pilot-100'),
+        }),
+      ])
     );
   });
 

@@ -10,6 +10,14 @@ const stalePackageClaims = ['packages/plugins/sanity', 'packages/plugins/pencil'
 const requiredLayoutClaims = ['packages/cli', 'packages/plugins/kit', 'workers/pilot-landing'];
 const requiredPackageFiles = ['packages/cli/package.json', 'packages/plugins/kit/package.json'];
 const requiredWorkflowFiles = ['.github/workflows/ci.yml', '.github/workflows/release.yml'];
+const requiredQuality100Commands = [
+  'pnpm quality',
+  'pnpm test:repo:coverage',
+  'pnpm test -- --run --coverage',
+  'pnpm knip:check',
+  'pnpm secret:scan',
+  'pnpm pilot-100',
+];
 
 function result(code, message, file) {
   return { code, message, file };
@@ -141,7 +149,8 @@ export async function checkPackageMetadata(root = process.cwd()) {
   const rootPackagePath = join(root, 'package.json');
   const rootPackage = await readJson(rootPackagePath);
 
-  if (!rootPackage.scripts?.['quality:100']) {
+  const quality100 = rootPackage.scripts?.['quality:100'];
+  if (!quality100) {
     findings.push(
       result(
         'package-root-quality-missing',
@@ -149,14 +158,18 @@ export async function checkPackageMetadata(root = process.cwd()) {
         'package.json'
       )
     );
-  } else if (!rootPackage.scripts['quality:100'].includes('test:repo:coverage')) {
-    findings.push(
-      result(
-        'package-root-repo-coverage-missing',
-        'scripts.quality:100 must run repo tests with coverage',
-        'package.json'
-      )
-    );
+  } else {
+    for (const command of requiredQuality100Commands) {
+      if (!quality100.includes(command)) {
+        findings.push(
+          result(
+            'package-root-quality-command-missing',
+            `scripts.quality:100 must include ${command}`,
+            'package.json'
+          )
+        );
+      }
+    }
   }
 
   for (const packageFile of requiredPackageFiles) {
