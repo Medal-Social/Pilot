@@ -4253,8 +4253,6 @@ snapshots:
 
   run-applescript@7.1.0: {}
 
-  run-applescript@7.1.0: {}
-
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
@@ -4551,11 +4549,6 @@ snapshots:
   ws@8.21.3: {}
 
   wsl-utils@1.0.0:
-    dependencies:
-      is-wsl: 3.1.1
-      powershell-utils: 0.1.0
-
-  wsl-utils@0.3.1:
     dependencies:
       is-wsl: 3.1.1
       powershell-utils: 0.1.0
