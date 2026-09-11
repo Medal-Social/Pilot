@@ -13,6 +13,9 @@ overrides:
   ink>ws: 8.21.3        # GHSA-96hv-2xvq-fx4p - ink bundles its own ws and that copy ships
   react-devtools-core>ws: 7.5.13  # same advisory on the 7.x line (dev only)
   js-yaml: 4.3.2        # GHSA-52cp-r559-cp3m, GHSA-5p4m-2wfm-xmqj (via changesets)
+  # changesets → @manypkg/get-packages@1 → read-yaml-file@1 calls yaml.safeLoad,
+  # which js-yaml 4 removed. 2.1.0 is CJS + js-yaml ^4 (yaml.load) — drop-in.
+  read-yaml-file: 2.1.0
   smol-toml: 1.8.0      # GHSA via knip; matches the CLI direct dep
   # vitest 4.1.11 still resolves an older vite/postcss/nanoid/esbuild internally.
   # Test-tooling only - nothing here reaches the published CLI.
