@@ -3602,10 +3602,6 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.7
 
-  fdir@6.5.0(picomatch@4.0.7):
-    optionalDependencies:
-      picomatch: 4.0.7
-
   fill-range@7.1.1:
     dependencies:
       to-regex-range: 5.0.1
