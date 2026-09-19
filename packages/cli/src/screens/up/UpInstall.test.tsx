@@ -1,9 +1,9 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { render } from 'ink-testing-library';
+import { cleanup, render } from 'ink-testing-library';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RunCallbacks } from '../../installer/runner.js';
 import type { TemplateEntry } from '../../registry/types.js';
 import { UpInstall } from './UpInstall.js';
@@ -20,6 +20,11 @@ const entry: TemplateEntry = {
 };
 
 const managers = { nix: false, brew: false, winget: false, npm: true };
+
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe('UpInstall', () => {
   it('renders the template displayName', () => {
@@ -139,10 +144,11 @@ describe('UpInstall', () => {
       React.createElement(UpInstall, { entry: entryWithCrew, managers, runSteps, onDone })
     );
     // Wait for runSteps.then → onDone → setDone(true) → React flush.
-    await new Promise((r) => setTimeout(r, 200));
-    const output = frames.join('\n') + (lastFrame() ?? '');
-    expect(output).toContain('Done in');
-    expect(output).toContain('Video Specialist');
+    await vi.waitFor(() => {
+      const output = frames.join('\n') + (lastFrame() ?? '');
+      expect(output).toContain('Done in');
+      expect(output).toContain('Video Specialist');
+    });
   });
 
   it('renders failure footer when runSteps rejects', async () => {
@@ -193,7 +199,44 @@ describe('UpInstall', () => {
     const { lastFrame } = render(
       React.createElement(UpInstall, { entry: multiEntry, managers, runSteps })
     );
-    expect(lastFrame()).toContain('A');
-    expect(lastFrame()).toContain('B');
+    await vi.waitFor(() => {
+      expect(lastFrame()).toMatch(/✗\s+A/);
+      expect(lastFrame()).toMatch(/✓\s+B/);
+      expect(lastFrame()).toContain('already installed');
+    });
   });
+});
+
+it('renders a plain completion when no hint, crew, or completion callback is supplied', async () => {
+  const { lastFrame } = render(
+    <UpInstall
+      entry={{ ...entry, completionHint: undefined, crew: undefined }}
+      managers={managers}
+      runSteps={async () => {}}
+    />
+  );
+  await vi.waitFor(() => expect(lastFrame()).toContain('Done in'));
+  expect(lastFrame()).not.toContain('Run npx');
+  expect(lastFrame()).not.toContain('Your ');
+});
+
+it('renders a non-Error completion rejection as a recoverable failure', async () => {
+  const previous = process.exitCode;
+  try {
+    const { lastFrame } = render(
+      <UpInstall
+        entry={entry}
+        managers={managers}
+        runSteps={async () => {}}
+        onDone={async () => {
+          throw 'state unavailable';
+        }}
+      />
+    );
+    await vi.waitFor(() => expect(lastFrame()).toContain('Failed: state unavailable'));
+    expect(process.exitCode).toBe(1);
+    expect(lastFrame()).toContain('pilot up remotion');
+  } finally {
+    process.exitCode = previous;
+  }
 });

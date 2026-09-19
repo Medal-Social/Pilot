@@ -448,3 +448,53 @@ describe('runUninstallSteps', () => {
     expect(handlers.unexecuteStep).not.toHaveBeenCalled();
   });
 });
+
+it.each(['nix', 'winget'] as const)(
+  'protects shared %s packages while ignoring non-package peer steps',
+  async (manager) => {
+    const step: AnyStep = { type: 'pkg', [manager]: 'shared-tool', label: 'Tool' };
+    const localStep: AnyStep = { type: 'npm', pkg: 'local-only', global: false, label: 'Local' };
+    (await getLoadStateMock()).mockReturnValueOnce({
+      templates: {
+        peer: {
+          steps: [
+            step,
+            localStep,
+            { type: 'mcp', server: 's', command: 'server', label: 'Server' },
+          ],
+        },
+      },
+    });
+    const handlers = makeHandlers(false);
+    const cbs = callbacks();
+    await runUninstallSteps(
+      [step, localStep],
+      { nix: manager === 'nix', brew: false, winget: manager === 'winget', npm: true },
+      handlers,
+      ['peer'],
+      'current',
+      cbs
+    );
+    expect(cbs.onStepSkip).toHaveBeenCalledWith(0);
+    expect(handlers.unexecuteStep).toHaveBeenCalledTimes(1);
+    expect(handlers.unexecuteStep).toHaveBeenCalledWith(
+      localStep,
+      expect.anything(),
+      expect.anything(),
+      expect.anything()
+    );
+  }
+);
+
+it('continues cleanup after multiple failures and reports the first failure', async () => {
+  const first = new Error('first failure');
+  const second = new Error('second failure');
+  const handlers = makeHandlers(false);
+  handlers.unexecuteStep.mockRejectedValueOnce(first).mockRejectedValueOnce(second);
+  const cbs = callbacks();
+  await expect(
+    runUninstallSteps([npmA, npmB], managers, handlers, [], 'current', cbs)
+  ).rejects.toBe(first);
+  expect(cbs.onStepError).toHaveBeenNthCalledWith(1, 1, first);
+  expect(cbs.onStepError).toHaveBeenNthCalledWith(2, 0, second);
+});

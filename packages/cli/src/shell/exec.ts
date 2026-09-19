@@ -37,7 +37,8 @@ export const realExec: Exec = {
       child.stderr.on('data', (b: Buffer) => {
         stderr += b.toString();
       });
-      child.on('close', (code) => resolve({ stdout, stderr, code: code ?? 0 }));
+      // A signal terminates the child without a numeric exit code; it did not succeed.
+      child.on('close', (code) => resolve({ stdout, stderr, code: code ?? 1 }));
       child.on('error', () => resolve({ stdout, stderr, code: 1 }));
     });
   },
@@ -63,7 +64,8 @@ export function runInherit(
       env: opts.env ?? process.env,
       stdio: 'inherit',
     });
-    child.on('exit', (code) => resolve(code ?? 0));
+    // Signal termination must not let callers report an interrupted install as successful.
+    child.on('exit', (code) => resolve(code ?? 1));
     child.on('error', () => resolve(1));
   });
 }

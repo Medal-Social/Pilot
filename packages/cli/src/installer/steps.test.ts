@@ -506,3 +506,65 @@ describe('zed-extension step', () => {
     }
   });
 });
+
+it('checks and installs local npm packages without global flags', async () => {
+  const step: NpmStep = { type: 'npm', pkg: 'local-tool', global: false, label: 'Local tool' };
+  const exec = makeExec();
+  expect(await checkStep(step, npmOnly, exec)).toBe(true);
+  await executeStep(step, npmOnly, exec);
+  expect(exec.run).toHaveBeenNthCalledWith(1, 'npm', ['list', '--depth=0', 'local-tool']);
+  expect(exec.run).toHaveBeenNthCalledWith(2, 'npm', ['install', 'local-tool']);
+});
+
+it('reports package removal failure instead of marking uninstall complete', async () => {
+  await expect(
+    unexecuteStep({ type: 'pkg', brew: 'tool', label: 'Tool' }, brewOnly, makeExec(1))
+  ).rejects.toMatchObject({ code: 'UP_STEP_FAILED' });
+});
+
+it('uses its default skills directory consistently for install, check, and removal', async () => {
+  vi.resetModules();
+  // The mocked homedir resolves to this test's temporary directory at import.
+  const steps = await import('./steps.js');
+  const step: SkillStep = {
+    type: 'skill',
+    id: 'demo',
+    url: 'https://example.com/demo.md',
+    label: 'Demo',
+  };
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('# Demo skill')));
+  try {
+    await steps.executeStep(step, npmOnly, makeExec());
+    expect(readFileSync(join(tmpDir, '.pilot/skills/demo.md'), 'utf8')).toBe('# Demo skill');
+    expect(await steps.checkStep(step, npmOnly, makeExec())).toBe(true);
+    await steps.unexecuteStep(step, npmOnly, makeExec());
+    expect(await steps.checkStep(step, npmOnly, makeExec())).toBe(false);
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+it('uses the Windows home fallback and initializes absent extension settings', async () => {
+  const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+  const originalAppData = process.env.APPDATA;
+  Object.defineProperty(process, 'platform', { value: 'win32' });
+  delete process.env.APPDATA;
+  try {
+    const folder = join(tmpDir, 'AppData/Roaming/Zed');
+    mkdirSync(folder, { recursive: true });
+    const file = join(folder, 'settings.json');
+    writeFileSync(file, '{}');
+    const step: ZedExtStep = { type: 'zed-extension', id: 'rust', label: 'Rust' };
+    await executeStep(step, allManagers, makeExec());
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({
+      auto_install_extensions: { rust: true },
+    });
+    writeFileSync(file, '{}');
+    await unexecuteStep(step, allManagers, makeExec());
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ auto_install_extensions: {} });
+  } finally {
+    if (originalPlatform) Object.defineProperty(process, 'platform', originalPlatform);
+    if (originalAppData === undefined) delete process.env.APPDATA;
+    else process.env.APPDATA = originalAppData;
+  }
+});
