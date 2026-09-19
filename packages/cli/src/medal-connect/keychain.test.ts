@@ -26,7 +26,7 @@ vi.mock('@napi-rs/keyring', () => {
 });
 
 import { errorCodes, PilotError } from '../errors.js';
-import { deleteDeviceToken, loadDeviceToken, storeDeviceToken } from './keychain';
+import { deleteDeviceToken, listDeviceIds, loadDeviceToken, storeDeviceToken } from './keychain';
 
 beforeEach(() => {
   mockStore.clear();
@@ -84,4 +84,20 @@ describe('keychain', () => {
     mockStore.set('medal-connect:corrupt', 'not-json{{');
     expect(loadDeviceToken('corrupt')).toBeNull();
   });
+});
+
+it('reports a generic keychain failure when native errors omit a message', () => {
+  getPasswordOverrides.set('medal-connect:locked', () => {
+    throw {};
+  });
+  expect(() => loadDeviceToken('locked')).toThrow(
+    expect.objectContaining({
+      code: errorCodes.CONNECT_KEYCHAIN_READ_FAILED,
+      cause: 'keychain read failed',
+    })
+  );
+});
+
+it('does not invent an enumeration API for the native keychain', () => {
+  expect(listDeviceIds()).toEqual([]);
 });
