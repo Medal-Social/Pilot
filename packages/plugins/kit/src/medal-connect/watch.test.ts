@@ -5,7 +5,7 @@ import { execSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { watchKit } from './watch.js';
 
 let dir: string;
@@ -35,11 +35,12 @@ describe('watchKit', () => {
         join(dir, 'machines', 't.apps.json'),
         JSON.stringify({ casks: ['spotify'], brews: [] })
       );
-      await new Promise((r) => setTimeout(r, 300));
-      const stateEvents = events.filter((e) => e.kind === 'kit.state');
-      expect(stateEvents.length).toBeGreaterThanOrEqual(1);
-      const last = stateEvents[stateEvents.length - 1] as { snapshot: { apps: string[] } };
-      expect(last.snapshot.apps).toEqual(['spotify']);
+      await vi.waitFor(() => {
+        const stateEvents = events.filter((e) => e.kind === 'kit.state');
+        expect(stateEvents.length).toBeGreaterThanOrEqual(1);
+        const last = stateEvents[stateEvents.length - 1] as { snapshot: { apps: string[] } };
+        expect(last.snapshot.apps).toEqual(['spotify']);
+      });
     } finally {
       sub.dispose();
     }

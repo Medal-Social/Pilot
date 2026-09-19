@@ -123,6 +123,13 @@ AI assistance is allowed, but contributors are responsible for the final patch.
 
 **Regression tests:** When fixing a bug, first write a test that reproduces the bug (it should fail), then fix the bug and verify the test passes. This prevents the same bug from recurring.
 
+Vitest 5 loads the CLI's explicit `packages/cli/vitest.config.ts`; it no longer
+searches parent directories for configuration. The CLI config inherits the root
+globals, Node environment, coverage thresholds, and exclusions, but measures
+`src/**/*.{ts,tsx}` inside the CLI package. Root coverage continues to measure
+`scripts/pilot-100.mjs`, and kit uses its own package config. Keep `vitest` and
+`@vitest/coverage-v8` on the same exact version when upgrading the test tooling.
+
 ## Code Review Policy
 
 All pull requests require approval from at least one reviewer who is not the author before merging. This is enforced by GitHub branch protection on the protected branches.

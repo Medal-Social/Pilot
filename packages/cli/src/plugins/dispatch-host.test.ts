@@ -48,3 +48,32 @@ describe('createDispatchHost', () => {
     expect(await host.secrets.get('missing')).toBeNull();
   });
 });
+
+it('forwards cloud events and authenticated identity through the connected host', async () => {
+  const uploadEvent = vi.fn(async () => {});
+  const identity = {
+    workspace: 'w',
+    workspaceName: 'Workspace',
+    userId: 'u',
+    userName: 'User',
+    email: 'user@example.com',
+  };
+  const host = createDispatchHost({
+    log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+    secretsStore: {},
+    medalSocial: identity,
+    sendEmail: async () => ({ id: 'e' }),
+    uploadEvent,
+  });
+  const event = {
+    plugin: '@medalsocial/dispatch',
+    id: 'e',
+    ts: 1,
+    kind: 'task.created',
+    deviceId: 'd',
+    payload: {},
+  };
+  await host.cloud.send(event);
+  expect(uploadEvent).toHaveBeenCalledWith(event);
+  expect(host.auth.medalSocial()).toBe(identity);
+});

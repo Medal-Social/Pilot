@@ -45,7 +45,7 @@
     "@commitlint/cli": "^20.5.3",
     "@commitlint/config-conventional": "^20.5.3",
     "@secretlint/secretlint-rule-preset-recommend": "^13.0.0",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "5.0.0",
     "fast-check": "^4.9.0",
     "husky": "^9.1.7",
     "knip": "^6.35.1",
@@ -54,6 +54,6 @@
     "secretlint": "^13.0.0",
     "turbo": "2.10.12",
     "typescript": "6.0.3",
-    "vitest": "4.1.11"
+    "vitest": "5.0.0"
   }
 }

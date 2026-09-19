@@ -1,5 +1,6 @@
-import { EventEmitter } from 'node:events';
+import { EventEmitter, once } from 'node:events';
 import { describe, expect, it, vi } from 'vitest';
+import { WebSocketServer } from 'ws';
 import { WSClient } from './ws-client';
 
 class MockWS extends EventEmitter {
@@ -171,11 +172,7 @@ describe('WSClient', () => {
   });
 
   it('does NOT reset backoff on open without a welcome (Codex P2)', async () => {
-    // A flapping endpoint accepts the TCP handshake (open fires) but the DO
-    // closes the socket before sending `welcome` (auth routing issue, deploy
-    // restart, etc.). If `reconnectAttempt` resets on `open`, the second
-    // close would schedule at base delay again — rapid retry forever. The
-    // fix only resets after a `welcome` frame arrives.
+    vi.useFakeTimers();
     MockWS.instances = [];
     const client = new WSClient({
       url: 'ws://x',
@@ -185,42 +182,25 @@ describe('WSClient', () => {
       reconnectBaseMs: 10,
       reconnectMaxMs: 10_000,
     });
-    client.start();
-    // First cycle: open (no welcome) → close. Schedules a reconnect with
-    // delay = 10 * 2^0 = 10ms; reconnectAttempt advances to 1.
-    let ws = MockWS.instances[0];
-    ws.open();
-    ws.emit('close', 1006, Buffer.from(''));
-    const t1 = Date.now();
-    await new Promise((r) => setTimeout(r, 30));
-    expect(MockWS.instances).toHaveLength(2);
-    // Second cycle: open (still no welcome) → close. With the bug this
-    // would reset to delay=10ms again. Without the bug, delay = 10*2^1 = 20ms;
-    // reconnectAttempt advances to 2 so the next delay is 40ms.
-    ws = MockWS.instances[1];
-    ws.open();
-    ws.emit('close', 1006, Buffer.from(''));
-    await new Promise((r) => setTimeout(r, 30));
-    expect(MockWS.instances).toHaveLength(3);
-    ws = MockWS.instances[2];
-    ws.open();
-    ws.emit('close', 1006, Buffer.from(''));
-    // Third reconnect MUST take at least 40ms (10 * 2^2 = 40); without the
-    // fix it would land at ~10ms.
-    const before4 = Date.now();
-    await new Promise((r) => setTimeout(r, 30)); // not enough time
-    expect(MockWS.instances).toHaveLength(3);
-    await new Promise((r) => setTimeout(r, 30)); // total ~60ms — now it must have fired
-    expect(MockWS.instances).toHaveLength(4);
-    expect(Date.now() - before4).toBeGreaterThanOrEqual(35);
-    expect(Date.now() - t1).toBeGreaterThan(70);
-    client.close();
+    try {
+      client.start();
+      for (const [attempt, delay] of [10, 20, 40].entries()) {
+        const ws = MockWS.instances[attempt];
+        ws.open();
+        ws.emit('close', 1006, Buffer.from(''));
+        await vi.advanceTimersByTimeAsync(delay - 1);
+        expect(MockWS.instances).toHaveLength(attempt + 1);
+        await vi.advanceTimersByTimeAsync(1);
+        expect(MockWS.instances).toHaveLength(attempt + 2);
+      }
+    } finally {
+      client.close();
+      vi.useRealTimers();
+    }
   });
 
   it('resets backoff after a welcome frame is received (Codex P2)', async () => {
-    // After a known-good session (welcome arrived) closes, the next
-    // reconnect should start at the base delay again — not stay at the
-    // accumulated exponential delay.
+    vi.useFakeTimers();
     MockWS.instances = [];
     const client = new WSClient({
       url: 'ws://x',
@@ -230,29 +210,30 @@ describe('WSClient', () => {
       reconnectBaseMs: 10,
       reconnectMaxMs: 10_000,
     });
-    client.start();
-    // Simulate two flap cycles without welcome to bump the counter.
-    let ws = MockWS.instances[0];
-    ws.open();
-    ws.emit('close', 1006, Buffer.from(''));
-    await new Promise((r) => setTimeout(r, 25));
-    ws = MockWS.instances[1];
-    ws.open();
-    ws.emit('close', 1006, Buffer.from(''));
-    await new Promise((r) => setTimeout(r, 35));
-    // Now a successful session: welcome arrives, then a clean close.
-    ws = MockWS.instances[2];
-    ws.open();
-    ws.receive({ type: 'welcome', rev: 1, queuedCommands: [] });
-    ws.emit('close', 1006, Buffer.from(''));
-    // Backoff has been reset to 0; next delay should be base (10ms), NOT
-    // 10 * 2^2 = 40ms. Use a generous upper bound to absorb event-loop
-    // jitter while still distinguishing 10ms from 40ms.
-    const before = Date.now();
-    await new Promise((r) => setTimeout(r, 30));
-    expect(MockWS.instances.length).toBeGreaterThanOrEqual(4);
-    expect(Date.now() - before).toBeLessThan(35);
-    client.close();
+    try {
+      client.start();
+      // Two closes without a welcome increase the delay to 10ms, then 20ms.
+      let ws = MockWS.instances[0];
+      ws.open();
+      ws.emit('close', 1006, Buffer.from(''));
+      await vi.advanceTimersByTimeAsync(10);
+      ws = MockWS.instances[1];
+      ws.open();
+      ws.emit('close', 1006, Buffer.from(''));
+      await vi.advanceTimersByTimeAsync(20);
+      ws = MockWS.instances[2];
+      ws.open();
+      ws.receive({ type: 'welcome', rev: 1, queuedCommands: [] });
+      ws.emit('close', 1006, Buffer.from(''));
+      // Welcome resets the next delay to 10ms rather than 40ms.
+      await vi.advanceTimersByTimeAsync(9);
+      expect(MockWS.instances).toHaveLength(3);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(MockWS.instances).toHaveLength(4);
+    } finally {
+      client.close();
+      vi.useRealTimers();
+    }
   });
 
   it('exponential backoff increases delay between reconnects', async () => {
@@ -281,4 +262,116 @@ describe('WSClient', () => {
     expect(Date.now() - t1).toBeGreaterThanOrEqual(20);
     client.close();
   });
+});
+
+it('ignores malformed frames and keeps the connection usable', () => {
+  MockWS.instances = [];
+  const onCommand = vi.fn();
+  const onConnect = vi.fn();
+  const onDisconnect = vi.fn();
+  const client = new WSClient({
+    url: 'ws://x',
+    deviceId: 'd',
+    token: 'test',
+    WebSocketCtor: MockWS as unknown as typeof WebSocket,
+    onCommand,
+    onConnect,
+    onDisconnect,
+  });
+  expect(client.send({ type: 'heartbeat', ts: 1 })).toBe(false);
+  client.start();
+  const socket = MockWS.instances[0];
+  expect(client.send({ type: 'heartbeat', ts: 1 })).toBe(false);
+  socket.open();
+  socket.emit('message', '{not JSON');
+  socket.receive({ type: 'not-a-frame' });
+  socket.emit('error', new Error('transient transport error'));
+  socket.receive({ type: 'command', commandId: 'c', kind: 'kit.rebuild', args: {} });
+  expect(onConnect).toHaveBeenCalledOnce();
+  expect(onCommand).toHaveBeenCalledWith({
+    type: 'command',
+    commandId: 'c',
+    kind: 'kit.rebuild',
+    args: {},
+  });
+  client.close();
+  expect(onDisconnect).toHaveBeenCalledWith(1000, 'client_close');
+  client.close();
+});
+
+it('uses the real WebSocket transport to handshake with a local server', async () => {
+  const server = new WebSocketServer({ port: 0, host: '127.0.0.1' });
+  await once(server, 'listening');
+  const address = server.address();
+  if (!address || typeof address === 'string') throw new Error('expected TCP address');
+  const hello = new Promise<unknown>((resolve) => {
+    server.once('connection', (socket) => {
+      socket.once('message', (data) => {
+        resolve(JSON.parse(data.toString()));
+        socket.send(JSON.stringify({ type: 'welcome', rev: 7, queuedCommands: [] }));
+      });
+    });
+  });
+  let welcome: () => void = () => {};
+  const accepted = new Promise<void>((resolve) => {
+    welcome = resolve;
+  });
+  const client = new WSClient({
+    url: `ws://127.0.0.1:${address.port}`,
+    deviceId: 'local',
+    token: 'test',
+    onWelcome: welcome,
+  });
+  try {
+    client.start();
+    expect(await hello).toEqual({ type: 'hello', deviceId: 'local', token: 'test', since: 0 });
+    await accepted;
+    expect(client.currentRev).toBe(7);
+  } finally {
+    client.close();
+    for (const socket of server.clients) socket.terminate();
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve()))
+    );
+  }
+});
+
+it('does not restart a client that was intentionally closed before starting', () => {
+  MockWS.instances = [];
+  const client = new WSClient({
+    url: 'ws://x',
+    deviceId: 'd',
+    token: 'test',
+    WebSocketCtor: MockWS as unknown as typeof WebSocket,
+  });
+  client.close();
+  client.start();
+  expect(MockWS.instances).toHaveLength(0);
+});
+
+it('uses a one-second default reconnect delay and normalizes transport close reasons', async () => {
+  vi.useFakeTimers();
+  MockWS.instances = [];
+  const onDisconnect = vi.fn();
+  const client = new WSClient({
+    url: 'ws://x',
+    deviceId: 'd',
+    token: 'test',
+    WebSocketCtor: MockWS as unknown as typeof WebSocket,
+    onDisconnect,
+  });
+  try {
+    client.start();
+    MockWS.instances[0].emit('close', 1006, 'retry');
+    expect(onDisconnect).toHaveBeenCalledWith(1006, 'retry');
+    await vi.advanceTimersByTimeAsync(999);
+    expect(MockWS.instances).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(MockWS.instances).toHaveLength(2);
+    MockWS.instances[1].emit('close', 1006, undefined);
+    expect(onDisconnect).toHaveBeenLastCalledWith(1006, '');
+  } finally {
+    client.close();
+    vi.useRealTimers();
+  }
 });
