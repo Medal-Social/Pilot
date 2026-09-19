@@ -31,16 +31,22 @@ describe('watchKit', () => {
     const ctx = { kitRepoDir: dir, machineId: 't', user: 'u', machineType: 'darwin' as const };
     const sub = watchKit(ctx, (e) => events.push(e), { debounceMs: 50 });
     try {
+      // Let the native watcher enter its event loop before the first mutation.
+      await new Promise<void>((resolve) => setImmediate(resolve));
       writeFileSync(
         join(dir, 'machines', 't.apps.json'),
         JSON.stringify({ casks: ['spotify'], brews: [] })
       );
-      await vi.waitFor(() => {
-        const stateEvents = events.filter((e) => e.kind === 'kit.state');
-        expect(stateEvents.length).toBeGreaterThanOrEqual(1);
-        const last = stateEvents[stateEvents.length - 1] as { snapshot: { apps: string[] } };
-        expect(last.snapshot.apps).toEqual(['spotify']);
-      });
+      // Real filesystem notifications and Git subprocesses share the host scheduler.
+      await vi.waitFor(
+        () => {
+          const stateEvents = events.filter((e) => e.kind === 'kit.state');
+          expect(stateEvents.length).toBeGreaterThanOrEqual(1);
+          const last = stateEvents[stateEvents.length - 1] as { snapshot: { apps: string[] } };
+          expect(last.snapshot.apps).toEqual(['spotify']);
+        },
+        { timeout: 4000 }
+      );
     } finally {
       sub.dispose();
     }
@@ -58,10 +64,21 @@ describe('watchKit', () => {
         );
         await new Promise((r) => setTimeout(r, 10));
       }
-      await new Promise((r) => setTimeout(r, 250));
-      // Each change schedules at most one snapshot; rapid changes coalesce.
+      await vi.waitFor(
+        () => {
+          // Rapid changes coalesce and the final snapshot contains the latest edit.
+          expect(events.length).toBeLessThan(5);
+          expect(events.length).toBeGreaterThan(0);
+          const last = events[events.length - 1] as { snapshot: { apps: string[] } };
+          expect(last.snapshot.apps).toEqual(['x4']);
+        },
+        { timeout: 4000 }
+      );
+      // Keep observing after readiness so extra pending emissions cannot hide behind dispose.
+      await new Promise((resolve) => setTimeout(resolve, 250));
       expect(events.length).toBeLessThan(5);
-      expect(events.length).toBeGreaterThan(0);
+      const settled = events[events.length - 1] as { snapshot: { apps: string[] } };
+      expect(settled.snapshot.apps).toEqual(['x4']);
     } finally {
       sub.dispose();
     }

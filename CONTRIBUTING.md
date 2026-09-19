@@ -129,6 +129,9 @@ globals, Node environment, coverage thresholds, and exclusions, but measures
 `src/**/*.{ts,tsx}` inside the CLI package. Root coverage continues to measure
 `scripts/pilot-100.mjs`, and kit uses its own package config. Keep `vitest` and
 `@vitest/coverage-v8` on the same exact version when upgrading the test tooling.
+For resource-limited machines, set `VITEST_MAX_WORKERS=2`; Turbo passes this
+worker cap through its default strict environment. Keep that environment strict
+so Git hook variables cannot escape into temporary-repository tests.
 
 ## Code Review Policy
 
