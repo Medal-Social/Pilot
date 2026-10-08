@@ -207,6 +207,7 @@ jobs:
 
       - name: Generate token from Medal Bot app
         id: app-token
+        if: ${{ !cancelled() }}
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v4
         with:
           app-id: ${{ secrets.APP_ID }}
@@ -215,6 +216,7 @@ jobs:
           permission-pull-requests: write
 
       - name: Push changeset with retry
+        id: push
         if: steps.commit.outputs.committed == 'true'
         env:
           HEAD_REF: ${{ needs.classify.outputs.head_ref }}
@@ -223,21 +225,22 @@ jobs:
           set -euo pipefail
           auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
           echo "::add-mask::$auth"
-          push() {
+          # Authenticate only these git invocations; nothing is written to config.
+          authed_git() {
             GIT_CONFIG_COUNT=1 \
             GIT_CONFIG_KEY_0='http.https://github.com/.extraheader' \
             GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth" \
-              git push --no-verify origin "HEAD:refs/heads/$HEAD_REF"
+              git "$@"
           }
           for attempt in 1 2 3; do
-            if push; then
+            if authed_git push --no-verify origin "HEAD:refs/heads/$HEAD_REF"; then
               echo "Pushed on attempt $attempt"
               exit 0
             fi
             echo "Push attempt $attempt failed; rebasing and retrying..."
             sleep_time=$((2 * 3 ** (attempt - 1)))
             sleep "$sleep_time"
-            git fetch origin "$HEAD_REF"
+            authed_git fetch origin "$HEAD_REF"
             git rebase --no-verify FETCH_HEAD || git rebase --abort || true
           done
           echo '::warning::Changeset push failed after 3 attempts; please run /changeset on the PR.'
@@ -250,15 +253,22 @@ jobs:
           GH_REPO: ${{ github.repository }}
           PR_NUM: ${{ needs.classify.outputs.number }}
           EXIT_CODE: ${{ needs.classify.outputs.exit_code }}
+          COMMIT_OUTCOME: ${{ steps.commit.outcome }}
+          PUSH_OUTCOME: ${{ steps.push.outcome }}
         run: |
           set -euo pipefail
           marker='<!-- changeset-bot -->'
+          retry_hint="Comment \`/changeset\` to retry, or add one with \`pnpm changeset\`."
           case "${EXIT_CODE:-0}" in
             0) body_line='No changeset needed.' ;;
             1) body_line='Changeset generated and pushed.' ;;
             2) body_line='Could not auto-classify — AI fallback invoked.' ;;
-            *) body_line='Classifier finished with an unexpected exit code.' ;;
+            *) body_line="The changeset could not be prepared. $retry_hint" ;;
           esac
+          if [ "${EXIT_CODE:-0}" = '1' ] &&
+            { [ "$COMMIT_OUTCOME" = 'failure' ] || [ "$PUSH_OUTCOME" = 'failure' ]; }; then
+            body_line="The changeset could not be pushed. $retry_hint"
+          fi
           {
             printf '%s\n' "$marker"
             printf '### Changeset bot\n\n'
