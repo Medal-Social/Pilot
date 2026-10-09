@@ -37,3 +37,19 @@ describe('loadDispatchPlugin', () => {
     expect(plugin).toBeNull();
   });
 });
+
+it('does not hide a broken installed plugin as an absent optional package', async () => {
+  const failure = new Error('plugin initialization failed');
+  await expect(
+    loadDispatchPlugin({
+      opts: {},
+      importFn: async () => {
+        throw failure;
+      },
+    })
+  ).rejects.toBe(failure);
+});
+
+it('uses native package resolution when no custom importer is supplied', async () => {
+  await expect(loadDispatchPlugin({ opts: {} })).resolves.toBeNull();
+});

@@ -92,3 +92,13 @@ describe('HeartbeatLoop', () => {
     }
   });
 });
+
+it('can be stopped before starting and repeatedly after stopping', () => {
+  const send = vi.fn(() => true);
+  const loop = new HeartbeatLoop({ send });
+  loop.stop();
+  loop.start();
+  loop.stop();
+  loop.stop();
+  expect(send).not.toHaveBeenCalled();
+});

@@ -145,7 +145,7 @@ describe('resolveMachine', () => {
   it('falls back with warning when detected hostname is not in config', () => {
     vi.mocked(detectMachine).mockReturnValueOnce('mystery-host');
     const err = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const result = resolveMachine(baseConfig);
+    const result = resolveMachine(baseConfig, undefined, 'unconfigured-host');
     expect(result).toBe('ali-pro'); // first configured machine
     expect(err).toHaveBeenCalledWith(expect.stringContaining('Hostname suggests'));
     err.mockRestore();
