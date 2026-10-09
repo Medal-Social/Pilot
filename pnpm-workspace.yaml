@@ -5,17 +5,18 @@ allowBuilds:
   esbuild: true
 
 # Transitive-only advisories: nothing here is declared directly, so an override is
-# the only way to move them. Re-check with `pnpm audit` after every bump and drop
-# any entry whose consumer has caught up on its own.
+# the only way to move them. Caret (tilde for 0.x) keeps each package inside its
+# consumer's major while letting patches flow. Re-check with `pnpm audit` after every
+# bump and drop any entry whose consumer has caught up on its own.
 overrides:
-  shell-quote: ">=1.12.0"   # GHSA-w7jw-789q-3m8p (critical) + follow-ups via react-devtools-core
-  fast-uri: ">=3.1.8"       # ajv needs ^3; 3.1.8 closes the whole host-confusion series
-  ws: ">=8.22.0"            # ink bundles its own ws copy and that copy ships
-  js-yaml: ">=4.3.2"        # merge-key DoS series (via changesets / commitlint)
-  smol-toml: ">=1.9.0"      # matches the CLI direct dep
-  source-map-js: ">=1.2.2"  # event-loop DoS (via vitest coverage)
+  shell-quote: "^1.12.0"   # GHSA-w7jw-789q-3m8p (critical) + follow-ups via react-devtools-core
+  fast-uri: "^3.1.8"       # ajv needs ^3; 3.1.8 closes the whole host-confusion series
+  ws: "^8.22.0"            # ink bundles its own ws copy and that copy ships
+  js-yaml: "^4.3.2"        # merge-key DoS series (via changesets / commitlint)
+  smol-toml: "^1.9.0"      # matches the CLI direct dep
+  source-map-js: "^1.2.2"  # event-loop DoS (via vitest coverage)
   # Test-tooling only - nothing here reaches the published CLI.
-  vite: ">=8.3.0"
-  postcss: ">=8.5.23"
-  nanoid: ">=3.3.18"
-  esbuild: ">=0.28.2"
+  vite: "^8.3.0"
+  postcss: "^8.5.23"
+  nanoid: "^3.3.18"
+  esbuild: "~0.28.2"

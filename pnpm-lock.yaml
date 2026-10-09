@@ -5,16 +5,16 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  shell-quote: '>=1.12.0'
-  fast-uri: '>=3.1.8'
-  ws: '>=8.22.0'
-  js-yaml: '>=4.3.2'
-  smol-toml: '>=1.9.0'
-  source-map-js: '>=1.2.2'
-  vite: '>=8.3.0'
-  postcss: '>=8.5.23'
-  nanoid: '>=3.3.18'
-  esbuild: '>=0.28.2'
+  shell-quote: ^1.12.0
+  fast-uri: ^3.1.8
+  ws: ^8.22.0
+  js-yaml: ^4.3.2
+  smol-toml: ^1.9.0
+  source-map-js: ^1.2.2
+  vite: ^8.3.0
+  postcss: ^8.5.23
+  nanoid: ^3.3.18
+  esbuild: ~0.28.2
 
 importers:
 
@@ -90,10 +90,10 @@ importers:
         specifier: 19.3.0
         version: 19.3.0
       smol-toml:
-        specifier: '>=1.9.0'
+        specifier: ^1.9.0
         version: 1.9.0
       ws:
-        specifier: '>=8.22.0'
+        specifier: ^8.22.0
         version: 8.22.0
       zod:
         specifier: 4.6.5
@@ -109,7 +109,7 @@ importers:
         specifier: 19.3.0
         version: 19.3.0
       esbuild:
-        specifier: '>=0.28.2'
+        specifier: ~0.28.2
         version: 0.28.2
       ink-testing-library:
         specifier: 4.0.0
@@ -1278,7 +1278,7 @@ packages:
     resolution: {integrity: sha512-T8sWAIbkSyAjkwTcaEc3Iu0o9A27X1/kdXrizhZkGuSKScRQtRzclfAMpOTcGdXCsqxeWlpGy3XjqaW8CpLORg==}
     peerDependencies:
       msw: ^2.4.9
-      vite: '>=8.3.0'
+      vite: ^8.3.0
     peerDependenciesMeta:
       msw:
         optional: true
@@ -1527,8 +1527,8 @@ packages:
   fast-string-width@3.0.2:
     resolution: {integrity: sha512-gX8LrtNEI5hq8DVUfRQMbr5lpaS4nMIWV+7XEbXk2b8kiQIizgnlr12B4dA3ZEx3308ze0O4Q1R+cHts8kyUJg==}
 
-  fast-uri@4.2.1:
-    resolution: {integrity: sha512-TmHQgewjHtMq1E5QKA0tOE0yeYGQs25KZC/ziJpubRtWI15W92e6vPFydWOeZBVROSHBYw/QhD9d5OefdD6LDg==}
+  fast-uri@3.1.8:
+    resolution: {integrity: sha512-GZMtZUTNRpOVIECoXwLNZS5xUGE+mVNbTB8h/7Rwh2TFWcBQiPzTgyZi05BF9UMZKkLJv8XBRJTlU7zg8+ZfMg==}
 
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
@@ -2164,7 +2164,7 @@ packages:
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       '@vitejs/devtools': ^0.7.1
-      esbuild: '>=0.28.2'
+      esbuild: ~0.28.2
       jiti: '>=1.21.0'
       less: ^4.0.0
       sass: ^1.70.0
@@ -2216,7 +2216,7 @@ packages:
       '@vitest/ui': 5.0.3
       happy-dom: '*'
       jsdom: '*'
-      vite: '>=8.3.0'
+      vite: ^8.3.0
     peerDependenciesMeta:
       '@edge-runtime/vm':
         optional: true
@@ -3229,7 +3229,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 4.2.1
+      fast-uri: 3.1.8
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -3437,7 +3437,7 @@ snapshots:
     dependencies:
       fast-string-truncated-width: 3.0.3
 
-  fast-uri@4.2.1: {}
+  fast-uri@3.1.8: {}
 
   fast-wrap-ansi@0.2.2:
     dependencies:
