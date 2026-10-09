@@ -41,7 +41,7 @@ export class WSClient {
   }
 
   send(frame: AgentFrame): boolean {
-    if (!this.ws || this.ws.readyState !== 1 /* OPEN */) return false;
+    if (this.ws?.readyState !== 1 /* OPEN */) return false;
     this.ws.send(JSON.stringify(frame));
     return true;
   }

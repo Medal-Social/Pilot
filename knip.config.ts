@@ -1,6 +1,6 @@
 const config = {
-  ignoreDependencies: ['@secretlint/secretlint-rule-preset-recommend', 'secretlint'],
-  ignoreBinaries: ['wrangler'],
+  // react: referenced by the root tsconfig jsxImportSource, declared by the workspaces that use it.
+  ignoreDependencies: ['@secretlint/secretlint-rule-preset-recommend', 'react'],
   ignoreFiles: ['workers/pilot-landing/src/index.ts'],
   rules: {
     exports: 'warn',
