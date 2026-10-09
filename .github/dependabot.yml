@@ -13,8 +13,8 @@ updates:
       default-days: 7
       semver-major-days: 30
     commit-message:
-      prefix: "fix(deps)"
-      prefix-development: "chore(deps)"
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
     groups:
       security-updates:
         applies-to: security-updates
