@@ -1,5 +1,47 @@
 # @medalsocial/pilot
 
+## 0.7.2
+
+### Patch Changes
+
+- [#173](https://github.com/Medal-Social/Pilot/pull/173) [`1adba2b`](https://github.com/Medal-Social/Pilot/commit/1adba2b69f89255e861efbf98dbcfb9ad7d7e047) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - Move every dependency to its current release and clear the remaining advisories.
+  
+  Runtime: `ink` 8, `commander` 15, `@napi-rs/keyring` 2, `react` 19.3, `zod` 4.6,
+  `smol-toml` 1.9, `ws` 8.22, `open` 11.0.4. Tooling: TypeScript 7, Vitest 5.0.3,
+  Biome 2.5, changesets 3, commitlint 21, knip 6.40, turbo 2.11, wrangler 4.149.
+  Overrides now use `>=` floors so transitive patches flow in on their own.
+  `pnpm audit` and the landing worker's `npm audit` both report zero.
+  
+  Also restores the 0.7.1 version and changelog entry that the last promote
+  dropped, so the next release versions to 0.7.2 instead of colliding with the
+  already-published 0.7.1.
+
+- [#163](https://github.com/Medal-Social/Pilot/pull/163) [`599827d`](https://github.com/Medal-Social/Pilot/commit/599827d632bfb9d1361cc18abae559c9286900dc) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - Close every advisory reaching the published CLI.
+  
+  `pnpm audit` reported 31, including a critical `shell-quote` and a high `ws`
+  that shipped to consumers through `ink`. Runtime dependencies move directly
+  (`ws` ^8.21.3, `ink` 7.1.1, `react` 19.2.8, `smol-toml` 1.8.0, `open` ^11.0.2,
+  `zod` 4.5.4); the transitive-only ones move by override. Now zero.
+
+- [#163](https://github.com/Medal-Social/Pilot/pull/163) [`599827d`](https://github.com/Medal-Social/Pilot/commit/599827d632bfb9d1361cc18abae559c9286900dc) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - Pilot now correctly identifies the active machine when its hostname matches a configured machine name, in addition to the built-in pattern map. Fixes a silent fallback where Pilot would route commands to the first configured machine on hosts whose hostname didn't match one of the built-in patterns.
+
+- [#163](https://github.com/Medal-Social/Pilot/pull/163) [`599827d`](https://github.com/Medal-Social/Pilot/commit/599827d632bfb9d1361cc18abae559c9286900dc) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - Fix `npm install @medalsocial/pilot` failing with a 404.
+  
+  The published manifest declared `@medalsocial/kit` as a runtime dependency.
+  kit is `private: true` and is never published, but `pnpm publish` rewrites
+  `workspace:*` to the concrete version, so every tarball shipped
+  `"@medalsocial/kit": "0.4.0"` and every install died with:
+  
+      npm error 404 Not Found - GET https://registry.npmjs.org/@medalsocial%2fkit
+  
+  The prebuilt binaries were never affected — `bun build --compile` already
+  inlines everything — so only the npm install path was broken.
+  
+  kit is now inlined into the CLI's entry points at build time and dropped from
+  the published dependencies.
+
+- [#167](https://github.com/Medal-Social/Pilot/pull/167) [`e085652`](https://github.com/Medal-Social/Pilot/commit/e08565248736ae2ca9ec703f52d908e46002d021) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - Interrupted installs and commands now report failure reliably and retain helpful diagnostic information.
+
 ## 0.7.1
 
 ### Patch Changes
