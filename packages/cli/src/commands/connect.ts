@@ -80,7 +80,7 @@ export async function runConnectCommand(opts: ConnectOpts = {}): Promise<void> {
   // kit.config.json and constructs the kit provider with real deps.
   const buildProviders =
     opts._providers ??
-    (async (paired) => {
+    (async (_paired) => {
       const os = await import('node:os');
       const { detectMachine, loadKitConfig } = await import('@medalsocial/kit');
       const { resolveKitContext } = await import('../medal-connect/kit-context.js');

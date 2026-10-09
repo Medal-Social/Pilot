@@ -39,21 +39,21 @@
     ]
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.13",
-    "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.31.0",
-    "@commitlint/cli": "^20.5.3",
-    "@commitlint/config-conventional": "^20.5.3",
-    "@secretlint/secretlint-rule-preset-recommend": "^13.0.0",
-    "@vitest/coverage-v8": "5.0.0",
-    "fast-check": "^4.9.0",
+    "@biomejs/biome": "2.5.15",
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.7",
+    "@vitest/coverage-v8": "^5.0.3",
+    "fast-check": "^4.10.2",
     "husky": "^9.1.7",
-    "knip": "^6.35.1",
-    "lint-staged": "^17.5.1",
+    "knip": "^6.40.0",
+    "lint-staged": "^17.6.0",
     "only-allow": "^1.2.2",
-    "secretlint": "^13.0.0",
-    "turbo": "2.10.12",
-    "typescript": "6.0.3",
-    "vitest": "5.0.0"
+    "secretlint": "^13.0.7",
+    "turbo": "2.11.7",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
   }
 }

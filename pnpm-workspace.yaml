@@ -5,21 +5,18 @@ allowBuilds:
   esbuild: true
 
 # Transitive-only advisories: nothing here is declared directly, so an override is
-# the only way to move them. Each is pinned to the first patched version, not latest,
-# to stay inside the consumer's existing major.
+# the only way to move them. Caret (tilde for 0.x) keeps each package inside its
+# consumer's major while letting patches flow. Re-check with `pnpm audit` after every
+# bump and drop any entry whose consumer has caught up on its own.
 overrides:
-  shell-quote: 1.10.0   # GHSA-w7jw-789q-3m8p (critical), GHSA-395f-4hp3-45gv
-  fast-uri: 3.1.6       # GHSA-v2hh-gcrm-f6hx, GHSA-7p8r-x3mc-p8w7 (ajv needs ^3)
-  ink>ws: 8.21.3        # GHSA-96hv-2xvq-fx4p - ink bundles its own ws and that copy ships
-  react-devtools-core>ws: 7.5.13  # same advisory on the 7.x line (dev only)
-  js-yaml: 4.3.2        # GHSA-52cp-r559-cp3m, GHSA-5p4m-2wfm-xmqj (via changesets)
-  # changesets → @manypkg/get-packages@1 → read-yaml-file@1 calls yaml.safeLoad,
-  # which js-yaml 4 removed. 2.1.0 is CJS + js-yaml ^4 (yaml.load) — drop-in.
-  read-yaml-file: 2.1.0
-  smol-toml: 1.8.0      # GHSA via knip; matches the CLI direct dep
-  # Keep patched test-tooling dependencies pinned across Vitest upgrades.
+  shell-quote: "^1.12.0"   # GHSA-w7jw-789q-3m8p (critical) + follow-ups via react-devtools-core
+  fast-uri: "^3.1.8"       # ajv needs ^3; 3.1.8 closes the whole host-confusion series
+  ws: "^8.22.0"            # ink bundles its own ws copy and that copy ships
+  js-yaml: "^4.3.2"        # merge-key DoS series (via changesets / commitlint)
+  smol-toml: "^1.9.0"      # matches the CLI direct dep
+  source-map-js: "^1.2.2"  # event-loop DoS (via vitest coverage)
   # Test-tooling only - nothing here reaches the published CLI.
-  vite: 8.3.0
-  postcss: 8.5.23
-  nanoid: 3.3.18
-  esbuild: 0.28.2
+  vite: "^8.3.0"
+  postcss: "^8.5.23"
+  nanoid: "^3.3.18"
+  esbuild: "~0.28.2"
