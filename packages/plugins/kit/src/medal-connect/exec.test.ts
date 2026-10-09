@@ -81,7 +81,6 @@ describe('execKit', () => {
     const deps = makeDeps({
       addCask: vi.fn(async () => {
         // Throwing a non-Error to exercise the `String(e)` branch.
-        // biome-ignore lint/suspicious/useErrorMessage: deliberate non-Error rejection
         throw 'string-rejection';
       }),
     });
