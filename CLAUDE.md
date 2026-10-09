@@ -79,6 +79,10 @@ conventional commits, and writes a stable `auto-<pr>-<sha7>-<slug>.md` file.
 
 **Comment commands (post on the PR):**
 
+Only honoured from repo owners, org members and collaborators, and only on PRs
+whose head branch lives in this repository (fork PRs are never processed). The
+comment must start with the command.
+
 - `/changeset` — re-run the classifier immediately.
 - `/changeset <type>: <desc>` — override both the type (`patch`/`minor`/`major`)
   and the description, e.g. `/changeset patch: fix keyboard nav`.
