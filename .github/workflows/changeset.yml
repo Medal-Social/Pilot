@@ -1,5 +1,19 @@
 name: Changeset Automation
 
+# Security model
+# --------------
+# The classifier (`scripts/changeset-auto.mjs`) is read from the PR head, so it
+# is treated as untrusted code:
+#   * Only PRs whose head branch lives in Medal-Social/Pilot are processed
+#     (fork PRs are skipped on every trigger).
+#   * `/changeset` comments are honoured only from OWNER / MEMBER / COLLABORATOR.
+#   * The `classify` job runs the PR code with a read-only GITHUB_TOKEN, no
+#     secrets, no persisted git credentials and no dependency install.
+#   * The `publish` job never executes PR code. It applies the generated patch
+#     only after validating that it touches nothing but this PR's
+#     `.changeset/auto-<pr>-*.md` files, and mints the GitHub App token right
+#     before pushing / commenting.
+
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled]
@@ -17,94 +31,97 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
-  pull-requests: write
-  actions: read
-  issues: read
+  contents: read
 
 jobs:
-  classify-and-write:
+  classify:
     if: |
-      (github.event_name != 'pull_request' || (
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'pull_request' &&
         github.event.pull_request.draft == false &&
-        !startsWith(github.head_ref, 'changeset-release/')
-      )) &&
-      (github.event_name != 'issue_comment' || (
-        github.event.issue.pull_request != null &&
-        (contains(github.event.comment.body, '/changeset') || contains(github.event.comment.body, '/skip-changeset'))
-      ))
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        !startsWith(github.head_ref, 'changeset-release/')) ||
+      (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+        (startsWith(github.event.comment.body, '/changeset') ||
+          startsWith(github.event.comment.body, '/skip-changeset')))
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+      pull-requests: read
     outputs:
+      number: ${{ steps.pr.outputs.number }}
+      head_ref: ${{ steps.pr.outputs.head_ref }}
+      head_sha: ${{ steps.pr.outputs.head_sha }}
       exit_code: ${{ steps.classify.outputs.exit_code }}
-      result: ${{ steps.classify.outputs.result }}
     steps:
-      - name: Generate token from Medal Bot app
-        id: app-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v4
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - name: Resolve PR head ref
+      - name: Resolve PR and reject fork heads
         id: pr
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          # `gh pr view` is called before the actions/checkout step below
-          # (because checkout needs the resolved head_sha as its ref).
-          # Without GH_REPO, gh falls back to reading git config to infer
-          # the repo and dies with "fatal: not a git repository" on the
-          # issue_comment / workflow_dispatch branches. Pinning GH_REPO at
-          # the step level removes that dependency on a checkout.
+          # `gh` runs before checkout, so pin the repo explicitly.
+          GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER_FROM_EVENT: ${{ github.event.pull_request.number }}
-          PR_HEAD_REF_FROM_EVENT: ${{ github.event.pull_request.head.ref }}
           PR_HEAD_SHA_FROM_EVENT: ${{ github.event.pull_request.head.sha }}
           ISSUE_NUMBER_FROM_EVENT: ${{ github.event.issue.number }}
           DISPATCH_PR_FROM_EVENT: ${{ github.event.inputs.pr }}
+          TRUSTED_OWNER: Medal-Social
         run: |
           set -euo pipefail
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            {
-              printf 'number=%s\n' "$PR_NUMBER_FROM_EVENT"
-              printf 'head_ref=%s\n' "$PR_HEAD_REF_FROM_EVENT"
-              printf 'head_sha=%s\n' "$PR_HEAD_SHA_FROM_EVENT"
-            } >> "$GITHUB_OUTPUT"
-          elif [ "$EVENT_NAME" = "issue_comment" ]; then
-            PR_NUM="$ISSUE_NUMBER_FROM_EVENT"
-            printf 'number=%s\n' "$PR_NUM" >> "$GITHUB_OUTPUT"
-            gh pr view "$PR_NUM" --json headRefName,headRefOid \
-              --jq '"head_ref=\(.headRefName)\nhead_sha=\(.headRefOid)"' >> "$GITHUB_OUTPUT"
-          else
-            PR_NUM="$DISPATCH_PR_FROM_EVENT"
-            printf 'number=%s\n' "$PR_NUM" >> "$GITHUB_OUTPUT"
-            gh pr view "$PR_NUM" --json headRefName,headRefOid \
-              --jq '"head_ref=\(.headRefName)\nhead_sha=\(.headRefOid)"' >> "$GITHUB_OUTPUT"
+          case "$EVENT_NAME" in
+            pull_request) PR_NUM="$PR_NUMBER_FROM_EVENT" ;;
+            issue_comment) PR_NUM="$ISSUE_NUMBER_FROM_EVENT" ;;
+            *) PR_NUM="$DISPATCH_PR_FROM_EVENT" ;;
+          esac
+          if ! [[ "$PR_NUM" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid PR number."
+            exit 1
           fi
+
+          info=$(gh pr view "$PR_NUM" \
+            --json headRefName,headRefOid,headRepositoryOwner,isCrossRepository)
+          owner=$(jq -r '.headRepositoryOwner.login // ""' <<<"$info")
+          cross=$(jq -r '.isCrossRepository' <<<"$info")
+          if [ "$owner" != "$TRUSTED_OWNER" ] || [ "$cross" != "false" ]; then
+            echo "::error::PR #$PR_NUM head is not a branch of this repository; refusing to run."
+            exit 1
+          fi
+
+          head_ref=$(jq -r '.headRefName' <<<"$info")
+          head_sha=$(jq -r '.headRefOid' <<<"$info")
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            head_sha="$PR_HEAD_SHA_FROM_EVENT"
+          fi
+          if ! [[ "$head_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Unexpected head SHA."
+            exit 1
+          fi
+          {
+            printf 'number=%s\n' "$PR_NUM"
+            printf 'head_ref=%s\n' "$head_ref"
+            printf 'head_sha=%s\n' "$head_sha"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           ref: ${{ steps.pr.outputs.head_sha }}
-          token: ${{ steps.app-token.outputs.token }}
-
-      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4
+          persist-credentials: false
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: '24'
 
-      - run: pnpm install --frozen-lockfile
-
+      # The classifier only imports Node built-ins and sibling scripts, so no
+      # dependency install is needed here.
       - name: Classify & write changeset
         id: classify
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           INPUT_PR: ${{ steps.pr.outputs.number }}
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           CHANGESET_AUTO_DISABLE: ${{ vars.CHANGESET_AUTO_DISABLE }}
         run: |
           set +e
@@ -113,72 +130,166 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Configure git
+      - name: Export changeset patch
         if: steps.classify.outputs.exit_code == '1'
-        run: |
-          git config user.name 'medal-bot[bot]'
-          git config user.email 'medal-bot[bot]@users.noreply.github.com'
-
-      - name: Commit & push changeset with retry
-        if: steps.classify.outputs.exit_code == '1'
-        env:
-          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
-          if git diff --quiet -- .changeset/; then
+          mkdir -p "$RUNNER_TEMP/changeset-patch"
+          git add -A -- .changeset/
+          git diff --cached --binary --no-renames > "$RUNNER_TEMP/changeset-patch/changeset.patch"
+
+      - name: Upload changeset patch
+        if: steps.classify.outputs.exit_code == '1'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: changeset-patch
+          path: ${{ runner.temp }}/changeset-patch/changeset.patch
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: classify
+    if: ${{ !cancelled() && needs.classify.outputs.number != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        if: needs.classify.outputs.exit_code == '1'
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.classify.outputs.head_sha }}
+          persist-credentials: false
+
+      - name: Download changeset patch
+        if: needs.classify.outputs.exit_code == '1'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: changeset-patch
+          path: ${{ runner.temp }}/changeset-patch
+
+      # The patch comes from a job that ran PR code, so only accept regular
+      # files matching this PR's auto changeset naming scheme.
+      - name: Validate & commit changeset patch
+        id: commit
+        if: needs.classify.outputs.exit_code == '1'
+        env:
+          PR_NUM: ${{ needs.classify.outputs.number }}
+        run: |
+          set -euo pipefail
+          patch="$RUNNER_TEMP/changeset-patch/changeset.patch"
+          if [ ! -s "$patch" ]; then
             echo 'No changeset diff to commit.'
             exit 0
           fi
-          git add .changeset/
-          git commit -m "chore: update changeset [skip-ci]"
+          git apply --check --index "$patch"
+          git apply --index "$patch"
+          allowed="^\\.changeset/auto-${PR_NUM}-[A-Za-z0-9._-]+\\.md$"
+          while IFS=$'\t' read -r meta path; do
+            new_mode=$(cut -d' ' -f2 <<<"${meta#:}")
+            if ! [[ "$path" =~ $allowed ]]; then
+              echo "::error::Patch touches a disallowed path: $path"
+              exit 1
+            fi
+            if [ "$new_mode" != '100644' ] && [ "$new_mode" != '000000' ]; then
+              echo "::error::Patch sets a disallowed file mode ($new_mode) on $path"
+              exit 1
+            fi
+          done < <(git diff --cached --raw --no-renames)
+          if git diff --cached --quiet; then
+            echo 'No changeset diff to commit.'
+            exit 0
+          fi
+          git config user.name 'medal-bot[bot]'
+          git config user.email 'medal-bot[bot]@users.noreply.github.com'
+          git commit --no-verify -m "chore: update changeset [skip-ci]"
+          echo 'committed=true' >> "$GITHUB_OUTPUT"
+
+      - name: Generate token from Medal Bot app
+        id: app-token
+        if: ${{ !cancelled() }}
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v4
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Push changeset with retry
+        id: push
+        if: steps.commit.outputs.committed == 'true'
+        env:
+          HEAD_REF: ${{ needs.classify.outputs.head_ref }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          # Authenticate only these git invocations; nothing is written to config.
+          authed_git() {
+            GIT_CONFIG_COUNT=1 \
+            GIT_CONFIG_KEY_0='http.https://github.com/.extraheader' \
+            GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth" \
+              git "$@"
+          }
           for attempt in 1 2 3; do
-            if git push origin "HEAD:$HEAD_REF"; then
+            if authed_git push --no-verify origin "HEAD:refs/heads/$HEAD_REF"; then
               echo "Pushed on attempt $attempt"
               exit 0
             fi
             echo "Push attempt $attempt failed; rebasing and retrying..."
             sleep_time=$((2 * 3 ** (attempt - 1)))
             sleep "$sleep_time"
-            git fetch origin "$HEAD_REF"
-            git pull --rebase origin "$HEAD_REF" || true
+            authed_git fetch origin "$HEAD_REF"
+            git rebase --no-verify FETCH_HEAD || git rebase --abort || true
           done
           echo '::warning::Changeset push failed after 3 attempts; please run /changeset on the PR.'
           exit 1
 
       - name: Post/update sticky PR comment
-        if: always() && steps.pr.outputs.number != ''
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_NUM: ${{ steps.pr.outputs.number }}
-          EXIT_CODE: ${{ steps.classify.outputs.exit_code }}
-          RESULT: ${{ steps.classify.outputs.result }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUM: ${{ needs.classify.outputs.number }}
+          EXIT_CODE: ${{ needs.classify.outputs.exit_code }}
+          COMMIT_OUTCOME: ${{ steps.commit.outcome }}
+          PUSH_OUTCOME: ${{ steps.push.outcome }}
         run: |
           set -euo pipefail
           marker='<!-- changeset-bot -->'
+          retry_hint="Comment \`/changeset\` to retry, or add one with \`pnpm changeset\`."
           case "${EXIT_CODE:-0}" in
             0) body_line='No changeset needed.' ;;
             1) body_line='Changeset generated and pushed.' ;;
             2) body_line='Could not auto-classify — AI fallback invoked.' ;;
-            *) body_line="Classifier finished with exit code ${EXIT_CODE}." ;;
+            *) body_line="The changeset could not be prepared. $retry_hint" ;;
           esac
+          if [ "${EXIT_CODE:-0}" = '1' ] &&
+            { [ "$COMMIT_OUTCOME" = 'failure' ] || [ "$PUSH_OUTCOME" = 'failure' ]; }; then
+            body_line="The changeset could not be pushed. $retry_hint"
+          fi
           {
             printf '%s\n' "$marker"
             printf '### Changeset bot\n\n'
             printf '%s\n\n' "$body_line"
-            printf '<details><summary>Commands</summary>\n\n'
-            printf -- '- `/changeset` — regenerate\n'
-            printf -- '- `/changeset patch: fix X` — override type and description\n'
-            printf -- '- `/skip-changeset` — declare no changeset needed\n\n'
-            printf 'Labels: `no-changeset`, `patch`, `minor`, `major`.\n\n'
-            printf '</details>\n'
-          } > /tmp/changeset-bot-body.md
+            cat <<'EOF'
+          <details><summary>Commands</summary>
+
+          - `/changeset` — regenerate
+          - `/changeset patch: fix X` — override type and description
+          - `/skip-changeset` — declare no changeset needed
+
+          Labels: `no-changeset`, `patch`, `minor`, `major`.
+
+          </details>
+          EOF
+          } > "$RUNNER_TEMP/changeset-bot-body.md"
           existing=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUM/comments" --paginate \
             --jq "[.[] | select(.body | startswith(\"$marker\"))][0].id" || echo '')
           if [ -n "$existing" ] && [ "$existing" != "null" ]; then
             gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existing" \
-              -F "body=@/tmp/changeset-bot-body.md"
+              -F "body=@$RUNNER_TEMP/changeset-bot-body.md"
           else
-            gh pr comment "$PR_NUM" --body-file /tmp/changeset-bot-body.md
+            gh pr comment "$PR_NUM" --body-file "$RUNNER_TEMP/changeset-bot-body.md"
           fi
-

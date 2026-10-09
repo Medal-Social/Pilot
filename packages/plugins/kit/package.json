@@ -24,15 +24,15 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "ink": "7.1.1",
-    "react": "19.2.8",
-    "zod": "4.5.4"
+    "ink": "8.0.0",
+    "react": "19.3.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
-    "@types/node": "25.6.0",
-    "@types/react": "19.2.18",
+    "@types/node": "24.19.1",
+    "@types/react": "19.3.0",
     "ink-testing-library": "4.0.0",
-    "typescript": "6.0.3",
-    "vitest": "5.0.0"
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
   }
 }
