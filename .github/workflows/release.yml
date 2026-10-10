@@ -40,23 +40,30 @@ jobs:
 
       - run: pnpm quality:100
 
+      # changesets/action v1 detects published packages by grepping the
+      # publish output for "New tag:" lines. @changesets/cli 3 no longer
+      # prints those (it writes NDJSON events to $CHANGESETS_OUTPUT instead),
+      # so v1 published to npm but never pushed the tag, created the GitHub
+      # Release, or set `published=true`. v2 reads $CHANGESETS_OUTPUT and is
+      # the line that supports Changesets CLI 3.
       - name: Create release PR or publish packages
         id: changesets
-        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          commit: 'chore: release packages'
-          title: 'chore: release packages'
-          version: pnpm run version
-          publish: pnpm release
+          commit-message: 'chore: release packages'
+          pr-title: 'chore: release packages'
+          version-script: pnpm run version
+          publish-script: pnpm release
+          github-token: ${{ steps.app-token.outputs.token }}
+          push-with-git-cli: true
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_CONFIG_PROVENANCE: 'true'
 
       - name: Open back-merge PR (prod → dev) after publish
         if: steps.changesets.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.published-packages }}
         run: |
           set -euo pipefail
 
