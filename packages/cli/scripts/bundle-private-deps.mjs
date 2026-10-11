@@ -21,7 +21,7 @@
  * packages inlined. Every dependency the published manifest still declares
  * stays external, so nothing else about the dependency graph moves.
  */
-import { readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -108,7 +108,61 @@ for (const entry of readdirSync(distDir, { recursive: true, withFileTypes: true 
   pruned += 1;
 }
 
+/**
+ * Same story for declarations: tsc emitted a .d.ts per module, but only the
+ * two the `exports` map points at (and whatever they transitively import) can
+ * be reached by a consumer. The rest still carry `import ... from
+ * '@medalsocial/kit'`, a package that is not on npm, so anyone who deep-imports
+ * one would get an unresolvable type. Keep the reachable set, drop the rest,
+ * then refuse to ship if a kept declaration still names a private package.
+ */
+const DTS_ENTRY_POINTS = ['dist/index.d.ts', 'dist/runtime/index.d.ts'];
+const specifierRe = /(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g;
+
+function resolveDts(fromFile, spec) {
+  const base = resolve(dirname(fromFile), spec.replace(/\.js$/, ''));
+  for (const candidate of [`${base}.d.ts`, resolve(base, 'index.d.ts')]) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+const reachableDts = new Set();
+const queue = DTS_ENTRY_POINTS.map((entry) => resolve(pkgDir, entry));
+while (queue.length > 0) {
+  const file = queue.pop();
+  if (!file || reachableDts.has(file) || !existsSync(file)) continue;
+  reachableDts.add(file);
+  const source = readFileSync(file, 'utf8');
+  for (const match of source.matchAll(specifierRe)) {
+    const next = resolveDts(file, match[1]);
+    if (next) queue.push(next);
+  }
+}
+
+let prunedDts = 0;
+for (const entry of readdirSync(distDir, { recursive: true, withFileTypes: true })) {
+  if (!entry.isFile()) continue;
+  const full = resolve(entry.parentPath ?? entry.path, entry.name);
+  if (!full.endsWith('.d.ts') && !full.endsWith('.d.ts.map')) continue;
+  const dts = full.endsWith('.map') ? full.slice(0, -4) : full;
+  if (reachableDts.has(dts)) continue;
+  rmSync(full);
+  prunedDts += 1;
+}
+
+for (const file of reachableDts) {
+  const source = readFileSync(file, 'utf8');
+  const leak = INLINE.find((name) => source.includes(`'${name}`) || source.includes(`"${name}`));
+  if (leak) {
+    throw new Error(
+      `${file.slice(pkgDir.length + 1)} is reachable from the package exports but still ` +
+        `references ${leak}, which is not published. Inline or re-export the type instead.`
+    );
+  }
+}
+
 console.log(
   `bundled ${inlined.length} private-package modules into the CLI entry points, ` +
-    `pruned ${pruned} unbundled tsc artefacts`
+    `pruned ${pruned} unbundled tsc artefacts and ${prunedDts} unreachable declaration files`
 );
