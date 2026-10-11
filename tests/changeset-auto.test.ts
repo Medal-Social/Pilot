@@ -223,7 +223,7 @@ describe('classify — conventional commit inference', () => {
     expect(result.type).toBe('minor');
     expect(result.action).toBe('created');
     expect(result.exitCode).toBe(1);
-    expect(result.file).toMatch(/^\.changeset\/auto-55-abcdef1-/);
+    expect(result.file).toMatch(/^\.changeset\/auto-55-add-x/);
   });
 
   it('fix: commit → patch', () => {
@@ -376,7 +376,7 @@ describe('classify — filename stability', () => {
     expect(a.file).toBe(b.file);
   });
 
-  it('different head sha → different filename', () => {
+  it('different head sha → same filename (the bot's own push must not re-trigger a rewrite)', () => {
     const a = classify(
       baseInputs({
         headSha: 'aaaaaaa0000',
@@ -393,7 +393,8 @@ describe('classify — filename stability', () => {
         prTitle: 'fix: bug',
       })
     );
-    expect(a.file).not.toBe(b.file);
+    expect(a.file).toBe(b.file);
+    expect(a.file).toBe('.changeset/auto-55-bug.md');
   });
 });
 
