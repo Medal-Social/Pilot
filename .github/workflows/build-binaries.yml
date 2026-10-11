@@ -147,6 +147,9 @@ jobs:
       # other than the last pusher.
       - name: Generate reviewer token for homebrew-pilot
         id: reviewer-token
+        # Best effort: without this token the PR still opens and waits for a
+        # human approval, exactly as before.
+        continue-on-error: true
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         with:
           app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
@@ -299,6 +302,10 @@ jobs:
             "$branch" || echo "Auto-merge not enabled — tap-sync PR awaits manual merge."
 
           # Approve as the reviewer app so auto-merge can land it unattended.
+          if [ -z "${REVIEWER_TOKEN:-}" ]; then
+            echo "::warning::No reviewer token (RELEASE_BOT_PRIVATE_KEY unset?) — tap-sync PR awaits a manual approval."
+            exit 0
+          fi
           GH_TOKEN="$REVIEWER_TOKEN" gh pr review \
             --repo "${REMOTE_REPO}" \
             --approve \

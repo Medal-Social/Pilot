@@ -2,9 +2,10 @@ name: Auto Approve
 
 # pull_request_target is required to approve with an App token. This workflow
 # never checks out or runs PR code. It acts only on PRs opened by the workflows'
-# own app (`medal-approvals`, the APP_ID identity): release PRs, back-merge PRs,
-# and the changeset-release branch. Promotion PRs (dev → prod) are excluded on
-# purpose so a human still decides when a release goes out.
+# own app (`medal-approvals`, the APP_ID identity) on an allow-listed branch
+# pair: the release PR (changeset-release/prod → prod) and the back-merge PR
+# (chore/backmerge-prod-into-dev-after-* → dev). Promotion PRs (dev → prod)
+# are not listed on purpose so a human still decides when a release goes out.
 #
 # The approval comes from a second app (`medal-social-release-bot`) because
 # GitHub does not let an app approve its own pull request.
@@ -17,9 +18,16 @@ permissions: {}
 jobs:
   auto-approve:
     runs-on: ubuntu-latest
+    # Allow-list of exact head/base pairs the release workflow produces.
+    # Anything else the app opens, including promotion PRs, waits for a human.
     if: |
       github.event.pull_request.user.login == 'medal-approvals[bot]' &&
-      !startsWith(github.event.pull_request.head.ref, 'chore/promote-with-ancestry-')
+      (
+        (github.event.pull_request.base.ref == 'prod' &&
+          github.event.pull_request.head.ref == 'changeset-release/prod') ||
+        (github.event.pull_request.base.ref == 'dev' &&
+          startsWith(github.event.pull_request.head.ref, 'chore/backmerge-prod-into-dev-after-'))
+      )
     steps:
       - name: Generate reviewer token from the release-bot app
         id: app-token

@@ -112,21 +112,35 @@ jobs:
           git config user.name "medal-social-release-bot[bot]"
           git config user.email "277925859+medal-social-release-bot[bot]@users.noreply.github.com"
 
-          # Build the branch ON DEV and copy in only the release artefacts from
-          # prod: package versions, CHANGELOGs, and the consumed changeset
-          # deletions. A branch that is simply "prod" conflicts with dev every
-          # time, because dev's squash merges share no ancestry with prod's
-          # commits, so the PR needed a manual rebuild on each release.
+          # Build the branch ON DEV and transplant only what the release commit
+          # itself changed on prod (HEAD vs its parent): the consumed changeset
+          # deletions, the bumped `version` fields, and the regenerated
+          # CHANGELOGs. Diffing the two branch tips instead would also delete
+          # changesets merged to dev after the promotion and overwrite newer
+          # dev edits to package.json. A prod-identical branch conflicted with
+          # dev on every release because squash merges share no ancestry.
           git fetch origin dev prod --quiet
           git checkout -B "$branch" origin/dev
-          git diff --name-status origin/dev origin/prod -- \
-              'packages/*/package.json' 'packages/plugins/*/package.json' \
-              'packages/*/CHANGELOG.md' 'packages/plugins/*/CHANGELOG.md' \
-              '.changeset/*.md' \
+          release_base="$(git rev-parse origin/prod~1)"
+          git diff --name-status "$release_base" origin/prod \
             | while IFS=$'\t' read -r status path; do
-                case "$status" in
-                  D) git rm -q --ignore-unmatch -- "$path" ;;
-                  *) git checkout origin/prod -- "$path" ;;
+                case "$status:$path" in
+                  D:.changeset/*.md)
+                    git rm -q --ignore-unmatch -- "$path" ;;
+                  *:*/package.json)
+                    if git cat-file -e "origin/dev:$path" 2>/dev/null; then
+                      v="$(git show "origin/prod:$path" | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).version')"
+                      node -e '
+                        const fs = require("fs");
+                        const [file, version] = process.argv.slice(1);
+                        const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+                        pkg.version = version;
+                        fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+                      ' "$path" "$v"
+                      git add -- "$path"
+                    fi ;;
+                  *:*/CHANGELOG.md)
+                    git checkout origin/prod -- "$path" ;;
                 esac
               done
           git push origin "$branch"
