@@ -26,15 +26,19 @@ on:
         required: true
         type: number
 
-concurrency:
-  group: changeset-${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   classify:
+    # Job-level, not workflow-level: every bot comment (Arlo, Qodo, DeepSource)
+    # fires an issue_comment run whose job is skipped by the guard below, but a
+    # workflow-level group would still let that skipped run cancel the real
+    # one. A skipped job never acquires the group.
+    concurrency:
+      group: changeset-${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr }}
+      cancel-in-progress: true
     if: |
       (github.event_name == 'workflow_dispatch') ||
       (github.event_name == 'pull_request' &&
@@ -151,6 +155,11 @@ jobs:
   publish:
     needs: classify
     if: ${{ !cancelled() && needs.classify.outputs.number != '' }}
+    # Separate group from classify: an older run's publish must not be able to
+    # cancel a newer run's classify. A newer publish still supersedes an older one.
+    concurrency:
+      group: changeset-publish-${{ needs.classify.outputs.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
       contents: read
