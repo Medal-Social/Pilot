@@ -1,7 +1,7 @@
 // Copyright (c) Medal Social. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { detectMachine, loadKitConfig } from '@medalsocial/kit';
+import { loadKitConfig, resolveConfiguredMachine } from '@medalsocial/kit';
 import { createKitProvider } from '@medalsocial/kit/medal-connect';
 import open from 'open';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,7 +27,7 @@ const fixture = vi.hoisted(() => ({
 vi.mock('node:os', () => ({ hostname: () => 'test-host' }));
 vi.mock('open', () => ({ default: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@medalsocial/kit', () => ({
-  detectMachine: vi.fn(),
+  resolveConfiguredMachine: vi.fn(),
   loadKitConfig: vi.fn(),
 }));
 vi.mock('@medalsocial/kit/medal-connect', () => ({
@@ -64,7 +64,7 @@ beforeEach(() => {
       detected: { type: 'darwin', user: 'tester' },
     },
   } as Awaited<ReturnType<typeof loadKitConfig>>);
-  vi.mocked(detectMachine).mockReturnValue('detected');
+  vi.mocked(resolveConfiguredMachine).mockReturnValue('detected');
 });
 
 afterEach(() => {
@@ -80,11 +80,14 @@ afterEach(() => {
 describe('connect default provider and lifecycle', () => {
   it.each([
     ['detected', 'detected'],
-    ['unknown', 'first'],
     [null, 'first'],
-  ])('maps detected machine %s to configured machine %s', async (detected, expected) => {
-    vi.mocked(detectMachine).mockReturnValue(detected);
+  ])('maps resolved machine %s to configured machine %s', async (resolved, expected) => {
+    vi.mocked(resolveConfiguredMachine).mockReturnValue(resolved);
     await runConnectCommand();
+    expect(resolveConfiguredMachine).toHaveBeenCalledWith(
+      { first: expect.anything(), detected: expect.anything() },
+      'test-host'
+    );
     expect(open).toHaveBeenCalledWith('https://example.test/claim');
     expect(process.stdout.write).toHaveBeenCalledWith('\n  Code: 123-456\n');
     expect(resolveKitContext).toHaveBeenCalledWith({
@@ -104,6 +107,7 @@ describe('connect default provider and lifecycle', () => {
     vi.mocked(loadKitConfig).mockResolvedValueOnce({
       configPath: '/fixture/kit.config.json',
     } as Awaited<ReturnType<typeof loadKitConfig>>);
+    vi.mocked(resolveConfiguredMachine).mockReturnValueOnce(null);
     vi.mocked(open).mockRejectedValueOnce(new Error('browser unavailable'));
     await runConnectCommand();
     expect(resolveKitContext).toHaveBeenCalledWith({
