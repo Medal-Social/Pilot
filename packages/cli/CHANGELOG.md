@@ -1,5 +1,17 @@
 # @medalsocial/pilot
 
+## 0.7.3
+
+### Patch Changes
+
+- [#186](https://github.com/Medal-Social/Pilot/pull/186) [`51b27bb`](https://github.com/Medal-Social/Pilot/commit/51b27bbf88fe1069dd64b2f793dacc0d2e6ffb95) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - resolve connect machine via hostname keys; detect npm installs under Nix node
+  
+  Refs: [#184](https://github.com/Medal-Social/Pilot/issues/184)
+
+- [#186](https://github.com/Medal-Social/Pilot/pull/186) [`51b27bb`](https://github.com/Medal-Social/Pilot/commit/51b27bbf88fe1069dd64b2f793dacc0d2e6ffb95) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - resolve connect machine via hostname keys; detect npm installs under Nix node
+  
+  Refs: [#184](https://github.com/Medal-Social/Pilot/issues/184)
+
 ## 0.7.2
 
 ### Patch Changes
