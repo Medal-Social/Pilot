@@ -12,7 +12,7 @@
  *
  * Decides whether the current PR needs a changeset, what semver bump type it
  * should declare, and which packages it should target. Writes a stable
- * `.changeset/auto-<pr>-<sha7>-<slug>.md` file, or skips entirely — no
+ * `.changeset/auto-<pr>-<slug>.md` file, or skips entirely — no
  * LLM tokens consumed on the hot path.
  *
  * Exit codes:
@@ -357,10 +357,12 @@ function detectPackages(files) {
   return Array.from(set).sort();
 }
 
-function finaliseCreate({ pr, headSha, packages, type, description, reason }) {
-  const sha7 = (headSha || '0000000').slice(0, 7);
+function finaliseCreate({ pr, packages, type, description, reason }) {
+  // The name must not depend on the head SHA: the bot's own push creates a new
+  // head, and a SHA-stamped name would then differ on the re-run, get rewritten,
+  // pushed again, and loop until someone cancels it.
   const slug = slugify(description);
-  const file = `.changeset/auto-${pr}-${sha7}-${slug}.md`;
+  const file = `.changeset/auto-${pr}-${slug}.md`;
   return {
     action: 'created',
     reason,
