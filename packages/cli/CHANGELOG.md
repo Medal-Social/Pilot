@@ -1,5 +1,13 @@
 # @medalsocial/pilot
 
+## 0.7.4
+
+### Patch Changes
+
+- [#193](https://github.com/Medal-Social/Pilot/pull/193) [`97534e5`](https://github.com/Medal-Social/Pilot/commit/97534e5290f9a3cb7fde94cebe83562e9ac8f8ae) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - ship only the declaration files reachable from the package exports
+  
+  Refs: [#191](https://github.com/Medal-Social/Pilot/issues/191)
+
 ## 0.7.3
 
 ### Patch Changes
