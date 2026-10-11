@@ -376,7 +376,7 @@ describe('classify — filename stability', () => {
     expect(a.file).toBe(b.file);
   });
 
-  it('different head sha → same filename (the bot's own push must not re-trigger a rewrite)', () => {
+  it('different head sha → same filename, so a bot push cannot re-trigger a rewrite', () => {
     const a = classify(
       baseInputs({
         headSha: 'aaaaaaa0000',
