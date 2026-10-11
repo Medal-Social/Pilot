@@ -20,7 +20,7 @@ export { realSudoKeeper, runMigrations, runUpdate } from './commands/update.js';
 export type { LoadedKitConfig } from './config/load.js';
 export { configCandidates, loadKitConfig } from './config/load.js';
 export type { KitConfig, Machine } from './config/schema.js';
-export { detectMachine } from './detect.js';
+export { detectMachine, resolveConfiguredMachine } from './detect.js';
 export { errorCodes, KitError } from './errors.js';
 export { getSystemInfo } from './machine/system.js';
 

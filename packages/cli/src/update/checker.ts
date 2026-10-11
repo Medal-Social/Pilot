@@ -52,6 +52,8 @@ export async function checkForUpdates(currentVersion: string): Promise<UpdateChe
   }
 }
 
+const NODE_RUNTIME = /(^|[\\/])(node|nodejs)(\.exe)?$/i;
+
 /**
  * Detect how the running pilot binary was installed by inspecting its filesystem path.
  *
@@ -61,15 +63,20 @@ export async function checkForUpdates(currentVersion: string): Promise<UpdateChe
  * - `npm` if the resolved path lives under npm's global root (`npm root -g`)
  * - `unknown` otherwise
  *
- * `execPath` defaults to `process.execPath` (overridable for tests). Symlinks are
- * resolved via `realpath` because Homebrew's `bin/pilot` is a symlink into Cellar.
+ * `execPath` defaults to `process.execPath` (overridable for tests). Under an npm
+ * install that is the Node runtime, not pilot, so when it looks like `node` the
+ * entry script (`process.argv[1]`) is inspected instead; otherwise a Nix-provided
+ * Node would make an npm install look like a Nix install. Symlinks are resolved
+ * via `realpath` because Homebrew's `bin/pilot` is a symlink into Cellar.
  */
 export async function detectInstallMethod(
-  execPath: string = process.execPath
+  execPath: string = process.execPath,
+  entryScript: string | undefined = process.argv[1]
 ): Promise<InstallMethod> {
-  let resolved = execPath;
+  const candidate = NODE_RUNTIME.test(execPath) && entryScript ? entryScript : execPath;
+  let resolved = candidate;
   try {
-    resolved = await realpath(execPath);
+    resolved = await realpath(candidate);
   } catch {
     // ignore — keep the original path
   }
