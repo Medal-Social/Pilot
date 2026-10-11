@@ -112,11 +112,23 @@ jobs:
           git config user.name "medal-social-release-bot[bot]"
           git config user.email "277925859+medal-social-release-bot[bot]@users.noreply.github.com"
 
-          # Build a branch off prod that's identical to it. The PR is then
-          # head=branch, base=dev, so the merge into dev brings prod's tree
-          # (version bumps, CHANGELOG, deleted changesets) onto dev.
+          # Build the branch ON DEV and copy in only the release artefacts from
+          # prod: package versions, CHANGELOGs, and the consumed changeset
+          # deletions. A branch that is simply "prod" conflicts with dev every
+          # time, because dev's squash merges share no ancestry with prod's
+          # commits, so the PR needed a manual rebuild on each release.
           git fetch origin dev prod --quiet
-          git checkout -B "$branch" origin/prod
+          git checkout -B "$branch" origin/dev
+          git diff --name-status origin/dev origin/prod -- \
+              'packages/*/package.json' 'packages/plugins/*/package.json' \
+              'packages/*/CHANGELOG.md' 'packages/plugins/*/CHANGELOG.md' \
+              '.changeset/*.md' \
+            | while IFS=$'\t' read -r status path; do
+                case "$status" in
+                  D) git rm -q --ignore-unmatch -- "$path" ;;
+                  *) git checkout origin/prod -- "$path" ;;
+                esac
+              done
           git push origin "$branch"
 
           # The empty-frontmatter changeset satisfies `changeset-required`

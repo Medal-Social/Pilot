@@ -1,7 +1,13 @@
 name: Auto Approve
 
-# pull_request_target is required to approve with the App token. This workflow
-# never checks out or runs PR code and only acts on PRs opened by the release bot.
+# pull_request_target is required to approve with an App token. This workflow
+# never checks out or runs PR code. It acts only on PRs opened by the workflows'
+# own app (`medal-approvals`, the APP_ID identity): release PRs, back-merge PRs,
+# and the changeset-release branch. Promotion PRs (dev → prod) are excluded on
+# purpose so a human still decides when a release goes out.
+#
+# The approval comes from a second app (`medal-social-release-bot`) because
+# GitHub does not let an app approve its own pull request.
 on:
   pull_request_target: # zizmor: ignore[dangerous-triggers]
     branches: [dev, prod]
@@ -11,14 +17,16 @@ permissions: {}
 jobs:
   auto-approve:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'medal-social-release-bot[bot]'
+    if: |
+      github.event.pull_request.user.login == 'medal-approvals[bot]' &&
+      !startsWith(github.event.pull_request.head.ref, 'chore/promote-with-ancestry-')
     steps:
-      - name: Generate token from Medal Bot app
+      - name: Generate reviewer token from the release-bot app
         id: app-token
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v4
         with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
 
