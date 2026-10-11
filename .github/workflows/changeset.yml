@@ -155,8 +155,10 @@ jobs:
   publish:
     needs: classify
     if: ${{ !cancelled() && needs.classify.outputs.number != '' }}
+    # Separate group from classify: an older run's publish must not be able to
+    # cancel a newer run's classify. A newer publish still supersedes an older one.
     concurrency:
-      group: changeset-${{ needs.classify.outputs.number }}
+      group: changeset-publish-${{ needs.classify.outputs.number }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
