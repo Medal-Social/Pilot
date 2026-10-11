@@ -104,7 +104,7 @@ describe('detectInstallMethod', () => {
     expect(m).toBe('unknown');
   });
 
-  it('inspects the entry script instead of a Node runtime execPath (npm install under Nix node)', async () => {
+  it('inspects the entry script when execPath is a Node runtime (npm pilot on Nix node)', async () => {
     // `npm install -g` runs pilot as `node .../dist/bin/pilot.js`, so execPath is
     // the Node binary. When Node itself comes from Nix, the old path check said
     // "nix" and `pilot update` refused even though npm could upgrade it.
@@ -126,7 +126,7 @@ describe('detectInstallMethod', () => {
     ).resolves.toBe('nix');
   });
 
-  it('keeps using execPath when it is not a Node runtime, even if an entry script is given', async () => {
+  it('keeps using a non-Node execPath even when an entry script is given', async () => {
     mockExecFile('');
     const m = await detectInstallMethod(
       '/opt/homebrew/Cellar/pilot/0.7.2/bin/pilot',

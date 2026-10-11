@@ -30,10 +30,12 @@ export function resolveConfiguredMachine(
   machines: Record<string, unknown>,
   host: string
 ): string | null {
+  // Own-key check only: `in` would accept inherited names like "toString".
+  const configured = (id: string): boolean => Object.hasOwn(machines, id);
   const detected = detectMachine(host);
-  if (detected && detected in machines) return detected;
-  if (host in machines) return host;
+  if (detected && configured(detected)) return detected;
+  if (configured(host)) return host;
   const hostShort = host.split('.')[0] ?? host;
-  if (hostShort !== host && hostShort in machines) return hostShort;
+  if (hostShort !== host && configured(hostShort)) return hostShort;
   return null;
 }

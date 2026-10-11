@@ -57,4 +57,9 @@ describe('resolveConfiguredMachine', () => {
   it('returns null when nothing matches', () => {
     expect(resolveConfiguredMachine(machines, 'unrelated-host')).toBeNull();
   });
+
+  it('ignores inherited object keys such as toString', () => {
+    expect(resolveConfiguredMachine(machines, 'toString')).toBeNull();
+    expect(resolveConfiguredMachine(machines, 'constructor.local')).toBeNull();
+  });
 });
