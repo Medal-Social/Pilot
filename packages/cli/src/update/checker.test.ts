@@ -103,6 +103,43 @@ describe('detectInstallMethod', () => {
     const m = await detectInstallMethod('/some/random/path/pilot');
     expect(m).toBe('unknown');
   });
+
+  it('inspects the entry script when execPath is a Node runtime', async () => {
+    // `npm install -g` runs pilot as `node .../dist/bin/pilot.js`, so execPath is
+    // the Node binary. When Node itself comes from Nix, the old path check said
+    // "nix" and `pilot update` refused even though npm could upgrade it.
+    mockExecFile('/usr/local/lib/node_modules\n');
+    const m = await detectInstallMethod(
+      '/nix/store/abc-nodejs-24.0.0/bin/node',
+      '/usr/local/lib/node_modules/@medalsocial/pilot/dist/bin/pilot.js'
+    );
+    expect(m).toBe('npm');
+  });
+
+  it('inspects the entry script for node.exe and nodejs runtimes too', async () => {
+    mockExecFile('');
+    await expect(
+      detectInstallMethod('C:\\nodejs\\node.exe', '/opt/homebrew/Cellar/pilot/0.7.2/bin/pilot')
+    ).resolves.toBe('homebrew');
+    await expect(
+      detectInstallMethod('/usr/bin/nodejs', '/nix/store/abc-pilot/bin/pilot')
+    ).resolves.toBe('nix');
+  });
+
+  it('keeps using a non-Node execPath even when an entry script is given', async () => {
+    mockExecFile('');
+    const m = await detectInstallMethod(
+      '/opt/homebrew/Cellar/pilot/0.7.2/bin/pilot',
+      '/usr/local/lib/node_modules/@medalsocial/pilot/dist/bin/pilot.js'
+    );
+    expect(m).toBe('homebrew');
+  });
+
+  it('falls back to execPath when execPath is Node but no entry script is known', async () => {
+    mockExecFile('');
+    const m = await detectInstallMethod('/nix/store/abc-nodejs/bin/node', '');
+    expect(m).toBe('nix');
+  });
 });
 
 describe('applyUpdate', () => {
