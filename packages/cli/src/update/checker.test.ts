@@ -104,7 +104,7 @@ describe('detectInstallMethod', () => {
     expect(m).toBe('unknown');
   });
 
-  it('inspects the entry script when execPath is a Node runtime (npm pilot on Nix node)', async () => {
+  it('inspects the entry script when execPath is a Node runtime', async () => {
     // `npm install -g` runs pilot as `node .../dist/bin/pilot.js`, so execPath is
     // the Node binary. When Node itself comes from Nix, the old path check said
     // "nix" and `pilot update` refused even though npm could upgrade it.
