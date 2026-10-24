@@ -8,5 +8,8 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261008.1",
     "wrangler": "^4.149.0"
+  },
+  "overrides": {
+    "undici": "7.30.1"
   }
 }
