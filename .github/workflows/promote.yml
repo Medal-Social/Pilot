@@ -16,9 +16,10 @@ permissions: {}
 jobs:
   promote:
     runs-on: ubuntu-latest
+    # Every write (push the promote branch, open the PR) goes through the app
+    # token below, so the job's own GITHUB_TOKEN stays read-only.
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - name: Generate app token
         id: app-token
