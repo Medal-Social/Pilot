@@ -1,5 +1,15 @@
 # @medalsocial/pilot
 
+## 0.7.5
+
+### Patch Changes
+
+- [#197](https://github.com/Medal-Social/Pilot/pull/197) [`531d3f0`](https://github.com/Medal-Social/Pilot/commit/531d3f062231609a108dbaf02ca515b100a498b1) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - clear open Dependabot, audit and Scorecard token findings
+  
+  Refs: [#196](https://github.com/Medal-Social/Pilot/issues/196)
+
+- [#197](https://github.com/Medal-Social/Pilot/pull/197) [`531d3f0`](https://github.com/Medal-Social/Pilot/commit/531d3f062231609a108dbaf02ca515b100a498b1) Thanks [@medal-approvals](https://github.com/apps/medal-approvals)! - Update zod to 4.6.7 to pick up the fix for GHSA-mrhx-c7xc-m3w5.
+
 ## 0.7.4
 
 ### Patch Changes
