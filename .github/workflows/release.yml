@@ -11,11 +11,12 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: npm
+    # The checkout, the release-PR push, the tag push, the GitHub release and
+    # the back-merge PR all use the app token below, so GITHUB_TOKEN only reads.
+    # id-token: write is the OIDC token npm trusted publishing and provenance need.
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
       id-token: write
-      attestations: write
     steps:
       - name: Generate app token
         id: app-token
